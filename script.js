@@ -21,7 +21,7 @@ const kosts = {
 };
 
 const hakAkses = { "admin": "all", "mekar": "Kostory Mekar", "satria": "Kostory Satria", "mitra": "Kostory Mitra", "ecokost": "Ecokost by Kostory", "mitraya": "Mitraya by Kostory", "inaya": "Inaya Bukit by Kostory" };
-const passwordDb = { "admin": "kostory123", "mekar": "ramenuno20", "satria": "satria123", "mitra": "mitra123", "ecokost": "ecokost123", "mitraya": "mitraya123", "inaya": "inaya123" };
+const passwordDb = { "admin": "ramenuno20", "mekar": "kopipait69", "satria": "cilukba123", "mitra": "ayamgeprek77", "ecokost": "mirebus08", "mitraya": "odading88", "inaya": "nasiuduk21" };
 
 let currentUser = null, allowedKosts = [], currentKost = null, currentRoom = null, currentData = null;
 
