@@ -41,12 +41,12 @@
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <h2 style="font-size:36px;color:#1e40af;text-align:center;margin-bottom:40px">KOSTORY Dashboard</h2>
   <div style="max-width:420px;margin:auto;background:white;padding:40px;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.15)">
-    <input type="text" id="username" placeholder="Username" autocomplete="off" style="width:100%;padding:18px;margin:12px 0;border-radius:14px;border:2px solid #ddd;font-size:18px"><br>
-    <input type="password" id="password" placeholder="Password" style="width:100%;padding:18px;margin:12px 0;border-radius:14px;border:2px solid #ddd;font-size:18px"><br>
+    <input type="text" id="username" placeholder="Username" autocomplete="off"><br>
+    <input type="password" id="password" placeholder="Password"><br>
     <button class="btn" onclick="window.login()">MASUK DASHBOARD</button>
   </div>
 </div>
@@ -61,7 +61,7 @@
   <div id="kostList"></div>
 </div>
 
-<!-- MODAL CHECK-IN / UPDATE -->
+<!-- MODAL CHECK-IN -->
 <div id="modal" class="modal hidden">
   <div class="modal-content">
     <h3 id="modalTitle">Check-in Kamar</h3>
@@ -85,60 +85,43 @@
   </div>
 </div>
 
-<!-- MODAL TAGIH -->
+<!-- TAGIH -->
 <div id="tagihModal" class="hidden">
   <div id="tagihBox">
     <h3>TAGIHAN KOST</h3>
     <p style="font-size:18px;margin:15px 0;text-align:center"><strong id="tagihNama"></strong></p>
-    <label>Tanggal Berakhir Kost</label>
-    <input type="date" id="tagihTanggal">
-    <label>Jumlah Tagihan (Rp)</label>
-    <input type="number" id="tagihJumlah" placeholder="1200000">
+    <label>Tanggal Berakhir</label><input type="date" id="tagihTanggal">
+    <label>Jumlah Tagihan (Rp)</label><input type="number" id="tagihJumlah">
     <button class="btn" onclick="window.kirimTagihan()">KIRIM VIA WHATSAPP</button>
     <button class="btn" style="background:#6b7280" onclick="document.getElementById('tagihModal').classList.add('hidden')">Batal</button>
   </div>
 </div>
 
-<!-- MODAL CHECK-OUT – RAPI + MOBILE FRIENDLY + TOKEN OTOMATIS -->
+<!-- CHECK-OUT (RAPI + TOKEN OTOMATIS) -->
 <div id="checkoutModal" class="hidden">
   <div id="checkoutBox">
-    <h3 style="margin-bottom:10px;color:#1e40af">CHECK-OUT PENGHUNI</h3>
-    <div style="background:#f0f9ff;padding:15px;border-radius:12px;margin-bottom:20px;text-align:center">
+    <h3 style="color:#1e40af">CHECK-OUT PENGHUNI</h3>
+    <div style="background:#f0f9ff;padding:15px;border-radius:12px;margin:20px 0;text-align:center">
       <strong style="font-size:18px" id="coNama"></strong><br>
       <small>Kamar <strong id="coKamar"></strong></small>
     </div>
-
     <label>Tanggal Check-out</label>
     <input type="date" id="tanggalCheckout">
-
     <label>Token PLN Awal</label>
     <div style="background:#e0f2fe;padding:14px;border-radius:12px;text-align:center;font-size:18px;font-weight:bold;color:#0369a1">
       <span id="tokenAwalDisplay">0</span>
     </div>
-
     <label>Token PLN Akhir</label>
-    <input type="number" id="tokenAkhir" placeholder="Masukkan angka terakhir">
-
+    <input type="number" id="tokenAkhir" placeholder="Masukkan angka akhir">
     <label>Selisih Token (Otomatis)</label>
     <div style="background:#fef3c7;padding:14px;border-radius:12px;text-align:center;font-size:22px;font-weight:bold;color:#92400e">
       <span id="selisihToken">0</span>
     </div>
-
-    <label>No. Rekening</label>
-    <input type="text" id="noRek" placeholder="1234567890">
-
-    <label>Nama Bank</label>
-    <input type="text" id="namaBank" placeholder="BCA / BRI / MANDIRI">
-
-    <label>Nama Rekening</label>
-    <input type="text" id="namaRekening" placeholder="Nama sesuai di bank">
-
-    <button class="btn" onclick="window.prosesCheckout()" style="margin-top:20px">
-      CHECK-OUT & KIRIM KE WHATSAPP
-    </button>
-    <button class="btn" style="background:#6b7280;margin-top:8px" onclick="document.getElementById('checkoutModal').classList.add('hidden')">
-      Batal
-    </button>
+    <label>No. Rekening</label><input type="text" id="noRek" placeholder="1234567890">
+    <label>Nama Bank</label><input type="text" id="namaBank" placeholder="BCA / BRI / MANDIRI">
+    <label>Nama Rekening</label><input type="text" id="namaRekening">
+    <button class="btn" onclick="window.prosesCheckout()">CHECK-OUT & KIRIM KE WA</button>
+    <button class="btn" style="background:#6b7280;margin-top:8px" onclick="document.getElementById('checkoutModal').classList.add('hidden')">Batal</button>
   </div>
 </div>
 
