@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>KOSTORY Dashboard</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <title>KOSTORY Dashboard v2.5</title>
+  <script type="module" src="script.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
-    body{background:#f0f4f8;color:#1e293b}
+    body{background:#f0f4f8;color:#1e293b;transition:background .3s}
     .hidden{display:none!important}
     #loginScreen,#app{max-width:1200px;margin:20px auto;padding:20px}
     #header{background:linear-gradient(135deg,#1e3a8a,#0ea5e9);color:white;padding:20px 28px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;box-shadow:0 8px 30px rgba(0,0,0,0.15)}
@@ -26,7 +25,7 @@
     .room.mingguan{background:#3b82f6 !important}
     .room.bulanan{background:#ef4444 !important}
     .room.tahunan{background:#1e293b !important;color:white}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:999}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:999;overflow-y:auto}
     .modal-content{background:white;padding:38px;border-radius:20px;width:92%;max-width:480px;box-shadow:0 30px 80px rgba(0,0,0,0.4);max-height:92vh;overflow-y:auto}
     .modal-content h3{text-align:center;margin-bottom:30px;font-size:28px;color:#1e40af;font-weight:800}
     .modal-content label{display:block;margin:20px 0 9px;font-weight:700;color:#1e293b;font-size:15px}
@@ -48,7 +47,11 @@
     #checkoutBox button{margin-top:20px;padding:16px;width:100%;border:none;border-radius:12px;color:white;font-weight:bold;font-size:17px;cursor:pointer}
     #checkoutBox button:first-of-type{background:#dc2626}
     #checkoutBox button:last-of-type{background:#6b7280;margin-top:8px}
-    @media(max-width:640px){.room-grid{grid-template-columns:repeat(4,1fr)}.modal-buttons{grid-template-columns:1fr}.modal-content{padding:28px}}
+    @media(max-width:640px){
+      .room-grid{grid-template-columns:repeat(4,1fr)}
+      .modal-buttons{grid-template-columns:1fr}
+      .modal-content{padding:28px}
+    }
   </style>
 </head>
 <body>
@@ -75,7 +78,7 @@
   <div id="kostList"></div>
 </div>
 
-<!-- MODAL CHECK-IN / UPDATE -->
+<!-- MODAL CHECK-IN / UPDATE (SUDAH DITAMBAH TANGGAL LAHIR) -->
 <div id="modal" class="modal hidden">
   <div class="modal-content">
     <h3 id="modalTitle">Check-in Kamar</h3>
@@ -85,6 +88,9 @@
     
     <label>No. HP / WA (wajib)</label>
     <input type="text" id="hp" placeholder="08xxxxxxxxxx" />
+    
+    <label>Tanggal Lahir (wajib)</label>
+    <input type="date" id="tanggalLahir" />
     
     <label>Jenis Penghuni</label>
     <select id="jenis">
@@ -188,6 +194,5 @@
   </div>
 </div>
 
-<script src="script.js"></script>
 </body>
 </html>
