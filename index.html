@@ -10,11 +10,11 @@
     body{background:#f0f4f8;color:#1e293b}
     .hidden{display:none!important}
     #loginScreen,#app{max-width:1200px;margin:40px auto;padding:20px;text-align:center}
-    #header{background:linear-gradient(135deg,#1e3a8a,#0ea5e9);color:white;padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+    #header{background:linear-gradient(135deg,#1e3a8a,#0ea5e9);color:white;padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;box-shadow:0 8px 30px rgba(0,0,0,0.15)}
     #totalStats{background:#2563eb;color:white;padding:22px;border-radius:16px;font-size:24px;font-weight:bold;margin-bottom:35px}
     .kost-card{background:white;border-radius:18px;padding:25px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,0.1)}
     .room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:18px}
-    .room{background:#22c55e;color:white;padding:18px 10px;border-radius:16px;text-align:center;font-weight:bold;cursor:pointer;transition:.2s}
+    .room{background:#22c55e;color:white;padding:18px 10px;border-radius:16px;text-align:center;font-weight:bold;cursor:pointer;transition:.3s}
     .room:hover{transform:translateY(-6px)}
     .room.kosong{background:#22c55e}
     .room.harian{background:#f59e0b;color:#000}
@@ -35,32 +35,30 @@
     .full{grid-column:1/-1}
     #tagihModal,#checkoutModal{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;justify-content:center;align-items:center;z-index:1000}
     #tagihBox,#checkoutBox{background:white;padding:35px;border-radius:20px;width:90%;max-width:460px}
-    button.main-btn{background:#1d4ed8;color:white;padding:18px;border:none;border-radius:14px;font-size:18px;font-weight:900;cursor:pointer;width:100%;margin-top:20px}
+    .btn{background:#1d4ed8;color:white;padding:16px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;width:100%;margin-top:10px}
   </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
   <h2 style="font-size:36px;color:#1e40af;margin-bottom:40px">KOSTORY Dashboard</h2>
   <div style="max-width:440px;margin:auto;background:white;padding:40px;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.15)">
     <input type="text" id="username" placeholder="Username" autocomplete="off" style="width:100%;padding:18px;margin:12px 0;border-radius:14px;border:2px solid #ddd;font-size:18px"><br>
     <input type="password" id="password" placeholder="Password" style="width:100%;padding:18px;margin:12px 0;border-radius:14px;border:2px solid #ddd;font-size:18px"><br>
-    <button class="main-btn" onclick="window.login()">MASUK DASHBOARD</button>
+    <button class="btn" onclick="window.login()">MASUK DASHBOARD</button>
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="app" class="hidden">
   <div id="header">
     <h1>KOSTORY Dashboard</h1>
-    <button id="logout" onclick="window.logout()">Logout</button>
+    <button class="btn" style="padding:12px 28px;font-size:17px" onclick="window.logout()">Logout</button>
   </div>
   <div id="totalStats">Memuat data...</div>
   <div id="kostList"></div>
 </div>
 
-<!-- MODAL CHECK-IN / UPDATE -->
+<!-- MODAL UTAMA -->
 <div id="modal" class="modal hidden">
   <div class="modal-content">
     <h3 id="modalTitle">Check-in Kamar</h3>
@@ -84,30 +82,30 @@
   </div>
 </div>
 
-<!-- MODAL TAGIH -->
+<!-- TAGIH -->
 <div id="tagihModal" class="hidden">
   <div id="tagihBox">
     <h3>TAGIHAN KOST</h3>
-    <p style="font-size:18px;margin:15px 0"><strong id="tagihNama"></strong></p>
-    <label>Tanggal Berakhir Kost</label><input type="date" id="tagihTanggal">
-    <label>Jumlah Tagihan (Rp)</label><input type="number" id="tagihJumlah" placeholder="1200000">
-    <button class="main-btn" onclick="window.kirimTagihan()">KIRIM VIA WHATSAPP</button>
-    <button onclick="document.getElementById('tagihModal').classList.add('hidden')" style="background:#6b7280;margin-top:8px" class="main-btn">Batal</button>
+    <p><strong id="tagihNama"></strong></p>
+    <label>Tanggal Berakhir</label><input type="date" id="tagihTanggal">
+    <label>Jumlah Tagihan (Rp)</label><input type="number" id="tagihJumlah">
+    <button class="btn" onclick="window.kirimTagihan()">KIRIM VIA WHATSAPP</button>
+    <button class="btn" style="background:#6b7280" onclick="document.getElementById('tagihModal').classList.add('hidden')">Batal</button>
   </div>
 </div>
 
-<!-- MODAL CHECK-OUT -->
+<!-- CHECKOUT -->
 <div id="checkoutModal" class="hidden">
   <div id="checkoutBox">
-    <h3>CHECK-OUT PENGHUNI</h3>
-    <p style="text-align:center;margin-bottom:20px"><strong id="coNama"></strong> - Kamar <strong id="coKamar"></strong></p>
+    <h3>CHECK-OUT</h3>
+    <p><strong id="coNama"></strong> - Kamar <strong id="coKamar"></strong></p>
     <label>Tanggal Check-out</label><input type="date" id="tanggalCheckout">
     <label>Token PLN Akhir</label><input type="number" id="tokenAkhir">
     <label>No Rekening</label><input type="text" id="noRek">
     <label>Nama Bank</label><input type="text" id="namaBank">
     <label>Nama Rekening</label><input type="text" id="namaRekening">
-    <button class="main-btn" onclick="window.prosesCheckout()">CHECK-OUT & SHARE KE WA</button>
-    <button onclick="document.getElementById('checkoutModal').classList.add('hidden')" style="background:#6b7280;margin-top:8px" class="main-btn">BATAL</button>
+    <button class="btn" onclick="window.prosesCheckout()">CHECK-OUT & SHARE</button>
+    <button class="btn" style="background:#6b7280" onclick="document.getElementById('checkoutModal').classList.add('hidden')">Batal</button>
   </div>
 </div>
 
