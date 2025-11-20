@@ -7,58 +7,61 @@
   <script type="module" src="script.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-    body{background:#f0f4f8;color:#1e293b}
+    body{background:#f4f6f9;color:#1e293b}
     .hidden{display:none!important}
-    #loginScreen,#app{max-width:1200px;margin:40px auto;padding:20px;text-align:center}
-    #header{background:linear-gradient(135deg,#1e3a8a,#0ea5e9);color:white;padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;box-shadow:0 8px 30px rgba(0,0,0,0.15)}
-    #totalStats{background:#2563eb;color:white;padding:22px;border-radius:16px;font-size:24px;font-weight:bold;margin-bottom:35px}
-    .kost-card{background:white;border-radius:18px;padding:25px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,0.1)}
-    .room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:18px}
-    .room{background:#22c55e;color:white;padding:18px 10px;border-radius:16px;text-align:center;font-weight:bold;cursor:pointer;transition:.3s}
-    .room:hover{transform:translateY(-6px)}
+    #loginScreen,#app{max-width:1200px;margin:30px auto;padding:20px}
+    #header{background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;box-shadow:0 8px 25px rgba(0,0,0,0.15)}
+    #totalStats{background:#2563eb;color:white;padding:20px;border-radius:16px;font-size:22px;font-weight:bold;text-align:center;margin-bottom:30px}
+    .kost-card{background:white;border-radius:18px;padding:25px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,0.08)}
+    .room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:16px}
+    .room{background:#22c55e;color:white;padding:16px 8px;border-radius:14px;text-align:center;font-weight:bold;cursor:pointer;transition:.3s;font-size:14px}
+    .room:hover{transform:translateY(-5px);box-shadow:0 8px 20px rgba(0,0,0,0.2)}
     .room.kosong{background:#22c55e}
     .room.harian{background:#f59e0b;color:#000}
     .room.mingguan{background:#3b82f6}
     .room.bulanan{background:#ef4444}
     .room.tahunan{background:#1e293b;color:white}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:999}
-    .modal-content{background:white;padding:38px;border-radius:20px;width:92%;max-width:480px;max-height:90vh;overflow-y:auto}
-    .modal-content h3{margin-bottom:25px;font-size:28px;color:#1e40af;text-align:center}
-    .modal-content label{display:block;margin:20px 0 8px;font-weight:700}
-    .modal-content input,.modal-content select,.modal-content textarea{width:100%;padding:16px;border:2px solid #e2e8f0;border-radius:14px;font-size:16px}
-    .modal-buttons{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
-    .modal-buttons button{padding:18px;border:none;border-radius:14px;color:white;font-weight:800;cursor:pointer}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:999;padding:15px}
+    .modal-content{background:white;padding:30px;border-radius:20px;width:95%;max-width:500px;max-height:95vh;overflow-y:auto}
+    .modal-content h3{margin-bottom:20px;font-size:26px;color:#1e40af;text-align:center}
+    .modal-content label{display:block;margin:18px 0 8px;font-weight:700;font-size:15px}
+    .modal-content input,.modal-content select,.modal-content textarea{width:100%;padding:14px;border:2px solid #e2e8f0;border-radius:12px;font-size:16px}
+    .modal-buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:25px}
+    .modal-buttons button{padding:16px;border:none;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:15px}
     .modal-buttons button:nth-child(1){background:#dc2626}
     .modal-buttons button:nth-child(2){background:#16a34a}
-    .modal-buttons button:nth-child(3){background:#ec4899}
+    .modal-buttons button:nth-child(3){background:#d946ef}
     .modal-buttons button:nth-child(4){background:#64748b}
-    .full{grid-column:1/-1}
-    #tagihModal,#checkoutModal{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;justify-content:center;align-items:center;z-index:1000}
-    #tagihBox,#checkoutBox{background:white;padding:35px;border-radius:20px;width:90%;max-width:460px}
-    .btn{background:#1d4ed8;color:white;padding:16px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;width:100%;margin-top:10px}
+    .full{grid-column:1/-1;background:#1d4ed8!important}
+    #tagihModal,#checkoutModal{position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;justify-content:center;align-items:center;z-index:1000;padding:15px}
+    #tagihBox,#checkoutBox{background:white;padding:30px;border-radius:20px;width:95%;max-width:460px}
+    .btn{background:#1d4ed8;color:white;padding:16px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;width:100%;margin-top:12px;font-size:17px}
+    .btn:hover{opacity:0.9}
   </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
 <div id="loginScreen">
-  <h2 style="font-size:36px;color:#1e40af;margin-bottom:40px">KOSTORY Dashboard</h2>
-  <div style="max-width:440px;margin:auto;background:white;padding:40px;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.15)">
+  <h2 style="font-size:36px;color:#1e40af;text-align:center;margin-bottom:40px">KOSTORY Dashboard</h2>
+  <div style="max-width:420px;margin:auto;background:white;padding:40px;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.15)">
     <input type="text" id="username" placeholder="Username" autocomplete="off" style="width:100%;padding:18px;margin:12px 0;border-radius:14px;border:2px solid #ddd;font-size:18px"><br>
     <input type="password" id="password" placeholder="Password" style="width:100%;padding:18px;margin:12px 0;border-radius:14px;border:2px solid #ddd;font-size:18px"><br>
     <button class="btn" onclick="window.login()">MASUK DASHBOARD</button>
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div id="app" class="hidden">
   <div id="header">
     <h1>KOSTORY Dashboard</h1>
-    <button class="btn" style="padding:12px 28px;font-size:17px" onclick="window.logout()">Logout</button>
+    <button class="btn" style="padding:12px 30px;font-size:16px" onclick="window.logout()">Logout</button>
   </div>
-  <div id="totalStats">Memuat data...</div>
+  <div id="totalStats">Sedang memuat data...</div>
   <div id="kostList"></div>
 </div>
 
-<!-- MODAL UTAMA -->
+<!-- MODAL CHECK-IN / UPDATE -->
 <div id="modal" class="modal hidden">
   <div class="modal-content">
     <h3 id="modalTitle">Check-in Kamar</h3>
@@ -77,35 +80,65 @@
     <label>Nama Keluarga</label><input type="text" id="namaKeluarga">
     <label>Status Keluarga</label><select id="statusKeluarga"><option>Orangtua</option><option>Anak</option><option>Kakak/Adik</option><option>Lainnya</option></select>
     <label>No Telp Keluarga</label><input type="text" id="telpKeluarga">
-    <label>Catatan</label><textarea id="catatan"></textarea>
+    <label>Catatan</label><textarea id="catatan" rows="3"></textarea>
     <div class="modal-buttons"></div>
   </div>
 </div>
 
-<!-- TAGIH -->
+<!-- MODAL TAGIH -->
 <div id="tagihModal" class="hidden">
   <div id="tagihBox">
     <h3>TAGIHAN KOST</h3>
-    <p><strong id="tagihNama"></strong></p>
-    <label>Tanggal Berakhir</label><input type="date" id="tagihTanggal">
-    <label>Jumlah Tagihan (Rp)</label><input type="number" id="tagihJumlah">
+    <p style="font-size:18px;margin:15px 0;text-align:center"><strong id="tagihNama"></strong></p>
+    <label>Tanggal Berakhir Kost</label>
+    <input type="date" id="tagihTanggal">
+    <label>Jumlah Tagihan (Rp)</label>
+    <input type="number" id="tagihJumlah" placeholder="1200000">
     <button class="btn" onclick="window.kirimTagihan()">KIRIM VIA WHATSAPP</button>
     <button class="btn" style="background:#6b7280" onclick="document.getElementById('tagihModal').classList.add('hidden')">Batal</button>
   </div>
 </div>
 
-<!-- CHECKOUT -->
+<!-- MODAL CHECK-OUT – RAPI + MOBILE FRIENDLY + TOKEN OTOMATIS -->
 <div id="checkoutModal" class="hidden">
   <div id="checkoutBox">
-    <h3>CHECK-OUT</h3>
-    <p><strong id="coNama"></strong> - Kamar <strong id="coKamar"></strong></p>
-    <label>Tanggal Check-out</label><input type="date" id="tanggalCheckout">
-    <label>Token PLN Akhir</label><input type="number" id="tokenAkhir">
-    <label>No Rekening</label><input type="text" id="noRek">
-    <label>Nama Bank</label><input type="text" id="namaBank">
-    <label>Nama Rekening</label><input type="text" id="namaRekening">
-    <button class="btn" onclick="window.prosesCheckout()">CHECK-OUT & SHARE</button>
-    <button class="btn" style="background:#6b7280" onclick="document.getElementById('checkoutModal').classList.add('hidden')">Batal</button>
+    <h3 style="margin-bottom:10px;color:#1e40af">CHECK-OUT PENGHUNI</h3>
+    <div style="background:#f0f9ff;padding:15px;border-radius:12px;margin-bottom:20px;text-align:center">
+      <strong style="font-size:18px" id="coNama"></strong><br>
+      <small>Kamar <strong id="coKamar"></strong></small>
+    </div>
+
+    <label>Tanggal Check-out</label>
+    <input type="date" id="tanggalCheckout">
+
+    <label>Token PLN Awal</label>
+    <div style="background:#e0f2fe;padding:14px;border-radius:12px;text-align:center;font-size:18px;font-weight:bold;color:#0369a1">
+      <span id="tokenAwalDisplay">0</span>
+    </div>
+
+    <label>Token PLN Akhir</label>
+    <input type="number" id="tokenAkhir" placeholder="Masukkan angka terakhir">
+
+    <label>Selisih Token (Otomatis)</label>
+    <div style="background:#fef3c7;padding:14px;border-radius:12px;text-align:center;font-size:22px;font-weight:bold;color:#92400e">
+      <span id="selisihToken">0</span>
+    </div>
+
+    <label>No. Rekening</label>
+    <input type="text" id="noRek" placeholder="1234567890">
+
+    <label>Nama Bank</label>
+    <input type="text" id="namaBank" placeholder="BCA / BRI / MANDIRI">
+
+    <label>Nama Rekening</label>
+    <input type="text" id="namaRekening" placeholder="Nama sesuai di bank">
+
+    <button class="btn" onclick="window.prosesCheckout()" style="margin-top:20px">
+      CHECK-OUT & KIRIM KE WHATSAPP
+    </button>
+    <button class="btn" style="background:#6b7280;margin-top:8px" onclick="document.getElementById('checkoutModal').classList.add('hidden')">
+      Batal
+    </button>
   </div>
 </div>
 
