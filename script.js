@@ -56,10 +56,10 @@ function hitungLamaTinggal(masuk, keluar = new Date()) {
   return `${tahun} Tahun ${bulan} Bulan ${hari} Hari`;
 }
 
-// ==================== LOAD DASHBOARD (SUDAH AMAN 100%) ====================
+// ==================== LOAD DASHBOARD ====================
 function loadDashboard() {
   const container = document.getElementById("kostList");
-  container.innerHTML = '<div style="text-align:center;padding:40px;font-size:18px">Sedang memuat data kamar...</div>';
+  container.innerHTML = '<div style="text-align:center;padding:50px">Loading kamar...</div>';
   document.getElementById("totalStats").innerHTML = "Memuat...";
 
   let totalKamar = 0, totalTerisi = 0;
@@ -77,7 +77,7 @@ function loadDashboard() {
         <button onclick="laporKost('${namaKost}')" style="background:#25d366;color:white;padding:10px 20px;border:none;border-radius:10px;font-weight:bold;font-size:15px;cursor:pointer">LAPOR</button>
       </div>
       <div class="stats">Terisi: <span class="occ">0</span> / ${rooms.length}</div>
-      <div class="room-grid" id="grid-${namaKost.replace(/ /g,'')}"></div>`;
+      <div class="room-grid"></div>`;
     container.appendChild(card);
 
     const grid = card.querySelector(".room-grid");
@@ -92,17 +92,13 @@ function loadDashboard() {
       box.onclick = () => openModal(namaKost, room);
       grid.appendChild(box);
 
-      // Real-time listener — INI YANG PALING PENTING!
-      const roomRef = ref(db, `kosts/${namaKost}/${room}`);
-      onValue(roomRef, (snap) => {
-        const data = snap.val();
-        if (data && data.nama) {
+      onValue(ref(db, `kosts/${namaKost}/${room}`), snap => {
+        const d = snap.val();
+        if (d && d.nama) {
           terisi++; totalTerisi++;
-          const cls = data.durasi === "Harian" ? "harian" :
-                     data.durasi === "Mingguan" ? "mingguan" :
-                     data.durasi === "Tahunan" ? "tahunan" : "bulanan";
+          const cls = d.durasi === "Harian" ? "harian" : d.durasi === "Mingguan" ? "mingguan" : d.durasi === "Tahunan" ? "tahunan" : "bulanan";
           box.className = `room ${cls}`;
-          box.innerHTML = `${room}<br><strong>${data.nama}</strong>`;
+          box.innerHTML = `${room}<br><strong>${d.nama}</strong>`;
         } else {
           box.className = "room kosong";
           box.innerHTML = `${room}<br><small>KOSONG</small>`;
@@ -112,19 +108,11 @@ function loadDashboard() {
       });
     });
   });
-
-  // Hapus loading setelah 10 detik kalau masih kosong
-  setTimeout(() => {
-    if (totalTerisi === 0 && container.innerHTML.includes("KOSONG")) {
-      container.innerHTML += '<div style="text-align:center;color:orange;margin:20px">Masih kosong semua? Coba refresh (Ctrl+F5)</div>';
-    }
-  }, 10000);
 }
 
-// ==================== MODAL ====================
+// ==================== MODAL CHECK-IN / UPDATE (SUDAH AKTIF) ====================
 window.openModal = async function(kost, room) {
-  currentKost = kost;
-  currentRoom = room;
+  currentKost = kost; currentRoom = room;
   document.getElementById("modalTitle").textContent = `${kost} - ${room}`;
   const snap = await get(ref(db, `kosts/${kost}/${room}`));
   currentData = snap.val() || {};
@@ -136,20 +124,79 @@ window.openModal = async function(kost, room) {
   });
 
   const btn = document.querySelector(".modal-buttons");
-  btn.innerHTML = currentData.nama ? `
-    <button onclick="openCheckoutModal()">CHECK OUT</button>
-    <button onclick="alert('Fitur update menyusul')">UPDATE & SHARE</button>
-    <button onclick="alert('Fitur tagih menyusul')">TAGIH</button>
-    <button onclick="closeModal()">BATAL</button>` :
-    `<button class="full" onclick="alert('Fitur check-in menyusul')">CHECK IN & SHARE</button>
-     <button onclick="closeModal()">BATAL</button>`;
-
+  if (currentData.nama) {
+    btn.innerHTML = `
+      <button onclick="openCheckoutModal()">CHECK OUT</button>
+      <button onclick="updateDanShare()">UPDATE & SHARE</button>
+      <button onclick="openTagihModal()">TAGIH</button>
+      <button onclick="closeModal()">BATAL</button>`;
+  } else {
+    btn.innerHTML = `
+      <button class="full" onclick="checkInDanShare()">CHECK IN & SHARE</button>
+      <button onclick="closeModal()">BATAL</button>`;
+  }
   document.getElementById("modal").classList.remove("hidden");
 };
 
 window.closeModal = () => document.getElementById("modal").classList.add("hidden");
 
-// ==================== CHECK-OUT ====================
+// ==================== FITUR UPDATE & SHARE (SUDAH AKTIF) ====================
+window.updateDanShare = window.checkInDanShare = function() {
+  const data = {
+    nama: document.getElementById("nama").value.trim(),
+    hp: document.getElementById("hp").value.trim(),
+    tanggalLahir: document.getElementById("tanggalLahir").value,
+    jenis: document.getElementById("jenis").value,
+    durasi: document.getElementById("durasi").value,
+    kendaraan: document.getElementById("kendaraan").value,
+    alamatktp: document.getElementById("alamatktp").value.trim(),
+    perusahaan: document.getElementById("perusahaan").value.trim(),
+    harga: Number(document.getElementById("harga").value),
+    deposit: Number(document.getElementById("deposit").value) || 0,
+    tanggalMasuk: document.getElementById("tanggal").value,
+    tokenAwal: Number(document.getElementById("tokenAwal").value),
+    namaKeluarga: document.getElementById("namaKeluarga").value.trim(),
+    statusKeluarga: document.getElementById("statusKeluarga").value,
+    telpKeluarga: document.getElementById("telpKeluarga").value.trim(),
+    catatan: document.getElementById("catatan").value.trim()
+  };
+
+  if (!data.nama || !data.hp || !data.harga || !data.tokenAwal) return alert("Nama, HP, Harga, Token Awal wajib diisi!");
+
+  set(ref(db, `kosts/${currentKost}/${currentRoom}`), data).then(() => {
+    closeModal();
+    alert(currentData.nama ? "Data berhasil diupdate!" : "Check-in berhasil!");
+    const pesan = currentData.nama ?
+      `*UPDATE DATA PENGHUNI*\n${currentKost} - ${currentRoom}\n${data.nama} | ${data.hp} | ${data.durasi} | Rp ${data.harga.toLocaleString()}` :
+      `*CHECK-IN BARU*\n${currentKost} - ${currentRoom}\n${data.nama} | ${data.hp} | ${data.durasi} | Rp ${data.harga.toLocaleString()}\nToken Awal: ${data.tokenAwal}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+  });
+};
+
+// ==================== FITUR TAGIH (SUDAH AKTIF) ====================
+window.openTagihModal = function() {
+  document.getElementById("tagihNama").textContent = currentData.nama;
+  document.getElementById("tagihJumlah").value = currentData.harga || "";
+  const next = new Date();
+  next.setMonth(next.getMonth() + 1);
+  document.getElementById("tagihTanggal").value = next.toISOString().split("T")[0];
+  document.getElementById("tagihModal").classList.remove("hidden");
+};
+
+window.kirimTagihan = function() {
+  const tgl = document.getElementById("tagihTanggal").value;
+  const jumlah = document.getElementById("tagihJumlah").value;
+  if (!tgl || !jumlah) return alert("Isi tanggal & jumlah dulu!");
+
+  const hariLagi = Math.ceil((new Date(tgl) - new Date()) / 86400000);
+  const pesan = `Halo kak ${currentData.nama}!\n\nKost kakak akan jatuh tempo tanggal *${new Date(tgl).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}* (${hariLagi} hari lagi)\n\nMohon melunasi sebesar *Rp ${Number(jumlah).toLocaleString()}* maksimal 1 hari sebelum jatuh tempo ya kak.\n\nAbaikan jika sudah transfer. Terima kasih!\nSalam, Kostory Team`;
+
+  const hp = currentData.hp.replace(/^0/, "62");
+  window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`, "_blank");
+  document.getElementById("tagihModal").classList.add("hidden");
+};
+
+// ==================== CHECK-OUT (SUDAH JALAN) ====================
 window.openCheckoutModal = function() {
   document.getElementById("coNama").textContent = currentData.nama;
   document.getElementById("coKamar").textContent = currentRoom;
@@ -173,19 +220,19 @@ window.prosesCheckout = function() {
   const selisih = akhir - awal;
   const rek = document.getElementById("noRek").value.trim();
   const bank = document.getElementById("namaBank").value.trim().toUpperCase();
-  const nama = document.getElementById("namaRekening").value.trim();
+  const namaRek = document.getElementById("namaRekening").value.trim();
 
-  if (!tgl || akhir === 0 || !rek || !bank || !nama) return alert("Isi semua field bro!");
+  if (!tgl || !akhir || !rek || !bank || !namaRek) return alert("Isi semua field!");
 
   remove(ref(db, `kosts/${currentKost}/${currentRoom}`)).then(() => {
     document.getElementById("checkoutModal").classList.add("hidden");
     alert("Check-out berhasil! Kamar sudah kosong.");
-    const pesan = `*Check-out ${currentKost}*\nKamar ${currentRoom} - ${currentData.nama}\nLama tinggal: ${hitungLamaTinggal(currentData.tanggalMasuk, tgl)}\nToken PLN: ${awal} → ${akhir} (selisih ${selisih})\nPengembalian: ${bank} ${rek} a.n ${nama}`;
+    const pesan = `*CHECK-OUT*\n${currentKost} - ${currentRoom}\n${currentData.nama}\nLama tinggal: ${hitungLamaTinggal(currentData.tanggalMasuk, tgl)}\nToken PLN: ${awal} → ${akhir} (selisih ${selisih})\nPengembalian deposit ke: ${bank} ${rek} a.n ${namaRek}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
   });
 };
 
-// ==================== LAPORAN HARIAN (BUKA WA LANGSUNG) ====================
+// ==================== LAPORAN HARIAN (SUDAH JALAN) ====================
 window.laporKost = async function(namaKost) {
   const rooms = kosts[namaKost];
   const today = new Date();
