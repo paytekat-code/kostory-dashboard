@@ -59,8 +59,8 @@ function hitungLamaTinggal(masuk, keluar = new Date()) {
 // ==================== LOAD DASHBOARD ====================
 function loadDashboard() {
   const container = document.getElementById("kostList");
-  container.innerHTML = '<div style="text-align:center;padding:50px">Loading kamar...</div>';
-  document.getElementById("totalStats").innerHTML = "Memuat...";
+  container.innerHTML = '<div style="text-align:center;padding:60px;color:#666">Loading kamar...</div>';
+  document.getElementById("totalStats").innerHTML = "Memuat data...";
 
   let totalKamar = 0, totalTerisi = 0;
 
@@ -110,7 +110,7 @@ function loadDashboard() {
   });
 }
 
-// ==================== MODAL CHECK-IN / UPDATE (SUDAH AKTIF) ====================
+// ==================== MODAL ====================
 window.openModal = async function(kost, room) {
   currentKost = kost; currentRoom = room;
   document.getElementById("modalTitle").textContent = `${kost} - ${room}`;
@@ -132,7 +132,7 @@ window.openModal = async function(kost, room) {
       <button onclick="closeModal()">BATAL</button>`;
   } else {
     btn.innerHTML = `
-      <button class="full" onclick="checkInDanShare()">CHECK IN & SHARE</button>
+      <button class="full" onclick="updateDanShare()">CHECK IN & SHARE</button>
       <button onclick="closeModal()">BATAL</button>`;
   }
   document.getElementById("modal").classList.remove("hidden");
@@ -140,7 +140,7 @@ window.openModal = async function(kost, room) {
 
 window.closeModal = () => document.getElementById("modal").classList.add("hidden");
 
-// ==================== FITUR UPDATE & SHARE (SUDAH AKTIF) ====================
+// ==================== CHECK-IN & UPDATE → KIRIM DATA LENGKAP KE WA ====================
 window.updateDanShare = window.checkInDanShare = function() {
   const data = {
     nama: document.getElementById("nama").value.trim(),
@@ -161,24 +161,46 @@ window.updateDanShare = window.checkInDanShare = function() {
     catatan: document.getElementById("catatan").value.trim()
   };
 
-  if (!data.nama || !data.hp || !data.harga || !data.tokenAwal) return alert("Nama, HP, Harga, Token Awal wajib diisi!");
+  if (!data.nama || !data.hp || !data.tanggalMasuk || !data.harga || data.tokenAwal === undefined) {
+    return alert("Nama, HP, Tanggal Masuk, Harga, dan Token Awal WAJIB diisi!");
+  }
 
   set(ref(db, `kosts/${currentKost}/${currentRoom}`), data).then(() => {
     closeModal();
     alert(currentData.nama ? "Data berhasil diupdate!" : "Check-in berhasil!");
-    const pesan = currentData.nama ?
-      `*UPDATE DATA PENGHUNI*\n${currentKost} - ${currentRoom}\n${data.nama} | ${data.hp} | ${data.durasi} | Rp ${data.harga.toLocaleString()}` :
-      `*CHECK-IN BARU*\n${currentKost} - ${currentRoom}\n${data.nama} | ${data.hp} | ${data.durasi} | Rp ${data.harga.toLocaleString()}\nToken Awal: ${data.tokenAwal}`;
+
+    const tglMasuk = new Date(data.tanggalMasuk).toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"});
+    const tglLahir = data.tanggalLahir ? new Date(data.tanggalLahir).toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"}) : "-";
+
+    const pesan = (currentData.nama ? `*UPDATE DATA PENGHUNI*` : `*CHECK-IN PENGHUNI BARU*`) +
+      `\n\n*${currentKost} - Kamar ${currentRoom}*\n\n` +
+      `*Nama*: ${data.nama}\n` +
+      `*HP/WA*: ${data.hp}\n` +
+      `*Tanggal Lahir*: ${tglLahir}\n` +
+      `*Jenis*: ${data.jenis}\n` +
+      `*Durasi*: ${data.durasi}\n` +
+      `*Kendaraan*: ${data.kendaraan}\n` +
+      `*Harga per Periode*: Rp ${data.harga.toLocaleString()}\n` +
+      `*Deposit*: Rp ${data.deposit.toLocaleString()}\n` +
+      `*Tanggal Masuk*: ${tglMasuk}\n` +
+      `*Token PLN Awal*: ${data.tokenAwal}\n` +
+      `*Alamat KTP*: ${data.alamatktp || "-"}\n` +
+      `*Perusahaan/Kampus*: ${data.perusahaan || "-"}\n` +
+      `*Nama Keluarga*: ${data.namaKeluarga || "-"}\n` +
+      `*Status Keluarga*: ${data.statusKeluarga}\n` +
+      `*Telp Keluarga*: ${data.telpKeluarga || "-"}\n` +
+      `*Catatan*: ${data.catatan || "Tidak ada"}\n\n` +
+      `Terima kasih! Team Kostory`;
+
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
-  });
+  }).catch(err => alert("Gagal simpan: " + err.message));
 };
 
-// ==================== FITUR TAGIH (SUDAH AKTIF) ====================
+// ==================== TAGIH ====================
 window.openTagihModal = function() {
   document.getElementById("tagihNama").textContent = currentData.nama;
   document.getElementById("tagihJumlah").value = currentData.harga || "";
-  const next = new Date();
-  next.setMonth(next.getMonth() + 1);
+  const next = new Date(); next.setMonth(next.getMonth() + 1);
   document.getElementById("tagihTanggal").value = next.toISOString().split("T")[0];
   document.getElementById("tagihModal").classList.remove("hidden");
 };
@@ -186,17 +208,17 @@ window.openTagihModal = function() {
 window.kirimTagihan = function() {
   const tgl = document.getElementById("tagihTanggal").value;
   const jumlah = document.getElementById("tagihJumlah").value;
-  if (!tgl || !jumlah) return alert("Isi tanggal & jumlah dulu!");
+  if (!tgl || !jumlah) return alert("Isi tanggal & jumlah!");
 
   const hariLagi = Math.ceil((new Date(tgl) - new Date()) / 86400000);
-  const pesan = `Halo kak ${currentData.nama}!\n\nKost kakak akan jatuh tempo tanggal *${new Date(tgl).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}* (${hariLagi} hari lagi)\n\nMohon melunasi sebesar *Rp ${Number(jumlah).toLocaleString()}* maksimal 1 hari sebelum jatuh tempo ya kak.\n\nAbaikan jika sudah transfer. Terima kasih!\nSalam, Kostory Team`;
+  const pesan = `Halo kak ${currentData.nama}!\n\nTagihan kost jatuh tempo tanggal *${new Date(tgl).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}* (${hariLagi} hari lagi)\n\nMohon transfer sebesar *Rp ${Number(jumlah).toLocaleString()}*\n\nTerima kasih kak!`;
 
   const hp = currentData.hp.replace(/^0/, "62");
   window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesan)}`, "_blank");
   document.getElementById("tagihModal").classList.add("hidden");
 };
 
-// ==================== CHECK-OUT (SUDAH JALAN) ====================
+// ==================== CHECK-OUT ====================
 window.openCheckoutModal = function() {
   document.getElementById("coNama").textContent = currentData.nama;
   document.getElementById("coKamar").textContent = currentRoom;
@@ -226,13 +248,13 @@ window.prosesCheckout = function() {
 
   remove(ref(db, `kosts/${currentKost}/${currentRoom}`)).then(() => {
     document.getElementById("checkoutModal").classList.add("hidden");
-    alert("Check-out berhasil! Kamar sudah kosong.");
-    const pesan = `*CHECK-OUT*\n${currentKost} - ${currentRoom}\n${currentData.nama}\nLama tinggal: ${hitungLamaTinggal(currentData.tanggalMasuk, tgl)}\nToken PLN: ${awal} → ${akhir} (selisih ${selisih})\nPengembalian deposit ke: ${bank} ${rek} a.n ${namaRek}`;
+    alert("Check-out berhasil!");
+    const pesan = `*CHECK-OUT*\n${currentKost} - ${currentRoom}\n${currentData.nama}\nLama tinggal: ${hitungLamaTinggal(currentData.tanggalMasuk, tgl)}\nToken PLN: ${awal} → ${akhir} (selisih ${selisih})\nPengembalian ke: ${bank} ${rek} a.n ${namaRek}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
   });
 };
 
-// ==================== LAPORAN HARIAN (SUDAH JALAN) ====================
+// ==================== LAPORAN HARIAN ====================
 window.laporKost = async function(namaKost) {
   const rooms = kosts[namaKost];
   const today = new Date();
@@ -267,8 +289,8 @@ window.laporKost = async function(namaKost) {
   if (!penghuniList.length) pesan += "Semua kamar kosong hari ini\n";
 
   pesan += `\n*Kendaraan :*\nMobil: ${mobilList.length} -> ${mobilList.join(", ") || "-"}\nMotor: ${motorList.length} -> ${motorList.join(", ") || "-"}\n\n`;
-  pesan += `*Check-in Bulan ini* : ${checkInBulanIni.length} orang\n${checkInBulanIni.length ? checkInBulanIni.join("\n") : "Belum ada check-in bulan ini"}\n\n`;
-  pesan += `*Check-out Bulan ini* : 0 orang\nBelum ada check-out bulan ini\n\nTerima kasih Team Kostory!`;
+  pesan += `*Check-in Bulan ini* : ${checkInBulanIni.length} orang\n${checkInBulanIni.length ? checkInBulanIni.join("\n") : "Belum ada"}\n\n`;
+  pesan += `*Check-out Bulan ini* : 0 orang\nBelum ada\n\nTerima kasih Team Kostory!`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
