@@ -128,7 +128,7 @@ window.laporKost = async function(namaKost) {
     text += `\nTerima kasih Team Kostory!`;
 
     // GANTI NOMOR INI JADI NOMOR GRUP WA KAMU
-    const nomorGrupWA = "6281234567890"; // UBAH INI BRO!
+    const nomorGrupWA = "6281383210009"; // UBAH INI BRO!
 
     const url = `https://wa.me/${nomorGrupWA}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
