@@ -1,6 +1,3 @@
-// script.js – VERSI FINAL 100% JALAN (Tagih + Checkout + Semua Fitur)
-// Tanggal: 20 November 2025
-
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
 import { getDatabase, ref, onValue, set, remove, get } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js';
 
@@ -17,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const kosts = { /* sama seperti sebelumnya */ 
+const kosts = {
   "Kostory Mekar": ["101","102","103","105","106","107","108","201","202","203","205","206","207","208"],
   "Kostory Satria": ["101","102","103","105","106","107","108","109","201","202","203","205","206","207","208","209","210"],
   "Kostory Mitra": ["101","102","103","105","106","107","108","109","110","112","201","202","203","205","206","207"],
@@ -31,7 +28,7 @@ const passwordDb = { "admin":"kostory123","mekar":"mekar123","satria":"satria123
 
 let currentUser=null, allowedKosts=[], currentKost=null, currentRoom=null, currentData=null;
 
-// ==================== SEMUA FUNGSI HARUS KE WINDOW ====================
+// ==================== LOGIN & LOGOUT ====================
 window.login = function() {
   const user = document.getElementById("username").value.trim().toLowerCase();
   const pass = document.getElementById("password").value;
@@ -45,13 +42,12 @@ window.login = function() {
 };
 
 window.logout = function() {
-  currentUser = null; allowedKosts = [];
+  currentUser = null;
   document.getElementById("app").classList.add("hidden");
   document.getElementById("loginScreen").classList.remove("hidden");
-  document.getElementById("username").value = "";
-  document.getElementById("password").value = "";
 };
 
+// ==================== HITUNG LAMA TINGGAL ====================
 function hitungLamaTinggal(checkin, checkout = new Date()) {
   const masuk = new Date(checkin);
   const keluar = new Date(checkout);
@@ -61,6 +57,7 @@ function hitungLamaTinggal(checkin, checkout = new Date()) {
   return `${tahun} Tahun ${bulan} Bulan ${hari} Hari`;
 }
 
+// ==================== LOAD DASHBOARD ====================
 function loadDashboard() {
   const kostList = document.getElementById("kostList"); kostList.innerHTML = "";
   document.getElementById("totalStats").innerHTML = "Memuat data...";
@@ -72,8 +69,7 @@ function loadDashboard() {
     const rooms = kosts[kostName]; totalRooms += rooms.length;
 
     const card = document.createElement("div"); card.className = "kost-card";
-    card.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <h3>${kostName}</h3>
         <button onclick="laporKost('${kostName}')" style="background:#25d366;color:white;padding:8px 15px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">LAPOR</button>
       </div>
@@ -118,8 +114,8 @@ window.openModal = async function(kost, room) {
   const snap = await get(ref(db, `kosts/${kost}/${room}`));
   currentData = snap.val() || {};
 
-  // isi form
-  ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","alamatktp","perusahaan","harga","deposit","tanggal","tokenAwal","namaKeluarga","statusKeluarga","telpKeluarga","catatan"].forEach(id => {
+  const fields = ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","alamatktp","perusahaan","harga","deposit","tanggal","tokenAwal","namaKeluarga","statusKeluarga","telpKeluarga","catatan"];
+  fields.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = currentData[id] || (id==="tanggal" ? new Date().toISOString().split("T")[0] : "");
   });
@@ -132,9 +128,8 @@ window.openModal = async function(kost, room) {
       <button onclick="window.openTagih()">TAGIH</button>
       <button onclick="window.closeModal()">BATAL</button>`;
   } else {
-    btn.innerHTML = `
-      <button class="full" onclick="window.saveAndAskShare()">CHECK IN & SHARE</button>
-      <button onclick="window.closeModal()">BATAL</button>`;
+    btn.innerHTML = `<button class="full" onclick="window.saveAndAskShare()">CHECK IN & SHARE</button>
+                     <button onclick="window.closeModal()">BATAL</button>`;
   }
   document.getElementById("modal").classList.remove("hidden");
 };
@@ -176,12 +171,11 @@ window.sharePenghuni = function(d) {
   window.open(`https://wa.me/?text=${encodeURIComponent(pesan)}`,"_blank");
 };
 
-// ==================== TOMBOL TAGIH – SEKARANG JALAN! ====================
+// ==================== TAGIH – 100% JALAN ====================
 window.openTagih = function() {
   document.getElementById("tagihNama").textContent = currentData.nama;
   document.getElementById("tagihJumlah").value = currentData.harga || "";
-  const next = new Date();
-  next.setMonth(next.getMonth() + 1);
+  const next = new Date(); next.setMonth(next.getMonth() + 1);
   document.getElementById("tagihTanggal").value = next.toISOString().split("T")[0];
   document.getElementById("tagihModal").classList.remove("hidden");
 };
@@ -202,7 +196,7 @@ window.kirimTagihan = function() {
   document.getElementById("tagihModal").classList.add("hidden");
 };
 
-// ==================== TOMBOL CHECK-OUT – SEKARANG JALAN 100%! ====================
+// ==================== CHECK-OUT – 100% JALAN ====================
 window.openCheckoutModal = function() {
   document.getElementById("coNama").textContent = currentData.nama;
   document.getElementById("coKamar").textContent = currentRoom;
@@ -227,7 +221,7 @@ window.prosesCheckout = function() {
 
   remove(ref(db, `kosts/${currentKost}/${currentRoom}`)).then(() => {
     document.getElementById("checkoutModal").classList.add("hidden");
-    alert("Check-out berhasil! Kamar sudah dikosongkan.");
+    alert("Check-out berhasil! Kamar sudah kosong.");
 
     const pesan = `*Informasi Check-out*\n\n` +
       `${currentKost}\n` +
@@ -247,13 +241,11 @@ window.prosesCheckout = function() {
   });
 };
 
-// ==================== LAPOR KOST HARIAN (sudah lengkap seperti request sebelumnya) ====================
+// ==================== LAPOR KOST HARIAN ====================
 window.laporKost = async function(kostName) {
   const snapshot = await get(ref(db, `kosts/${kostName}`));
   const data = snapshot.val() || {};
   const today = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-  const thisMonth = new Date().getMonth();
-  const thisYear = new Date().getFullYear();
 
   const penghuni = [], kosong = [], mobil = [], motor = [], checkinBulanIni = [];
 
@@ -265,29 +257,23 @@ window.laporKost = async function(kostName) {
       penghuni.push({room, ...d, lama: hitungLamaTinggal(d.tanggalMasuk)});
       if (d.kendaraan==="Mobil") mobil.push(d.nama);
       if (d.kendaraan==="Motor") motor.push(d.nama);
-      if (masuk.getMonth()===thisMonth && masuk.getFullYear()===thisYear) checkinBulanIni.push({room, nama:d.nama, tanggal:d.tanggalMasuk});
+      if (masuk.getMonth()===new Date().getMonth() && masuk.getFullYear()===new Date().getFullYear())
+        checkinBulanIni.push({room, nama:d.nama, tanggal:d.tanggalMasuk});
     }
   });
 
   penghuni.sort((a,b) => new Date(a.tanggalMasuk) - new Date(b.tanggalMasuk));
-
   const terisi = penghuni.length;
   const total = kosts[kostName].length;
   const okupasi = Math.round((terisi/total)*100);
 
   let pesan = `*Laporan Kost perhari ini*\n${today}\n\n*${kostName}*\nOkupasi = ${okupasi}% (${terisi}/${total})\nKamar Kosong: ${kosong.length} → ${kosong.join(", ")||"Tidak ada"}\n\n*Daftar Penghuni:*\n`;
-  penghuni.forEach((p,i) => {
-    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${new Date(p.tanggalMasuk).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"})} | ${p.lama}\n`;
-  });
-  pesan += `\n*Kendaraan:* Mobil ${mobil.length} → ${mobil.join(", ")||"Tidak ada"} | Motor ${motor.length} → ${motor.join(", ")||"Tidak ada"}\n\n`;
-  pesan += `*Check-in bulan ini:* ${checkinBulanIni.length} orang\n`;
-  checkinBulanIni.forEach((c,i) => pesan += `${i+1}. ${c.room} | ${c.nama} | ${new Date(c.tanggal).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}\n`);
-  pesan += `\nTerima kasih Kostorian!`;
-
+  penghuni.forEach((p,i) => pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${new Date(p.tanggalMasuk).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"})} | ${p.lama}\n`);
+  pesan += `\n*Kendaraan:* Mobil ${mobil.length} | Motor ${motor.length}\n\n*Check-in bulan ini:* ${checkinBulanIni.length} orang\n`;
   window.open(`https://wa.me/?text=${encodeURIComponent(pesan)}`,"_blank");
 };
 
-// Load otomatis saat halaman ready
+// ==================== INIT ====================
 document.addEventListener("DOMContentLoaded", () => {
   if (currentUser) loadDashboard();
 });
