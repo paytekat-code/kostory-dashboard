@@ -375,7 +375,12 @@ window.prosesCheckout = function() {
     });
   });
 };
-
+// PERBAIKAN MINOR — TOMBOL KEMBALI & LIST CHECK-OUT
+function backToDashboard() {
+  document.getElementById("penghuniListPage").classList.add("hidden");
+  document.getElementById("checkoutListPage").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+}
 document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("kostoryUser");
   if (saved && passwordDb[saved.toLowerCase()]) {
