@@ -119,7 +119,6 @@ window.openModal = async function(kost, room, fromCheckout = false) {
   });
   document.getElementById("statusPenghuni").value = currentData.statusPenghuni || "staying";
 
-  // Sembunyikan token akhir & selisih kalau bukan checkout
   ["tokenAkhirCheckout", "selisihToken"].forEach(id => {
     const label = document.querySelector(`label[for="${id}"]`);
     if (label && label.parentElement) label.parentElement.style.display = fromCheckout ? "block" : "none";
@@ -222,7 +221,7 @@ window.shareFullData = function() {
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// ==================== LAPOR HARIAN — VERSI TERBARU SESUAI PERMINTAAN ====================
+// ==================== LAPOR HARIAN — FINAL ====================
 window.laporKost = async function(namaKost) {
   const rooms = kosts[namaKost];
   const today = new Date();
@@ -244,7 +243,7 @@ window.laporKost = async function(namaKost) {
 
   let daftar = "";
   penghuniList.forEach((p, i) => {
-    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk || today)}\n`;
+    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(d.tanggalMasuk || today)}\n`;
   });
 
   const pesan = `*LAPORAN HARIAN*\n${formatDate(today)}\n\n` +
@@ -260,7 +259,7 @@ window.laporKost = async function(namaKost) {
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// ==================== FITUR LAIN (TETAP UTUH) ====================
+// ==================== FITUR LAIN (LENGKAP) ====================
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
@@ -299,6 +298,31 @@ window.showPenghuniList = async function() {
       </div>
     </div>
   `).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
+};
+
+window.showCheckoutList = async function() {
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("checkoutListPage").classList.remove("hidden");
+  const bulanIni = [], sebelumnya = [];
+  const now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const snap = await db.ref("checkout").once("value");
+  const all = snap.val() || {};
+
+  Object.keys(all).forEach(kost => {
+    Object.keys(all[kost] || {}).forEach(room => {
+      const d = all[kost][room];
+      if (d && d.tanggalCheckout) {
+        const item = {kost, room, ...d, coDate: new Date(d.tanggalCheckout)};
+        (item.coDate.getMonth() === thisMonth && item.coDate.getFullYear() === thisYear ? bulanIni : sebelumnya).push(item);
+      }
+    });
+  });
+
+  bulanIni.sort((a,b) => b.coDate - a.coDate);
+  sebelumnya.sort((a,b) => b.coDate - a.coDate);
+
+  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)"><strong>${i+1}. ${d.nama}</strong><br><small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small></div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada</p>";
+  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map(d => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)"><strong>${d.nama}</strong><br><small>${formatDate(d.tanggalCheckout)}</small></div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada</p>";
 };
 
 window.bukaTagih = function(kost, room, nama, hp) {
