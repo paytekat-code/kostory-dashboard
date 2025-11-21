@@ -119,7 +119,7 @@ function loadDashboard() {
   });
 }
 
-// ==================== MODAL CHECK-IN / UPDATE ====================
+// ==================== MODAL CHECK-IN / UPDATE / CHECK-OUT (SUDAH AKTIF UPDATE & SHARE UNTUK CHECK-OUT) ====================
 window.openModal = async function(kost, room, fromCheckout = false) {
   currentKost = kost; currentRoom = room; isCheckoutView = fromCheckout;
   document.getElementById("modalTitle").textContent = fromCheckout ? `Detail Check-Out: ${kost} - ${room}` : `${kost} - ${room}`;
@@ -129,27 +129,38 @@ window.openModal = async function(kost, room, fromCheckout = false) {
   currentData = snap.val() || {};
 
   const fields = ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan"];
-  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = currentData[id] || (id==="tanggal" ? new Date().toISOString().split("T")[0] : ""); });
+  fields.forEach(id => { 
+    const el = document.getElementById(id); 
+    if (el) el.value = currentData[id] || (id==="tanggal" ? new Date().toISOString().split("T")[0] : ""); 
+  });
   document.getElementById("statusPenghuni").value = currentData.statusPenghuni || "staying";
 
   const btn = document.getElementById("modalButtons");
+
   if (fromCheckout) {
-    btn.innerHTML = `<button class="btn-danger full" onclick="closeModal()">TUTUP</button>`;
+    // SEKARANG ADA TOMBOL UPDATE & SHARE UNTUK YANG SUDAH CHECK-OUT
+    btn.innerHTML = `
+      <button class="btn-danger" onclick="closeModal()">Tutup</button>
+      <button class="btn-wa" onclick="shareFullData()">SHARE WA</button>
+      <button class="btn full" onclick="updateDataOnly(true)">UPDATE DATA CHECK-OUT</button>
+    `;
   } else if (currentData.nama) {
-    btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Batal</button>
+    btn.innerHTML = `
+      <button class="btn-danger" onclick="closeModal()">Batal</button>
       <button class="btn-wa" onclick="shareFullData()">SHARE</button>
       <button class="btn-success" onclick="openCheckoutModal()">CHECK-OUT</button>
-      <button class="btn full" onclick="updateDataOnly()">UPDATE DATA</button>`;
+      <button class="btn full" onclick="updateDataOnly()">UPDATE DATA</button>
+    `;
   } else {
     btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Batal</button>
       <button class="btn-success full" onclick="updateDataOnly()">SIMPAN & CHECK-IN</button>`;
   }
+
   document.getElementById("modal").classList.remove("hidden");
 };
 
-window.updateDataOnly = function() { saveData(false); };
-
-function saveData() {
+// UPDATE DATA CHECK-OUT (tambahan baru)
+window.updateDataOnly = function(isFromCheckout = false) {
   const data = {
     nama: document.getElementById("nama").value.trim(),
     hp: document.getElementById("hp").value.trim(),
@@ -170,11 +181,12 @@ function saveData() {
 
   if (!data.nama || !data.hp || !data.tanggalMasuk || !data.harga) return alert("Field wajib harus diisi!");
 
-  db.ref(`kosts/${currentKost}/${currentRoom}`).set(data).then(() => {
-    closeModal(); alert("Data berhasil diperbarui!");
+  const path = isFromCheckout ? `checkout/${currentKost}/${currentRoom}` : `kosts/${currentKost}/${currentRoom}`;
+  db.ref(path).update(data).then(() => {
+    closeModal();
+    alert("Data berhasil diperbarui!");
   });
-}
-
+};
 // ==================== CHECK-OUT (ASLI) ====================
 window.openCheckoutModal = function() {
   document.getElementById("coNama").textContent = currentData.nama;
