@@ -120,6 +120,12 @@
     <label>Deposit (Rp)</label><input type="number" id="deposit">
     <label>Tanggal Check-in</label><input type="date" id="tanggal">
     <label>Token PLN Awal</label><input type="number" id="tokenAwal">
+    <label>Token PLN Akhir (Check-Out)</label>
+<input type="number" id="tokenAkhirCheckout" placeholder="Hanya muncul di detail check-out" oninput="hitungSelisihToken()">
+
+<label>Selisih Token (Otomatis)</label>
+<input type="number" id="selisihToken" readonly style="background:#f0fdf4;font-weight:bold;color:#166534">
+<small id="infoSelisih" style="color:#dc2626;font-weight:bold"></small>
     <label>No. Rekening</label><input type="text" id="noRek">
     <label>Nama Bank</label><input type="text" id="namaBank">
     <label>Nama di Rekening</label><input type="text" id="namaRekening">
