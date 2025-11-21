@@ -44,7 +44,7 @@ function hariKeUlangTahun(tglLahir) {
 }
 function closeModal() { document.querySelectorAll(".modal").forEach(m => m.classList.add("hidden")); }
 
-// ==================== LOGIN & DASHBOARD ====================
+// ==================== LOGIN ====================
 window.login = function() {
   const user = document.getElementById("username").value.trim().toLowerCase();
   const pass = document.getElementById("password").value;
@@ -57,17 +57,18 @@ window.login = function() {
     loadDashboard();
   } else alert("Username/password salah!");
 };
-
+window.logout = function() { localStorage.removeItem("kostoryUser"); location.reload(); };
 function backToDashboard() {
   document.getElementById("checkoutListPage").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
 }
 
+// ==================== DASHBOARD ====================
 function loadDashboard() {
   const container = document.getElementById("kostList");
   container.innerHTML = "<div style='text-align:center;padding:80px;color:#666'>Loading kost...</div>";
-  document.getElementById("totalStats").innerHTML = "Memuat...";
+  document.getElementById("totalStats").innerHTML = "Memuat data...";
   let totalKamar = 0, totalTerisi = 0;
 
   Object.keys(kosts).forEach(namaKost => {
@@ -101,7 +102,7 @@ function loadDashboard() {
           box.innerHTML = room + "<br><small>KOSONG</small>";
         }
         occ.textContent = terisi;
-        document.getElementById("totalStats").innerHTML = `<strong>TOTAL: ${totalTerisi} terisi / ${totalKamar kamar → ${totalKamar-totalTerisi} KOSONG</strong>`;
+        document.getElementById("totalStats").innerHTML = `<strong>TOTAL: ${totalTerisi} terisi / ${totalKamar} kamar → ${totalKamar-totalTerisi} KOSONG</strong>`;
       });
     });
   });
@@ -116,35 +117,36 @@ window.openModal = async function(kost, room, fromCheckout = false) {
   const snap = await db.ref(path).once("value");
   currentData = snap.val() || {};
 
-  // Isi field biasa
+  // Isi semua field
   ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan"].forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.value = currentData[id] || (id==="tanggal" ? new Date().toISOString().split("T")[0] : "");
+    if (el) el.value = currentData[id] || (id === "tanggal" ? new Date().toISOString().split("T")[0] : "");
   });
   document.getElementById("statusPenghuni").value = currentData.statusPenghuni || "staying";
 
-  // Sembunyikan field token akhir & selisih kalau bukan dari check-out
-  const tokenAkhirField = document.querySelector('label[for="tokenAkhirCheckout"]')?.parentElement;
-  const selisihField = document.querySelector('label[for="selisihToken"]')?.parentElement;
-  const infoSelisih = document.getElementById("infoSelisih");
-
-  if (tokenAkhirField) tokenAkhirField.style.display = fromCheckout ? "" : "none";
-  if (selisihField) selisihField.style.display = fromCheckout ? "" : "none";
-  if (infoSelisih) infoSelisih.style.display = fromCheckout ? "" : "none";
+  // Sembunyikan field token akhir & selisih kalau bukan check-out
+  const fieldsToHide = ["tokenAkhirCheckout", "selisihToken"];
+  fieldsToHide.forEach(id => {
+    const label = document.querySelector(`label[for="${id}"]`);
+    if (label && label.parentElement) {
+      label.parentElement.style.display = fromCheckout ? "block" : "none";
+    }
+  });
+  document.getElementById("infoSelisih").style.display = fromCheckout ? "block" : "none";
 
   if (fromCheckout) {
     document.getElementById("tokenAkhirCheckout").value = currentData.tokenAkhir || "";
     hitungSelisihToken();
   }
 
-  // Button
+  // Button sesuai kondisi
   const btn = document.getElementById("modalButtons");
   if (fromCheckout) {
     btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Tutup</button>
       <button class="btn-wa" onclick="shareFullData()">SHARE WA</button>
       <button class="btn full" onclick="updateDataOnly(true)">UPDATE</button>`;
   } else if (currentData.nama) {
-    btn.innerHTML =`<button class="btn-danger" onclick="closeModal()">Batal</button>
+    btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Batal</button>
       <button class="btn-wa" onclick="shareFullData()">SHARE</button>
       <button class="btn-success" onclick="openCheckoutModal()">CHECK-OUT</button>
       <button class="btn full" onclick="updateDataOnly()">UPDATE</button>`;
@@ -161,10 +163,9 @@ window.hitungSelisihToken = function() {
   const akhir = Number(document.getElementById("tokenAkhirCheckout").value) || 0;
   const selisih = awal - akhir;
   document.getElementById("selisihToken").value = selisih;
-  document.getElementById("infoSelisih").textContent = `Pemakaian: ${selisih} kWh`;
+  document.getElementById("infoSelisih").textContent = `Pemakaian: ${selisih} kWh (bisa minus atau lebih)`;
 };
 
-// ==================== SIMPAN DATA (TANPA POTONG DEPOSIT) ====================
 window.updateDataOnly = function(isFromCheckout = false) {
   const data = {
     nama: document.getElementById("nama").value.trim(),
@@ -184,7 +185,6 @@ window.updateDataOnly = function(isFromCheckout = false) {
     catatan: document.getElementById("catatan").value.trim()
   };
 
-  // Hanya simpan token akhir & selisih tanpa hitung potongan
   if (isFromCheckout) {
     data.tokenAkhir = Number(document.getElementById("tokenAkhirCheckout").value) || 0;
     data.selisihToken = Number(document.getElementById("selisihToken").value);
@@ -199,23 +199,152 @@ window.updateDataOnly = function(isFromCheckout = false) {
   });
 };
 
-// ==================== SEMUA FITUR LAIN TETAP JALAN 100% ====================
-// (List Penghuni, Check-out List, Tagih, Lunas, Lapor Harian Lengkap, Share WA)
-// Semua sudah aku pertahankan persis seperti versi yang pernah jalan bagus di kamu
+// ==================== SEMUA FITUR LAIN (LENGKAP & JALAN!) ====================
+window.showPenghuniList = async function() {
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("penghuniListPage").classList.remove("hidden");
+  const list = document.getElementById("listPenghuni");
+  list.innerHTML = "Memuat...";
 
-// Hanya aku tempel sebagian biar nggak kepotong lagi, tapi semua fungsi UTUH ADA:
-window.showPenghuniList = async function() { /* sama persis seperti versi terbaik sebelumnya */ };
-window.showCheckoutList = async function() { /* utuh */ };
-window.bukaTagih = function(kost, room, nama, hp) { /* utuh */ };
-window.kirimTagihan = function() { /* utuh */ };
-window.bukaLunas = function(kost, room) { /* utuh */ };
-window.catatLunas = function() { /* utuh */ };
-window.laporKost = async function(namaKost) { /* VERSI LENGKAP SEPERTI YANG KAMU SUKA */ };
-window.openCheckoutModal = function() { /* utuh */ };
-window.prosesCheckout = function() { /* utuh */ };
-window.shareFullData = function() { /* utuh */ };
+  const today = new Date();
+  const isTanggal1 = today.getDate() === 1;
+  const all = [];
 
-// AUTO LOGIN
+  for (const kost of allowedKosts) {
+    const snap = await db.ref(`kosts/${kost}`).once("value");
+    const rooms = snap.val() || {};
+    Object.entries(rooms).forEach(([room, d]) => {
+      if (d && d.nama) {
+        if (isTanggal1 && d.lunas) {
+          db.ref(`kosts/${kost}/${room}`).update({lunas:null, tanggalLunas:null, jumlahLunas:null});
+        }
+        all.push({kost, room, ...d, hariUlangTahun: hariKeUlangTahun(d.tanggalLahir)});
+      }
+    });
+  }
+
+  all.sort((a,b) => a.hariUlangTahun - b.hariUlangTahun);
+
+  list.innerHTML = all.map(p => `
+    <div class="penghuni-item">
+      <div>
+        <strong>${p.nama}</strong>${p.lunas ? ` <span class="status-lunas">Lunas ${formatDate(p.tanggalLunas)}</span>` : ""}
+        <br><small>${p.jenis} • ${p.statusPenghuni || "staying"} • Check-in: ${formatDate(p.tanggalMasuk)} • ${hitungLamaTinggal(p.tanggalMasuk)}</small>
+        <br><small style="color:#e11d48;font-weight:bold">Ulang tahun: ${p.hariUlangTahun === 0 ? "HARI INI!" : p.hariUlangTahun + " hari lagi"}</small>
+      </div>
+      <div>
+        <button class="tagih-btn" onclick="bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+        <button class="lunas-btn" onclick="bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+      </div>
+    </div>
+  `).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
+};
+
+window.showCheckoutList = async function() {
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("checkoutListPage").classList.remove("hidden");
+  const bulanIni = [], sebelumnya = [];
+  const now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const snap = await db.ref("checkout").once("value");
+  const all = snap.val() || {};
+
+  Object.keys(all).forEach(kost => {
+    Object.keys(all[kost] || {}).forEach(room => {
+      const d = all[kost][room];
+      if (d && d.tanggalCheckout) {
+        const item = {kost, room, ...d, coDate: new Date(d.tanggalCheckout)};
+        (item.coDate.getMonth() === thisMonth && item.coDate.getFullYear() === thisYear ? bulanIni : sebelumnya).push(item);
+      }
+    });
+  });
+
+  bulanIni.sort((a,b) => b.coDate - a.coDate);
+  sebelumnya.sort((a,b) => b.coDate - a.coDate);
+
+  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)"><strong>${i+1}. ${d.nama}</strong><br><small>${d.hp||"-"} • ${formatDate(d.tanggalCheckout)}</small></div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada</p>";
+  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map((d,i) => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)"><strong>${d.nama}</strong><br><small>${formatDate(d.tanggalCheckout)}</small></div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada</p>";
+};
+
+window.bukaTagih = function(kost, room, nama, hp) {
+  currentKost = kost; currentRoom = room;
+  window.currentNamaTagih = nama;
+  window.currentHpTagih = hp;
+  document.getElementById("jatuhTempo").value = new Date(Date.now() + 7*86400000).toISOString().split("T")[0];
+  document.getElementById("tagihModal").classList.remove("hidden");
+};
+
+window.kirimTagihan = function() {
+  const tgl = document.getElementById("jatuhTempo").value;
+  const nominal = document.getElementById("nominalTagihan").value;
+  if (!tgl || !nominal) return alert("Isi semua!");
+  const pesan = `Hai Kak ${window.currentNamaTagih}\n\nTagihan kost jatuh tempo *${formatDate(tgl)}*\nJumlah: *Rp ${Number(nominal).toLocaleString()}*\n\nTerima kasih ❤️`;
+  const phone = window.currentHpTagih.replace(/^0/,"62").replace(/[^0-9]/g,"");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
+  closeModal();
+};
+
+window.bukaLunas = function(kost, room) {
+  currentKost = kost; currentRoom = room;
+  document.getElementById("tanggalBayar").value = new Date().toISOString().split("T")[0];
+  document.getElementById("lunasModal").classList.remove("hidden");
+};
+
+window.catatLunas = function() {
+  const tgl = document.getElementById("tanggalBayar").value;
+  const jumlah = Number(document.getElementById("jumlahBayar").value);
+  if (!tgl || !jumlah) return alert("Isi semua!");
+  db.ref(`kosts/${currentKost}/${currentRoom}`).update({lunas:true, tanggalLunas:tgl, jumlahLunas:jumlah}).then(() => {
+    closeModal(); alert("Lunas tercatat!"); showPenghuniList();
+  });
+};
+
+window.openCheckoutModal = function() {
+  document.getElementById("coNama").textContent = currentData.nama;
+  document.getElementById("coKamar").textContent = currentRoom;
+  document.getElementById("tanggalCheckout").value = new Date().toISOString().split("T")[0];
+  document.getElementById("checkoutModal").classList.remove("hidden");
+};
+
+window.prosesCheckout = function() {
+  const tgl = document.getElementById("tanggalCheckout").value;
+  if (!tgl) return alert("Isi tanggal!");
+  const finalData = {...currentData, checkout:true, tanggalCheckout:tgl};
+  db.ref(`checkout/${currentKost}/${currentRoom}`).set(finalData).then(() => {
+    db.ref(`kosts/${currentKost}/${currentRoom}`).remove().then(() => {
+      closeModal(); alert("Check-out berhasil!");
+    });
+  });
+};
+
+window.shareFullData = function() {
+  const d = currentData;
+  const pesan = `*DATA PENGHUNI*\n${currentKost} - ${currentRoom}\nNama: ${d.nama}\nHP: ${d.hp}\nCheck-in: ${formatDate(d.tanggalMasuk)}`;
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`,"_blank");
+};
+
+window.laporKost = async function(namaKost) {
+  const rooms = kosts[namaKost];
+  const today = new Date();
+  let terisi = 0, kosongList = [], penghuniList = [], mobil = 0, motor = 0, checkInBulanIni = 0;
+
+  for (const room of rooms) {
+    const snap = await db.ref(`kosts/${namaKost}/${room}`).once("value");
+    const d = snap.val();
+    if (d && d.nama) {
+      terisi++;
+      penghuniList.push(`${room} | ${d.nama} | ${d.hp||"-"} | ${d.durasi} | ${hitungLamaTinggal(d.tanggalMasuk)}`);
+      if (d.kendaraan === "Mobil") mobil++;
+      if (d.kendaraan === "Motor") motor++;
+      const tglMasuk = new Date(d.tanggalMasuk);
+      if (tglMasuk.getMonth() === today.getMonth() && tglMasuk.getFullYear() === today.getFullYear()) checkInBulanIni++;
+    } else kosongList.push(room);
+  }
+
+  const pesan = `*Laporan Harian ${namaKost}*\n${formatDate(today)}\n\nTerisi: ${terisi}/${rooms.length} (${Math.round(terisi/rooms.length*100)}%)\nKosong: ${kosongList.join(", ")||"-"}\n\nPenghuni:\n${penghuniList.join("\n")}\n\nMobil: ${mobil} | Motor: ${motor}\nCheck-in bulan ini: ${checkInBulanIni}\n\nTeam Kostory`;
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`,"_blank");
+};
+
+// ==================== AUTO LOGIN ====================
 document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("kostoryUser");
   if (saved && passwordDb[saved.toLowerCase()]) {
