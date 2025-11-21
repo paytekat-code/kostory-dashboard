@@ -384,3 +384,8 @@ document.addEventListener("DOMContentLoaded", () => {
     loadDashboard();
   }
 });
+// TOMBOL LOGOUT — INI YANG KAMU TUNGGU-TUNGGU
+window.logout = function() {
+  localStorage.removeItem("kostoryUser");
+  location.reload();
+};
