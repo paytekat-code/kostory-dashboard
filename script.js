@@ -241,9 +241,9 @@ window.laporKost = async function(namaKost) {
   penghuniList.sort((a,b) => b.lamaHari - a.lamaHari);
 
   let daftar = "";
-  penghuniList.forEach((p, i) => {
-    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(d.tanggalMasuk || today)}\n`;
-  });
+penghuniList.forEach((p, i) => {
+  daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk || today)}\n`;
+});
 
   const pesan = `*LAPORAN HARIAN*\n${formatDate(today)}\n\n` +
     `*${namaKost}*\n` +
