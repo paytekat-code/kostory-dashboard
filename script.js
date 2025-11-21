@@ -53,14 +53,20 @@ window.login = function() {
   const pass = document.getElementById("password").value;
   if (passwordDb[user] && passwordDb[user] === pass) {
     currentUser = user;
+    localStorage.setItem("kostoryUser", user); // simpan biar next time langsung masuk
     allowedKosts = hakAkses[user] === "all" ? Object.keys(kosts) : [hakAkses[user]];
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     loadDashboard();
-  } else alert("Username/password salah!");
+  } else {
+    alert("Username atau password salah!");
+  }
 };
 
-window.logout = function() { location.reload(); };
+window.logout = function() {
+  localStorage.removeItem("kostoryUser");
+  location.reload();
+};
 
 function backToDashboard() {
   document.getElementById("checkoutListPage").classList.add("hidden");
@@ -347,5 +353,13 @@ window.laporKost = async function(namaKost) {
 
 // INIT
 document.addEventListener("DOMContentLoaded", () => {
-  if (currentUser) loadDashboard();
+  // Cek apakah sudah pernah login sebelumnya (pakai localStorage)
+  const savedUser = localStorage.getItem("kostoryUser");
+  if (savedUser && passwordDb[savedUser.toLowerCase()]) {
+    currentUser = savedUser.toLowerCase();
+    allowedKosts = hakAkses[currentUser] === "all" ? Object.keys(kosts) : [hakAkses[currentUser]];
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    loadDashboard();
+  }
 });
