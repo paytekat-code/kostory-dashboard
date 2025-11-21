@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KOSTORY Dashboard v2.0</title>
+  <title>KOSTORY v2.0</title>
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
   <style>
@@ -35,9 +35,11 @@
     .btn-danger{background:#dc2626}
     .btn-wa{background:#25d366}
     .btn-secondary{background:#64748b}
-    .checkout-group{background:#f0fdf4;padding:15px;border-radius:12px;margin:15px 0;border:2px solid #86efac}
-    .checkout-item{margin:15px 0;padding:15px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-    .back-btn{margin-bottom:20px}
+    .full{grid-column:1/-1}
+    .checkout-group{background:#f0fdf4;padding:20px;border-radius:12px;margin:20px 0;border:2px solid #86efac}
+    .checkout-group h2{color:#166534}
+    .checkout-item{cursor:pointer;background:#fff;padding:15px;border-radius:12px;margin:10px 0;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+    .checkout-item:hover{background:#f0fdf4}
   </style>
 </head>
 <body>
@@ -56,26 +58,24 @@
 <div id="app" class="hidden">
   <div id="header">
     <h1>KOSTORY Dashboard</h1>
-    <div>
-      <button class="btn btn-secondary" onclick="window.logout()">Logout</button>
-    </div>
+    <button class="btn btn-secondary" onclick="window.logout()">Logout</button>
   </div>
-  <div id="totalStats">Sedang memuat data...</div>
+  <div id="totalStats">Memuat data...</div>
   <div id="kostList"></div>
 </div>
 
-<!-- HALAMAN LIST CHECK-OUT -->
+<!-- LIST CHECK-OUT -->
 <div id="checkoutListPage" class="hidden">
   <div id="header">
     <h1>Daftar Check-Out</h1>
-    <button class="btn" onclick="backToDashboard()">Kembali ke Dashboard</button>
+    <button class="btn" onclick="backToDashboard()">Kembali</button>
   </div>
-  <div id="checkoutBulanIni" class="checkout-group">
-    <h2 style="color:#16a34a">Check-Out Bulan Ini</h2>
+  <div class="checkout-group">
+    <h2>Check-Out Bulan Ini</h2>
     <div id="listBulanIni"></div>
   </div>
-  <div id="checkoutSebelumnya" class="checkout-group" style="background:#fefce8;border-color:#fde047">
-    <h2 style="color:#ca8a04">Check-Out Sebelumnya</h2>
+  <div class="checkout-group" style="background:#fefce8;border-color:#fde047">
+    <h2 style="color:#a16207">Check-Out Sebelumnya</h2>
     <div id="listSebelumnya"></div>
   </div>
 </div>
@@ -89,13 +89,13 @@
     <label>Tanggal Lahir</label><input type="date" id="tanggalLahir">
     <label>Jenis Penghuni</label><select id="jenis"><option>Pria</option><option>Wanita</option><option>Suami-Istri</option><option>Keluarga</option></select>
     <label>Durasi Kost</label><select id="durasi"><option>Harian</option><option>Mingguan</option><option value="Bulanan" selected>Bulanan</option><option>Tahunan</option></select>
-    <label>Kendaraan</label><select id="kendaraan"><option>Umum</option><option>Motor</option><option>Mobil</option></select>
+    <label>Kendajaran</label><select id="kendaraan"><option>Umum</option><option>Motor</option><option>Mobil</option></select>
     <label>Harga Kost per Periode</label><input type="number" id="harga">
     <label>Deposit (Rp)</label><input type="number" id="deposit">
     <label>Tanggal Check-in</label><input type="date" id="tanggal">
     <label>Token PLN Awal</label><input type="number" id="tokenAwal">
-    <label>No. Rekening (untuk pengembalian deposit)</label><input type="text" id="noRek">
-    <label>Nama Bank</label><input type="text" id="namaBank" placeholder="BCA / BRI / dll">
+    <label>No. Rekening (Pengembalian Deposit)</label><input type="text" id="noRek">
+    <label>Nama Bank</label><input type="text" id="namaBank">
     <label>Nama di Rekening</label><input type="text" id="namaRekening">
     <label>Catatan</label><textarea id="catatan" rows="3"></textarea>
     <div class="modal-buttons">
@@ -105,27 +105,13 @@
   </div>
 </div>
 
-<!-- MODAL SHARE DATA -->
-<div id="shareModal" class="modal hidden">
-  <div class="modal-content">
-    <h3>Kirim Data ke WhatsApp</h3>
-    <p>Semua data akan dikirim ke WA:</p>
-    <div class="modal-buttons">
-      <button class="btn-danger" onclick="closeModal()">Batal</button>
-      <button class="btn-wa full" onclick="shareToWA()">KIRIM SEKARANG</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL CHECK-OUT -->
 <div id="checkoutModal" class="modal hidden">
   <div class="modal-content">
-    <h3>CHECK-OUT PENGHUNI</h3>
+    <h3>CHECK-OUT</h3>
     <p><strong id="coNama"></strong> - Kamar <strong id="coKamar"></strong></p>
-    <label>Tanggal Check-out</label>
-    <input type="date" id="tanggalCheckout">
-    <label>Token PLN Akhir</label>
-    <input type="number" id="tokenAkhir" placeholder="Masukkan angka akhir">
+    <label>Tanggal Check-out</label><input type="date" id="tanggalCheckout">
+    <label>Token PLN Akhir</label><input type="number" id="tokenAkhir">
     <div class="modal-buttons">
       <button class="btn-danger" onclick="closeModal()">Batal</button>
       <button class="btn-success full" onclick="prosesCheckout()">PROSES CHECK-OUT</button>
