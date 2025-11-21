@@ -247,7 +247,7 @@ window.shareFullData = function() {
 };
 
 window.kirimUlangTahun = function(nama, hp) {
-  const pesan = `Halo *${nama}*!!! 🎉🎂\n\n*SELAMAT ULANG TAHUN BROOO!!* 🥳🔥\nSemoga panjang umur, sehat selalu, rezekinya lancar jaya, dan semakin ganteng/cantik tiap tahunnya ya! 💪\n\nJangan lupa traktir tim Kostory ya kalo pulang kampung 😜\n\nSalam hangat,\nTeam Kostory`;
+  const pesan = `Halo *${nama}*!!! 🎉🎂\n\n*SELAMAT ULANG TAHUN Kak!!* 🥳🔥\nSemoga panjang umur, sehat selalu, dilancarkan usahanya, dan semakin sukses tiap tahunnya ya! 💪\n\nSemoga selalu dilindugi Tuhan dalam Pekerjaan dan semua urusan\n\nSomnia Audacter - Mane Kostorianus,\nSalam Kostorian - Team Kostory`;
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
