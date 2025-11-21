@@ -25,7 +25,6 @@ const passwordDb = { "admin":"ramenuno20","mekar":"kopipait69","satria":"cilukba
 
 let currentUser = null, allowedKosts = [], currentKost = null, currentRoom = null, currentData = null;
 
-// ==================== UTILS ====================
 function formatDate(d) { if(!d) return "-"; return new Date(d).toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"}); }
 function hitungLamaTinggal(masuk, keluar = new Date()) {
   const diff = Math.floor((new Date(keluar) - new Date(masuk)) / 86400000);
@@ -44,7 +43,12 @@ function hariKeUlangTahun(tglLahir) {
 }
 function closeModal() { document.querySelectorAll(".modal").forEach(m => m.classList.add("hidden")); }
 
-// ==================== LOGIN ====================
+function backToDashboard() {
+  document.getElementById("penghuniListPage").classList.add("hidden");
+  document.getElementById("checkoutListPage").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+}
+
 window.login = function() {
   const user = document.getElementById("username").value.trim().toLowerCase();
   const pass = document.getElementById("password").value;
@@ -57,9 +61,7 @@ window.login = function() {
     loadDashboard();
   } else alert("Username/password salah!");
 };
-window.logout = function() { localStorage.removeItem("kostoryUser"); location.reload(); };
 
-// ==================== DASHBOARD ====================
 function loadDashboard() {
   const container = document.getElementById("kostList");
   container.innerHTML = "<div style='text-align:center;padding:80px;color:#666'>Loading...</div>";
@@ -103,7 +105,6 @@ function loadDashboard() {
   });
 }
 
-// ==================== MODAL ====================
 window.openModal = async function(kost, room, fromCheckout = false) {
   currentKost = kost; currentRoom = room;
   document.getElementById("modalTitle").textContent = fromCheckout ? `Detail Check-Out: ${kost} - ${room}` : `${kost} - ${room}`;
@@ -191,7 +192,6 @@ window.updateDataOnly = function(isFromCheckout = false) {
   });
 };
 
-// ==================== SHARE WA LENGKAP ====================
 window.shareFullData = function() {
   const d = currentData;
   const lamaTinggal = d.tanggalCheckout ? hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout) : hitungLamaTinggal(d.tanggalMasuk);
@@ -217,11 +217,10 @@ window.shareFullData = function() {
     pesan += `Keluarga Darurat: ${d.namaKeluarga} (${d.hubunganKeluarga || "-"})\nHP Keluarga: ${d.hpKeluarga || "-"}\n`;
   }
 
-  pesan += `\nTeam Kostory ❤️`;
+  pesan += `\nTeam Kostory`;
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// ==================== LAPOR HARIAN — FINAL ====================
 window.laporKost = async function(namaKost) {
   const rooms = kosts[namaKost];
   const today = new Date();
@@ -250,16 +249,15 @@ window.laporKost = async function(namaKost) {
     `*${namaKost}*\n` +
     `Terisi: ${terisi}/${rooms.length} (${Math.round(terisi/rooms.length*100)}%)\n` +
     `Kosong: ${kosongList.join(", ") || "Tidak ada"}\n\n` +
-    `*Daftar Penghuni (Urut Paling Lama Tinggal):*\n${daftar || "Tidak ada penghuni"}\n\n` +
+    `*Daftar Penghuni (Urut Paling Lama):*\n${daftar || "Tidak ada"}\n\n` +
     `*Kendaraan:*\n` +
     `Mobil (${mobilList.length}): ${mobilList.join(", ") || "-"}\n` +
     `Motor (${motorList.length}): ${motorList.join(", ") || "-"}\n\n` +
-    `Team Kostory ❤️`;
+    `Team Kostory`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// ==================== FITUR LAIN (LENGKAP) ====================
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
@@ -337,7 +335,7 @@ window.kirimTagihan = function() {
   const tgl = document.getElementById("jatuhTempo").value;
   const nominal = document.getElementById("nominalTagihan").value;
   if (!tgl || !nominal) return alert("Isi semua!");
-  const pesan = `Hai Kak ${window.currentNamaTagih}\n\nTagihan kost jatuh tempo *${formatDate(tgl)}*\nJumlah: *Rp ${Number(nominal).toLocaleString()}*\n\nTerima kasih ❤️`;
+  const pesan = `Hai Kak ${window.currentNamaTagih}\n\nTagihan kost jatuh tempo *${formatDate(tgl)}*\nJumlah: *Rp ${Number(nominal).toLocaleString()}*\n\nTerima kasih`;
   const phone = window.currentHpTagih.replace(/^0/,"62").replace(/[^0-9]/g,"");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
   closeModal();
@@ -375,12 +373,7 @@ window.prosesCheckout = function() {
     });
   });
 };
-// PERBAIKAN MINOR — TOMBOL KEMBALI & LIST CHECK-OUT
-function backToDashboard() {
-  document.getElementById("penghuniListPage").classList.add("hidden");
-  document.getElementById("checkoutListPage").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-}
+
 document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("kostoryUser");
   if (saved && passwordDb[saved.toLowerCase()]) {
