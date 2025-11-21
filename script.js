@@ -228,12 +228,15 @@ function renderCheckoutList(arr) {
     </div>`).join("");
 }
 
-// ==================== LIST PENGHUNI + TAGIH & LUNAS ====================
+// ==================== LIST PENGHUNI + AUTO RESET LUNAS TANGGAL 1 ====================
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
   const list = document.getElementById("listPenghuni");
   list.innerHTML = "Memuat data penghuni...";
+
+  const today = new Date();
+  const isTanggal1 = today.getDate() === 1;
 
   const all = [];
   for (const kost of allowedKosts) {
@@ -241,6 +244,16 @@ window.showPenghuniList = async function() {
     const rooms = snap.val() || {};
     Object.entries(rooms).forEach(([room, d]) => {
       if (d && d.nama) {
+        // AUTO RESET LUNAS SETIAP TANGGAL 1
+        if (isTanggal1 && d.lunas) {
+          db.ref(`kosts/${kost}/${room}`).update({
+            lunas: null,
+            tanggalLunas: null,
+            jumlahLunas: null
+          });
+          d.lunas = false; // langsung ilangin di tampilan juga
+        }
+
         all.push({kost, room, ...d, hariUlangTahun: hariKeUlangTahun(d.tanggalLahir)});
       }
     });
@@ -263,7 +276,6 @@ window.showPenghuniList = async function() {
     </div>
   `).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
-
 // TAGIH
 window.bukaTagih = (kost, room, nama, hp) => {
   currentKost = kost; currentRoom = room;
