@@ -121,6 +121,7 @@ function loadDashboard() {
 
 // ==================== MODAL CHECK-IN / UPDATE / CHECK-OUT (SUDAH AKTIF UPDATE & SHARE UNTUK CHECK-OUT) ====================
 window.openModal = async function(kost, room, fromCheckout = false) {// UPDATE DATA CHECK-OUT (tambahan baru)
+// ==================== UPDATE DATA (FIX SELISIH TOKEN & SIMPAN TOKEN AKHIR) ====================
 window.updateDataOnly = function(isFromCheckout = false) {
   const data = {
     nama: document.getElementById("nama").value.trim(),
@@ -135,20 +136,38 @@ window.updateDataOnly = function(isFromCheckout = false) {
     tanggalMasuk: document.getElementById("tanggal").value,
     tokenAwal: Number(document.getElementById("tokenAwal").value),
     noRek: document.getElementById("noRek").value.trim(),
-    namaBank: document.getElementById("namaBank").value.trim(),
+    namaBank: document.getElementBy  ("namaBank").value.trim(),
     namaRekening: document.getElementById("namaRekening").value.trim(),
     catatan: document.getElementById("catatan").value.trim()
   };
 
-  if (!data.nama || !data.hp || !data.tanggalMasuk || !data.harga) return alert("Field wajib harus diisi!");
+  // KHUSUS JIKA DARI CHECK-OUT → TAMBAHKAN TOKEN AKHIR & SELISIH
+  if (isFromCheckout) {
+    const tokenAkhir = Number(document.getElementById("tokenAkhirCheckout").value) || 0;
+    const selisih = data.tokenAwal - tokenAkhir;
+    data.tokenAkhir = tokenAkhir;
+    data.selisihToken = selisih >= 0 ? selisih : 0;
+    data.potonganListrik = selisih >= 0 ? selisih * 1452 : 0;
+    data.sisaDeposit = data.deposit - data.potonganListrik;
+  }
+
+  if (!data.nama || !data.hp || !data.tanggalMasuk || !data.harga) {
+    return alert("Field wajib harus diisi!");
+  }
 
   const path = isFromCheckout ? `checkout/${currentKost}/${currentRoom}` : `kosts/${currentKost}/${currentRoom}`;
+  
   db.ref(path).update(data).then(() => {
     closeModal();
     alert("Data berhasil diperbarui!");
+    // Refresh tampilan selisih token kalau masih buka modal check-out
+    if (isFromCheckout) hitungSelisihToken();
+  }).catch(err => {
+    console.error(err);
+    alert("Gagal menyimpan data!");
   });
 };
-// ==================== CHECK-OUT (ASLI) ====================
+  // ==================== CHECK-OUT (ASLI) ====================
 window.openCheckoutModal = function() {
   document.getElementById("coNama").textContent = currentData.nama;
   document.getElementById("coKamar").textContent = currentRoom;
