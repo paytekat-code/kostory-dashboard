@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const kosts = {
+const kosts = { /* sama seperti sebelumnya */ 
   "Kostory Mekar": ["101","102","103","105","106","107","108","201","202","203","205","206","207","208"],
   "Kostory Satria": ["101","102","103","105","106","107","108","109","201","202","203","205","206","207","208","209","210"],
   "Kostory Mitra": ["101","102","103","105","106","107","108","109","110","112","201","202","203","205","206","207"],
@@ -23,9 +23,9 @@ const kosts = {
 const hakAkses = { "admin":"all","mekar":"Kostory Mekar","satria":"Kostory Satria","mitra":"Kostory Mitra","ecokost":"Ecokost by Kostory","mitraya":"Mitraya by Kostory","inaya":"Inaya Bukit by Kostory" };
 const passwordDb = { "admin":"ramenuno20","mekar":"kopipait69","satria":"cilukba123","mitra":"ayamgeprek77","ecokost":"mirebus08","mitraya":"odading88","inaya":"nasiuduk21" };
 
-let currentUser = null, allowedKosts = [], currentKost = null, currentRoom = null, currentData = null;
+let currentUser = null, allowedKosts = [], currentKost = null, currentRoom = null, currentData = null, isCheckoutView = false;
 
-// ==================== LOGIN ====================
+// ==================== LOGIN & NAV ====================
 window.login = function() {
   const user = document.getElementById("username").value.trim().toLowerCase();
   const pass = document.getElementById("password").value;
@@ -35,13 +35,11 @@ window.login = function() {
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     loadDashboard();
-  } else {
-    alert("Username atau password salah!");
-  }
+  } else alert("Username/password salah!");
 };
 
 window.logout = function() {
-  currentUser = null;
+  currentUser = null; isCheckoutView = false;
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.add("hidden");
   document.getElementById("loginScreen").classList.remove("hidden");
@@ -56,30 +54,22 @@ function backToDashboard() {
 function formatDate(d) { return new Date(d).toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"}); }
 function hitungLamaTinggal(masuk, keluar) {
   const diff = Math.floor((new Date(keluar) - new Date(masuk)) / 86400000);
-  const y = Math.floor(diff / 365);
-  const m = Math.floor((diff % 365) / 30);
-  const h = diff % 30;
+  const y = Math.floor(diff / 365), m = Math.floor((diff % 365) / 30), h = diff % 30;
   return `${y} Tahun ${m} Bulan ${h} Hari`;
 }
 function closeModal() { document.querySelectorAll(".modal").forEach(m => m.classList.add("hidden")); }
 
 // ==================== DASHBOARD ====================
 function loadDashboard() {
-  const container = document.getElementById("kostList");
-  container.innerHTML = "<div style='text-align:center;padding:60px;color:#666'>Loading...</div>";
+  const container = document.getElementById("kostList"); container.innerHTML = "<div style='text-align:center;padding:60px;color:#666'>Loading...</div>";
   document.getElementById("totalStats").innerHTML = "Memuat data...";
-
   let totalKamar = 0, totalTerisi = 0;
 
   Object.keys(kosts).forEach(namaKost => {
     if (!allowedKosts.includes(namaKost)) return;
-    const rooms = kosts[namaKost];
-    totalKamar += rooms.length;
-
-    const card = document.createElement("div");
-    card.className = "kost-card";
-    card.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px">
+    const rooms = kosts[namaKost]; totalKamar += rooms.length;
+    const card = document.createElement("div"); card.className = "kost-card";
+    card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px">
         <h3>${namaKost}</h3>
         <div>
           <button class="btn btn-wa" onclick="laporKost('${namaKost}')">LAPOR</button>
@@ -89,16 +79,12 @@ function loadDashboard() {
       <div class="stats">Terisi: <span class="occ">0</span> / ${rooms.length}</div>
       <div class="room-grid"></div>`;
     container.appendChild(card);
-
-    const grid = card.querySelector(".room-grid");
-    const occ = card.querySelector(".occ");
+    const grid = card.querySelector(".room-grid"), occ = card.querySelector(".occ");
     let terisi = 0;
 
     rooms.forEach(room => {
-      const box = document.createElement("div");
-      box.className = "room kosong";
-      box.innerHTML = room + "<br><small>KOSONG</small>";
-      box.onclick = () => openModal(namaKost, room);
+      const box = document.createElement("div"); box.className = "room kosong";
+      box.innerHTML = room + "<br><small>KOSONG</small>"; box.onclick = () => openModal(namaKost, room);
       grid.appendChild(box);
 
       db.ref(`kosts/${namaKost}/${room}`).on("value", s => {
@@ -106,11 +92,9 @@ function loadDashboard() {
         if (d && d.nama && !d.checkout) {
           terisi++; totalTerisi++;
           const cls = d.durasi === "Harian" ? "harian" : d.durasi === "Mingguan" ? "mingguan" : d.durasi === "Tahunan" ? "tahunan" : "bulanan";
-          box.className = `room ${cls}`;
-          box.innerHTML = room + "<br><strong>" + d.nama + "</strong>";
+          box.className = `room ${cls}`; box.innerHTML = room + "<br><strong>" + d.nama + "</strong>";
         } else {
-          box.className = "room kosong";
-          box.innerHTML = room + "<br><small>KOSONG</small>";
+          box.className = "room kosong"; box.innerHTML = room + "<br><small>KOSONG</small>";
         }
         occ.textContent = terisi;
         document.getElementById("totalStats").innerHTML = `<strong>TOTAL: ${totalTerisi} terisi / ${totalKamar} kamar → ${totalKamar-totalTerisi} KOSONG</strong>`;
@@ -119,35 +103,42 @@ function loadDashboard() {
   });
 }
 
-// ==================== MODAL & DATA ====================
-window.openModal = async function(kost, room) {
-  currentKost = kost; currentRoom = room;
-  document.getElementById("modalTitle").textContent = kost + " - " + room;
-  const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
+// ==================== MODAL CHECK-IN / UPDATE ====================
+window.openModal = async function(kost, room, fromCheckout = false) {
+  currentKost = kost; currentRoom = room; isCheckoutView = fromCheckout;
+  document.getElementById("modalTitle").textContent = fromCheckout ? `Detail Check-Out: ${kost} - ${room}` : `${kost} - ${room}`;
+
+  const path = fromCheckout ? `checkout/${kost}/${room}` : `kosts/${kost}/${room}`;
+  const snap = await db.ref(path).once("value");
   currentData = snap.val() || {};
 
-  ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = currentData[id] || (id==="tanggal" ? new Date().toISOString().split("T")[0] : "");
-  });
+  const fields = ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan"];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = currentData[id] || (id==="tanggal" ? new Date().toISOString().split("T")[0] : ""); });
 
-  // Tambah tombol SHARE & CHECKOUT kalau sudah ada penghuni
-  const buttons = document.querySelector("#modal .modal-buttons");
-  if (currentData.nama) {
-    buttons.innerHTML = `
+  const btn = document.getElementById("modalButtons");
+  if (fromCheckout) {
+    btn.innerHTML = `
+      <button class="btn-danger" onclick="closeModal()">TUTUP</button>
+      <button class="btn-wa" onclick="shareFullData()">SHARE KE WA</button>
+      <button class="btn-success full" onclick="updateCheckoutData()">UPDATE DATA</button>`;
+  } else if (currentData.nama) {
+    btn.innerHTML = `
       <button class="btn-danger" onclick="closeModal()">Batal</button>
-      <button class="btn-wa" onclick="shareCurrentData()">SHARE</button>
+      <button class="btn-wa" onclick="shareFullData()">SHARE</button>
       <button class="btn-success" onclick="openCheckoutModal()">CHECK-OUT</button>
       <button class="btn full" onclick="updateDataOnly()">UPDATE DATA</button>`;
   } else {
-    buttons.innerHTML = `<button class="btn-danger" onclick="closeModal()">Batal</button>
+    btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Batal</button>
       <button class="btn-success full" onclick="updateDataOnly()">SIMPAN & CHECK-IN</button>`;
   }
-
   document.getElementById("modal").classList.remove("hidden");
 };
 
-window.updateDataOnly = function() {
+// Simpan / Update (aktif & checkout)
+window.updateDataOnly = function() { saveData(false); };
+window.updateCheckoutData = function() { saveData(true); };
+
+function saveData(isCheckout) {
   const data = {
     nama: document.getElementById("nama").value.trim(),
     hp: document.getElementById("hp").value.trim(),
@@ -167,19 +158,35 @@ window.updateDataOnly = function() {
 
   if (!data.nama || !data.hp || !data.tanggalMasuk || !data.harga) return alert("Field wajib harus diisi!");
 
-  db.ref(`kosts/${currentKost}/${currentRoom}`).update(data).then(() => {
+  const path = isCheckoutView ? `checkout/${currentKost}/${currentRoom}` : `kosts/${currentKost}/${currentRoom}`;
+  db.ref(path).update(data).then(() => {
     closeModal();
-    alert("Data berhasil disimpan!");
+    alert("Data berhasil diperbarui!");
   });
-};
+}
 
-window.shareCurrentData = function() {
+// SHARE SELURUH DATA (LENGKAP BANGET)
+window.shareFullData = function() {
   const d = currentData;
-  const pesan = `*DATA PENGHUNI*\n${currentKost} - ${currentRoom}\n\n` +
-    `*Nama*: ${d.nama}\n*HP*: ${d.hp}\n*Durasi*: ${d.durasi}\n*Harga*: Rp ${d.harga?.toLocaleString()}\n` +
-    `*Masuk*: ${formatDate(d.tanggalMasuk)}\n*Token Awal*: ${d.tokenAwal}\n` +
-    `*Rekening*: ${d.namaBank||"-"} ${d.noRek||"-"} a.n ${d.namaRekening||"-"}\n\nTeam Kostory`;
-  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`,"_blank");
+  const lama = d.tanggalCheckout ? hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout) : "-";
+  const pesan = `*${isCheckoutView ? "DATA CHECK-OUT" : "DATA PENGHUNI"}*\n` +
+    `${currentKost} - ${currentRoom}\n\n` +
+    `*Nama*: ${d.nama}\n` +
+    `*HP/WA*: ${d.hp}\n` +
+    `*Tanggal Lahir*: ${d.tanggalLahir ? formatDate(d.tanggalLahir) : "-"}\n` +
+    `*Jenis*: ${d.jenis}\n` +
+    `*Durasi*: ${d.durasi}\n` +
+    `*Kendaraan*: ${d.kendaraan}\n` +
+    `*Harga per Periode*: Rp ${d.harga?.toLocaleString()}\n` +
+    `*Deposit*: Rp ${d.deposit?.toLocaleString() || 0}\n` +
+    `*Tanggal Masuk*: ${formatDate(d.tanggalMasuk)}\n` +
+    `*Token PLN Awal*: ${d.tokenAwal}\n` +
+    (d.tanggalCheckout ? `*Tanggal Check-out*: ${formatDate(d.tanggalCheckout)}\n*Lama Tinggal*: ${lama}\n*Token PLN Akhir*: ${d.tokenAkhir}\n` : "") +
+    `*Rekening Pengembalian*: ${d.namaBank || "-"} ${d.noRek || "-"} a.n ${d.namaRekening || "-"}\n` +
+    `*Catatan*: ${d.catatan || "Tidak ada"}\n\n` +
+    `Team Kostory ❤️`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
 // ==================== CHECK-OUT ====================
@@ -195,14 +202,8 @@ window.prosesCheckout = function() {
   const tokenAkhir = Number(document.getElementById("tokenAkhir").value);
   if (!tgl || !tokenAkhir) return alert("Isi tanggal & token akhir!");
 
-  const checkoutData = {
-    ...currentData,
-    checkout: true,
-    tanggalCheckout: tgl,
-    tokenAkhir: tokenAkhir
-  };
-
-  db.ref(`checkout/${currentKost}/${currentRoom}`).set(checkoutData).then(() => {
+  const finalData = { ...currentData, checkout: true, tanggalCheckout: tgl, tokenAkhir };
+  db.ref(`checkout/${currentKost}/${currentRoom}`).set(finalData).then(() => {
     db.ref(`kosts/${currentKost}/${currentRoom}`).remove().then(() => {
       closeModal();
       alert("Check-out berhasil!");
@@ -217,47 +218,66 @@ window.showCheckoutList = async function() {
 
   const bulanIni = [], sebelumnya = [];
   const now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
-
   const snap = await db.ref("checkout").once("value");
   const all = snap.val() || {};
 
-  Object.keys(all).forEach(kost => {
-    Object.keys(all[kost]).forEach(room => {
-      const d = all[kost][room];
-      const coDate = new Date(d.tanggalCheckout);
-      const item = {kost, room, ...d, coDate};
-      if (coDate.getMonth() === thisMonth && coDate.getFullYear() === thisYear) bulanIni.push(item);
-      else sebelumnya.push(item);
-    });
-  });
+  Object.keys(all).forEach(kost => Object.keys(all[kost]).forEach(room => {
+    const d = all[kost][room];
+    const item = {kost, room, ...d, coDate: new Date(d.tanggalCheckout)};
+    (item.coDate.getMonth() === thisMonth && item.coDate.getFullYear() === thisYear ? bulanIni : sebelumnya).push(item);
+  }));
 
   bulanIni.sort((a,b) => b.coDate - a.coDate);
   sebelumnya.sort((a,b) => b.coDate - a.coDate);
 
-  document.getElementById("listBulanIni").innerHTML = renderList(bulanIni);
-  document.getElementById("listSebelumnya").innerHTML = renderList(sebelumnya);
+  document.getElementById("listBulanIni").innerHTML = renderCheckoutList(bulanIni);
+  document.getElementById("listSebelumnya").innerHTML = renderCheckoutList(sebelumnya);
 };
 
-function renderList(arr) {
-  if (arr.length === 0) return "<p style='text-align:center;color:#666;padding:20px'>Belum ada data</p>";
+function renderCheckoutList(arr) {
+  if (!arr.length) return "<p style='text-align:center;color:#666;padding:30px'>Belum ada data</p>";
   return arr.map((d,i) => `
-    <div class="checkout-item" onclick="openCheckoutDetail('${d.kost}','${d.room}')">
+    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
       <strong>${i+1}. ${d.nama}</strong><br>
       <small>${d.hp} • ${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
     </div>`).join("");
 }
 
-window.openCheckoutDetail = async function(kost, room) {
-  const snap = await db.ref(`checkout/${kost}/${room}`).once("value");
-  currentData = snap.val();
-  currentKost = kost; currentRoom = room;
-  openModal(kost, room);
+// ==================== LAPOR HARIAN (AKTIF KEMBALI) ====================
+window.laporKost = async function(namaKost) {
+  const rooms = kosts[namaKost];
+  const today = new Date();
+  const bulanIni = today.getMonth(), tahunIni = today.getFullYear();
+
+  let terisi = 0, kosongList = [], penghuniList = [], mobilList = [], motorList = [], checkInBulanIni = [];
+
+  for (const room of rooms) {
+    const snap = await db.ref(`kosts/${namaKost}/${room}`).once("value");
+    const d = snap.val();
+    if (d && d.nama) {
+      terisi++;
+      const tglMasuk = new Date(d.tanggalMasuk);
+      const lama = hitungLamaTinggal(d.tanggalMasuk);
+      penghuniList.push({room, nama: d.nama, hp: d.hp || "-", durasi: d.durasi, masuk: tglMasuk.toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}), lama});
+      if (tglMasuk.getMonth() === bulanIni && tglMasuk.getFullYear() === tahunIni) {
+        checkInBulanIni.push(`${room} | ${d.nama} | ${tglMasuk.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}`);
+      }
+      if (d.kendaraan === "Mobil") mobilList.push(d.nama);
+      if (d.kendaraan === "Motor") motorList.push(d.nama);
+    } else kosongList.push(room);
+  }
+
+  const tanggalHariIni = today.toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"});
+  const okupasi = Math.round((terisi / rooms.length) * 100);
+
+  let pesan = `*Laporan Harian*\n${tanggalHariIni}\n\n*${namaKost}*\nOkupasi = *${okupasi}%* (${terisi}/${rooms.length})\nKamar Kosong: ${kosongList.length} → ${kosongList.join(", ") || "Tidak ada"}\n\n*Daftar Penghuni:*\n`;
+  penghuniList.forEach((p,i) => pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${p.masuk} | ${p.lama}\n`);
+  if (!penghuniList.length) pesan += "Semua kamar kosong\n";
+
+  pesan += `\n*Kendaraan:*\nMobil: ${mobilList.length} → ${mobilList.join(", ") || "-"}\nMotor: ${motorList.length} → ${motorList.join(", ") || "-"}\n\n`;
+  pesan += `*Check-in Bulan Ini*: ${checkInBulanIni.length} orang\n${checkInBulanIni.length ? checkInBulanIni.join("\n") : "Belum ada"}\n\nTerima kasih! Team Kostory ❤️`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// ==================== LAPOR HARIAN (sementara matiin dulu biar gak error) ====================
-window.laporKost = function() { alert("Fitur lapor sementara dinonaktifkan di versi ini"); };
-
-// ==================== INIT ====================
-document.addEventListener("DOMContentLoaded", () => {
-  if (currentUser) loadDashboard();
-});
+document.addEventListener("DOMContentLoaded", () => { if (currentUser) loadDashboard(); });
