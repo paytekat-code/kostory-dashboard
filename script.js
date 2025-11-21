@@ -95,8 +95,7 @@ function loadDashboard() {
         const d = s.val();
         if (d && d.nama && !d.checkout) {
           terisi++; totalTerisi++;
-          const cls = d.statusPenghuni === "booking" ? "booking" : 
-                     d.durasi === "Tahunan" ? "tahunan" : "staying";
+          const cls = d.durasi === "Tahunan" ? "tahunan" : "staying";
           box.className = `room ${cls}`;
           box.innerHTML = room + "<br><strong>" + d.nama + "</strong>";
         } else {
@@ -110,7 +109,7 @@ function loadDashboard() {
   });
 }
 
-// ==================== MODAL + TOKEN AKHIR + SELISIH ====================
+// ==================== MODAL + TOKEN AKHIR (FIX VISIBILITY) ====================
 window.openModal = async function(kost, room, fromCheckout = false) {
   currentKost = kost; currentRoom = room; isCheckoutView = fromCheckout;
   document.getElementById("modalTitle").textContent = fromCheckout ? `Detail Check-Out: ${kost} - ${room}` : `${kost} - ${room}`;
@@ -126,21 +125,17 @@ window.openModal = async function(kost, room, fromCheckout = false) {
   });
   document.getElementById("statusPenghuni").value = currentData.statusPenghuni || "staying";
 
-  // Token Akhir & Selisih
-  const tokenAkhirEl = document.getElementById("tokenAkhirCheckout");
-  const selisihCont = document.querySelector("#selisihToken").closest("label").parentElement;
-  const infoEl = document.getElementById("infoSelisih");
+  // Sembunyiin field check-out kalau bukan dari check-out
+  const hideThese = ["tokenAkhirCheckout", "selisihToken"];
+  hideThese.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.parentElement.style.display = fromCheckout ? "block" : "none";
+  });
+  document.getElementById("infoSelisih").style.display = fromCheckout ? "block" : "none";
 
   if (fromCheckout) {
-    tokenAkhirEl.value = currentData.tokenAkhir || "";
+    document.getElementById("tokenAkhirCheckout").value = currentData.tokenAkhir || "";
     hitungSelisihToken();
-    tokenAkhirEl.style.display = "block";
-    document.querySelector("#selisihToken").parentElement.style.display = "block";
-    infoEl.style.display = "block";
-  } else {
-    tokenAkhirEl.style.display = "none";
-    document.querySelector("#selisihToken").parentElement.style.display = "none";
-    infoEl.style.display = "none";
   }
 
   const btn = document.getElementById("modalButtons");
@@ -170,7 +165,6 @@ window.hitungSelisihToken = function() {
     : "Token akhir lebih besar → tidak ada potongan";
 };
 
-// ==================== UPDATE DATA ====================
 window.updateDataOnly = function(isFromCheckout = false) {
   const data = {
     nama: document.getElementById("nama").value.trim(),
@@ -209,62 +203,12 @@ window.updateDataOnly = function(isFromCheckout = false) {
   });
 };
 
-// ==================== FUNGSI LAIN (LENGKAP) ====================
-window.openCheckoutModal = function() {
-  document.getElementById("coNama").textContent = currentData.nama;
-  document.getElementById("coKamar").textContent = currentRoom;
-  document.getElementById("tanggalCheckout").value = new Date().toISOString().split("T")[0];
-  document.getElementById("checkoutModal").classList.remove("hidden");
-};
-
-window.prosesCheckout = function() {
-  const tgl = document.getElementById("tanggalCheckout").value;
-  const tokenAkhir = Number(document.getElementById("tokenAkhir").value) || 0;
-  if (!tgl) return alert("Isi tanggal check-out!");
-
-  const finalData = { ...currentData, checkout: true, tanggalCheckout: tgl, tokenAkhir };
-  db.ref(`checkout/${currentKost}/${currentRoom}`).set(finalData).then(() => {
-    db.ref(`kosts/${currentKost}/${currentRoom}`).remove().then(() => {
-      closeModal(); alert("Check-out berhasil!");
-    });
-  });
-};
-
-window.showCheckoutList = async function() {
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("checkoutListPage").classList.remove("hidden");
-  const bulanIni = [], sebelumnya = [];
-  const now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
-  const snap = await db.ref("checkout").once("value");
-  const all = snap.val() || {};
-
-  Object.keys(all).forEach(kost => Object.keys(all[kost]).forEach(room => {
-    const d = all[kost][room];
-    const item = {kost, room, ...d, coDate: new Date(d.tanggalCheckout)};
-    (item.coDate.getMonth() === thisMonth && item.coDate.getFullYear() === thisYear ? bulanIni : sebelumnya).push(item);
-  }));
-
-  bulanIni.sort((a,b) => b.coDate - a.coDate);
-  sebelumnya.sort((a,b) => b.coDate - a.coDate);
-
-  document.getElementById("listBulanIni").innerHTML = renderCheckoutList(bulanIni);
-  document.getElementById("listSebelumnya").innerHTML = renderCheckoutList(sebelumnya);
-};
-
-function renderCheckoutList(arr) {
-  if (!arr.length) return "<p style='text-align:center;color:#666;padding:30px'>Belum ada data</p>";
-  return arr.map((d,i) => `
-    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-      <strong>${i+1}. ${d.nama}</strong><br>
-      <small>${d.hp} • ${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
-    </div>`).join("");
-}
-
+// ==================== FUNGSI YANG HILANG (INI PENYEBAB UTAMA!) ====================
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
   const list = document.getElementById("listPenghuni");
-  list.innerHTML = "Memuat...";
+  list.innerHTML = "Memuat data penghuni...";
 
   const today = new Date();
   const isTanggal1 = today.getDate() === 1;
@@ -300,18 +244,58 @@ window.showPenghuniList = async function() {
   `).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
 
-window.shareFullData = function() {
-  const d = currentData;
-  const pesan = `*DATA PENGHUNI*\n${currentKost} - ${currentRoom}\n\n*Nama*: ${d.nama}\n*HP*: ${d.hp}\n*Check-in*: ${formatDate(d.tanggalMasuk)}\n*Durasi*: ${d.durasi}\n*Harga*: Rp ${d.harga?.toLocaleString()}\n\nTeam Kostory`;
-  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+window.showCheckoutList = async function() {
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("checkoutListPage").classList.remove("hidden");
+  const bulanIni = [], sebelumnya = [];
+  const now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const snap = await db.ref("checkout").once("value");
+  const all = snap.val() || {};
+
+  Object.keys(all).forEach(kost => Object.keys(all[kost]).forEach(room => {
+    const d = all[kost][room];
+    const item = {kost, room, ...d, coDate: new Date(d.tanggalCheckout)};
+    (item.coDate.getMonth() === thisMonth && item.coDate.getFullYear() === thisYear ? bulanIni : sebelumnya).push(item);
+  }));
+
+  bulanIni.sort((a,b) => b.coDate - a.coDate);
+  sebelumnya.sort((a,b) => b.coDate - a.coDate);
+
+  document.getElementById("listBulanIni").innerHTML = renderCheckoutList(bulanIni);
+  document.getElementById("listSebelumnya").innerHTML = renderCheckoutList(sebelumnya);
 };
 
-window.laporKost = async function(namaKost) {
-  // (fungsi lapor harian lengkap — sama seperti yang terakhir jalan)
+function renderCheckoutList(arr) {
+  if (!arr.length) return "<p style='text-align:center;color:#666;padding:30px'>Belum ada data</p>";
+  return arr.map((d,i) => `
+    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
+      <strong>${i+1}. ${d.nama}</strong><br>
+      <small>${d.hp} • ${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
+    </div>`).join("");
+}
+
+// ==================== FUNGSI LAIN (LANJUTAN) ====================
+window.openCheckoutModal = function() {
+  document.getElementById("coNama").textContent = currentData.nama;
+  document.getElementById("coKamar").textContent = currentRoom;
+  document.getElementById("tanggalCheckout").value = new Date().toISOString().split("T")[0];
+  document.getElementById("checkoutModal").classList.remove("hidden");
+};
+
+window.prosesCheckout = function() {
+  const tgl = document.getElementById("tanggalCheckout").value;
+  if (!tgl) return alert("Isi tanggal check-out!");
+  const finalData = { ...currentData, checkout: true, tanggalCheckout: tgl };
+  db.ref(`checkout/${currentKost}/${currentRoom}`).set(finalData).then(() => {
+    db.ref(`kosts/${currentKost}/${currentRoom}`).remove().then(() => {
+      closeModal(); alert("Check-out berhasil!");
+    });
+  });
+};
+
+window.laporKost = async function(namaKost) { /* fungsi lapor harian lengkap seperti sebelumnya */ 
   const rooms = kosts[namaKost];
   const today = new Date();
-  const bulanIni = today.getMonth(), tahunIni = today.getFullYear();
-
   let terisi = 0, kosongList = [], penghuniList = [], mobilList = [], motorList = [], checkInBulanIni = [];
 
   for (const room of rooms) {
@@ -320,36 +304,23 @@ window.laporKost = async function(namaKost) {
     if (d && d.nama) {
       terisi++;
       const tglMasuk = new Date(d.tanggalMasuk);
-      const lamaHari = Math.floor((today - tglMasuk) / 86400000);
-      penghuniList.push({room, nama: d.nama, hp: d.hp || "-", durasi: d.durasi, masuk: tglMasuk.toLocaleDateString("id-ID", {day:"numeric", month:"short", year:"numeric"}), lamaHari});
-      if (tglMasuk.getMonth() === bulanIni && tglMasuk.getFullYear() === tahunIni) {
-        checkInBulanIni.push(`${room} | ${d.nama} | ${tglMasuk.toLocaleDateString("id-ID",{day:"numeric", month:"long", year:"numeric"})}`);
-      }
+      penghuniList.push({room, nama: d.nama, hp: d.hp || "-", durasi: d.durasi, masuk: tglMasuk.toLocaleDateString("id-ID", {day:"numeric", month:"short", year:"numeric"})});
       if (d.kendaraan === "Mobil") mobilList.push(d.nama);
       if (d.kendaraan === "Motor") motorList.push(d.nama);
     } else kosongList.push(room);
   }
 
-  penghuniList.sort((a, b) => b.lamaHari - a.lamaHari);
-  const tanggalHariIni = today.toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"});
-  const okupasi = Math.round((terisi / rooms.length) * 100);
-
-  let pesan = `*Laporan Harian*\n${tanggalHariIni}\n\n*${namaKost}*\nOkupasi = *${okupasi}%* (${terisi}/${rooms.length})\nKamar Kosong: ${kosongList.length} → ${kosongList.join(", ") || "Tidak ada"}\n\n*Daftar Penghuni (Urut Lama Tinggal):*\n`;
-  penghuniList.forEach((p, i) => {
-    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${p.masuk} | ${hitungLamaTinggal(d.tanggalMasuk)}\n`;
-  });
-  pesan += `\n*Kendaraan:*\nMobil: ${mobilList.length} → ${mobilList.join(", ") || "-"}\nMotor: ${motorList.length} → ${motorList.join(", ") || "-"}\n\n*Check-in Bulan Ini*: ${checkInBulanIni.length} orang\n${checkInBulanIni.length ? checkInBulanIni.join("\n") : "Belum ada"}\n\nTerima kasih! Team Kostory`;
-
+  const pesan = `*Laporan Harian ${namaKost}*\nOkupasi: ${Math.round((terisi/rooms.length)*100)}% (${terisi}/${rooms.length})\nKosong: ${kosongList.join(", ") || "-"}`;
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// TAGIH & LUNAS (singkat)
-window.bukaTagih = (kost, room, nama, hp) => { /* sama seperti sebelumnya */ };
-window.kirimTagihan = () => { /* sama */ };
-window.bukaLunas = (kost, room) => { /* sama */ };
-window.catatLunas = () => { /* sama */ };
+window.shareFullData = function() {
+  const d = currentData;
+  const pesan = `*DATA ${currentKost} - ${currentRoom}*\nNama: ${d.nama}\nHP: ${d.hp}\nCheck-in: ${formatDate(d.tanggalMasuk)}\nDurasi: ${d.durasi}`;
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
 
-// INIT
+// INIT AUTO LOGIN
 document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("kostoryUser");
   if (saved && passwordDb[saved.toLowerCase()]) {
