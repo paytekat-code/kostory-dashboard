@@ -521,3 +521,58 @@ window.laporPembayaran = async function() {
   pesan += "\nTeam Kostory";
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
+window.laporCheckout = async function() {
+  const bulanIni = [], sebelumnya = [];
+  const now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const snap = await db.ref("checkout").once("value");
+  const all = snap.val() || {};
+
+  Object.keys(all).forEach(kost => {
+    Object.keys(all[kost] || {}).forEach(room => {
+      const d = all[kost][room];
+      if (d && d.tanggalCheckout) {
+        const item = {
+          kost, room, nama: d.nama || "-", durasi: d.durasi || "Bulanan",
+          tanggalCheckout: d.tanggalCheckout,
+          lama: hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)
+        };
+        const coDate = new Date(d.tanggalCheckout);
+        if (coDate.getMonth() === thisMonth && coDate.getFullYear() === thisYear) {
+          bulanIni.push(item);
+        } else {
+          sebelumnya.push(item);
+        }
+      }
+    });
+  });
+
+  // Urutkan dari terbaru
+  bulanIni.sort((a,b) => new Date(b.tanggalCheckout) - new Date(a.tanggalCheckout));
+  sebelumnya.sort((a,b) => new Date(b.tanggalCheckout) - new Date(a.tanggalCheckout));
+
+  let pesan = "*LAPORAN CHECK-OUT*\n";
+  pesan += formatDate(new Date()) + "\n\n";
+
+  pesan += "*Bulan Ini:*\n";
+  if (bulanIni.length === 0) {
+    pesan += "Belum ada check-out\n\n";
+  } else {
+    bulanIni.forEach((d, i) => {
+      pesan += `${i+1}. ${d.room} | ${d.nama} | ${d.durasi} | ${formatDate(d.tanggalCheckout)} | ${d.lama}\n`;
+    });
+    pesan += "\n";
+  }
+
+  pesan += "*Sebelumnya:*\n";
+  if (sebelumnya.length === 0) {
+    pesan += "Tidak ada\n";
+  } else {
+    sebelumnya.forEach((d, i) => {
+      pesan += `${i+1}. ${d.room} | ${d.nama} | ${d.durasi} | ${formatDate(d.tanggalCheckout)} | ${d.lama}\n`;
+    });
+  }
+
+  pesan += "\nTeam Kostory";
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
