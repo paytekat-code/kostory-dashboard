@@ -344,17 +344,15 @@ window.showPenghuniList = async function() {
       const d = snap.val();
       if (d && d.nama && !d.checkout) {
         list.push({
-  kost,
-  room,
-  nama: d.nama,
-  hp: d.hp || "",
-  tanggalLahir: d.tanggalLahir,
-  || null,
-  tanggalMasuk: d.tanggalMasuk || null,  // INI YANG BARU DITAMBAH
-  lunas: d.lunas || false,
-  tanggalLunas: d.tanggalLunas || "",
-  jumlahLunas: d.jumlahLunas || 0
-});
+          kost,
+          room,
+          nama: d.nama,
+          hp: d.hp || "",
+          tanggalLahir: d.tanggalLahir,
+          lunas: d.lunas || false,
+          tanggalLunas: d.tanggalLunas || "",
+          jumlahLunas: d.jumlahLunas || 0
+        });
       }
     }
   }
@@ -385,7 +383,7 @@ window.showPenghuniList = async function() {
     return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
       <div>
         <strong>${p.nama}</strong><br>
-       <small>${p.kost} - ${p.room} • Check-in: ${formatDate(p.tanggalMasuk) || "-"}</small><br>
+        <small>${p.kost} - ${p.room}</small><br>
         ${statusBayar}
         <br><small style="color:#555;font-style:italic;">
           ${p.tanggalLahir ? 
