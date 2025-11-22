@@ -517,7 +517,7 @@ window.laporPembayaran = async function() {
     pesan += "Belum ada penghuni aktif.";
   } else {
    list.forEach((p, i) => {
-  pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.tglMasuk)} | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
+  pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
 });
   }
 
