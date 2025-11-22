@@ -70,7 +70,7 @@
 
 <!-- DASHBOARD -->
 <div id="app" class="hidden">
-<div id="header">
+  <div id="header">
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px">
     <h1 style="margin:0;">KOSTORY DASHBOARD</h1>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -84,16 +84,13 @@
 <!-- DAFTAR PENGHUNI -->
 <div id="penghuniListPage" class="hidden">
   <div id="header">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px">
-    <h1>KOSTORY DASHBOARD</h1>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn" onclick="showPenghuniList()">DAFTAR PENGHUNI</button>
-      <button class="btn btn-success" onclick="showCheckinList()">DAFTAR CHECK-IN</button>
-      <button class="btn" onclick="showCheckoutList()">DAFTAR CHECK-OUT</button>
-    </div>
+    <h1>Daftar Penghuni (Urut Ulang Tahun Terdekat)</h1>
+    <button class="btn" onclick="backToDashboard()">Kembali</button>
   </div>
+  <div id="listPenghuni" style="margin-top:20px">Memuat...</div>
 </div>
 
+<!-- LIST CHECK-OUT -->
 <!-- LIST CHECK-OUT -->
 <div id="checkoutListPage" class="hidden">
   <div id="header">
@@ -112,24 +109,7 @@
     <div id="listSebelumnya"></div>
   </div>
 </div>
-<!-- DAFTAR CHECK-IN -->
-<div id="checkinListPage" class="hidden">
-  <div id="header">
-    <h1>Daftar Check-in</h1>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn btn-wa" onclick="laporCheckinWA()">LAPOR CHECK-IN</button>
-      <button class="btn" onclick="backToDashboard()">Kembali</button>
-    </div>
-  </div>
-  <div class="checkout-group">
-    <h2>Check-in Bulan Ini</h2>
-    <div id="listCheckinBulanIni"></div>
-  </div>
-  <div class="checkout-group" style="background:#fefce8;border-color:#fde047">
-    <h2 style="color:#a16207">Check-in Bulan Lalu</h2>
-    <div id="listCheckinBulanLalu"></div>
-  </div>
-</div>
+
 <!-- MODAL CHECK-IN / UPDATE -->
 <div id="modal" class="modal hidden">
   <div class="modal-content">
