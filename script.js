@@ -41,6 +41,12 @@ function hariKeUlangTahun(tglLahir) {
   if (next < today) next.setFullYear(today.getFullYear() + 1);
   return Math.ceil((next - today) / 86400000);
 }
+function isHariIniUlangTahun(tglLahir) {
+  if (!tglLahir) return false;
+  const lahir = new Date(tglLahir);
+  const today = new Date();
+  return lahir.getDate() === today.getDate() && lahir.getMonth() === today.getMonth();
+}
 function closeModal() { document.querySelectorAll(".modal").forEach(m => m.classList.add("hidden")); }
 
 function backToDashboard() {
@@ -83,7 +89,8 @@ function loadDashboard() {
     let terisi = 0;
 
     kosts[namaKost].forEach(room => {
-      const box = document.createElement("div"); box.className = "room kosong";
+      const box = document.createElement("div");
+      box.className = "room kosong";
       box.innerHTML = room + "<br><small>KOSONG</small>";
       box.onclick = () => openModal(namaKost, room);
       grid.appendChild(box);
@@ -193,7 +200,25 @@ window.updateDataOnly = function(isFromCheckout = false) {
 };
 
 window.shareFullData = function() {
-  const d = currentData;
+  const d = {
+    nama: document.getElementById("nama").value.trim(),
+    hp: document.getElementById("hp").value.trim(),
+    tanggalMasuk: document.getElementById("tanggal").value,
+    tanggalCheckout: currentData.tanggalCheckout || null,
+    harga: Number(document.getElementById("harga").value),
+    deposit: Number(document.getElementById("deposit").value) || 0,
+    tokenAwal: Number(document.getElementById("tokenAwal").value),
+    tokenAkhir: currentData.tokenAkhir || "-",
+    selisihToken: currentData.selisihToken || "-",
+    namaBank: document.getElementById("namaBank").value.trim(),
+    noRek: document.getElementById("noRek").value.trim(),
+    namaRekening: document.getElementById("namaRekening").value.trim(),
+    catatan: document.getElementById("catatan").value.trim(),
+    namaKeluarga: document.getElementById("namaKeluarga")?.value.trim() || "",
+    hubunganKeluarga: document.getElementById("hubunganKeluarga")?.value || "",
+    hpKeluarga: document.getElementById("hpKeluarga")?.value.trim() || ""
+  };
+
   const lamaTinggal = d.tanggalCheckout ? hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout) : hitungLamaTinggal(d.tanggalMasuk);
   const status = d.tanggalCheckout ? "CHECK-OUT" : "MASIH MENETAP";
 
@@ -208,8 +233,8 @@ window.shareFullData = function() {
     `Harga/Bulan: Rp ${d.harga?.toLocaleString() || "-"}\n` +
     `Deposit: Rp ${d.deposit?.toLocaleString() || "0"}\n` +
     `Token Awal: ${d.tokenAwal || "-"}\n` +
-    `Token Akhir: ${d.tokenAkhir || "-"}\n` +
-    `Selisih Token: ${d.selisihToken || "-"} kWh\n` +
+    `Token Akhir: ${d.tokenAkhir}\n` +
+    `Selisih Token: ${d.selisihToken} kWh\n` +
     `Rekening: ${d.namaBank || "-"} - ${d.noRek || "-"} a.n ${d.namaRekening || "-"}\n` +
     `Catatan: ${d.catatan || "-"}\n`;
 
@@ -219,6 +244,12 @@ window.shareFullData = function() {
 
   pesan += `\nTeam Kostory`;
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
+
+window.kirimUlangTahun = function(nama, hp) {
+  const pesan = `Halo Kak*${nama}*!!! 🎉🎂\n\n*SELAMAT ULANG TAHUN Kak!!* 🥳🔥\nSemoga hari ini penuh hal baik dan kebahagiaan!, Kami berdoa semoga kakak diberikan Panjang umur, selalu sehat dan semakin sukses 💪\n\nKostory senang bisa jadi bagian kecil dari cerita Perjalanan hidup kakak\n\nSalam Kostorian\nTeam Kostory`;
+  const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
 window.laporKost = async function(namaKost) {
@@ -241,9 +272,9 @@ window.laporKost = async function(namaKost) {
   penghuniList.sort((a,b) => b.lamaHari - a.lamaHari);
 
   let daftar = "";
-penghuniList.forEach((p, i) => {
-  daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk || today)}\n`;
-});
+  penghuniList.forEach((p, i) => {
+    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk || today)}\n`;
+  });
 
   const pesan = `*LAPORAN HARIAN*\n${formatDate(today)}\n\n` +
     `*${namaKost}*\n` +
@@ -283,19 +314,25 @@ window.showPenghuniList = async function() {
 
   all.sort((a,b) => a.hariUlangTahun - b.hariUlangTahun);
 
-  list.innerHTML = all.map(p => `
+  list.innerHTML = all.map(p => {
+    const hariIni = isHariIniUlangTahun(p.tanggalLahir);
+    return `
     <div class="penghuni-item">
       <div>
         <strong>${p.nama}</strong>${p.lunas ? ` <span class="status-lunas">Lunas ${formatDate(p.tanggalLunas)}</span>` : ""}
         <br><small>${p.jenis} • ${p.statusPenghuni || "staying"} • Check-in: ${formatDate(p.tanggalMasuk)} • ${hitungLamaTinggal(p.tanggalMasuk)}</small>
-        <br><small style="color:#e11d48;font-weight:bold">Ulang tahun: ${p.hariUlangTahun === 0 ? "HARI INI!" : p.hariUlangTahun + " hari lagi"}</small>
+        <br><small style="color:#e11d48;font-weight:bold">Ulang tahun: ${hariIni ? "HARI INI!" : p.hariUlangTahun + " hari lagi"}</small>
       </div>
-      <div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="tagih-btn" onclick="bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
         <button class="lunas-btn" onclick="bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+        <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:bold" 
+                onclick="kirimUlangTahun('${p.nama}','${p.hp}')">
+          ${hariIni ? 'HARI INI! ' : ''}🎂 Ulang Tahun
+        </button>
       </div>
-    </div>
-  `).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
+    </div>`;
+  }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
 
 window.showCheckoutList = async function() {
@@ -370,6 +407,7 @@ window.prosesCheckout = function() {
   db.ref(`checkout/${currentKost}/${currentRoom}`).set(finalData).then(() => {
     db.ref(`kosts/${currentKost}/${currentRoom}`).remove().then(() => {
       closeModal(); alert("Check-out berhasil!");
+      loadDashboard(); // Refresh dashboard biar box kamar langsung kosong
     });
   });
 };
@@ -384,7 +422,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadDashboard();
   }
 });
-// TOMBOL LOGOUT — INI YANG KAMU TUNGGU-TUNGGU
+
 window.logout = function() {
   localStorage.removeItem("kostoryUser");
   location.reload();
