@@ -99,26 +99,87 @@ function loadDashboard() {
         const d = s.val();
         if (d && d.nama && !d.checkout) {
           terisi++; totalTerisi++;
-          box.className = "room staying";
-          box.innerHTML = room + "<br><strong>" + d.nama + "</strong>";
+          box.className = `room ${d.statusPenghuni || "staying"}`;
+          box.innerHTML = `${room}<br><small>${d.nama}</small>`;
         } else {
+          terisi = Math.max(terisi - 1, 0); totalTerisi = Math.max(totalTerisi - 1, 0);
           box.className = "room kosong";
           box.innerHTML = room + "<br><small>KOSONG</small>";
         }
         occ.textContent = terisi;
-        document.getElementById("totalStats").innerHTML = `<strong>TOTAL: ${totalTerisi} terisi / ${totalKamar} kamar → ${totalKamar-totalTerisi} KOSONG</strong>`;
+        document.getElementById("totalStats").innerHTML = `Total Terisi: ${totalTerisi} / ${totalKamar} (${Math.round(totalTerisi/totalKamar*100)}%)`;
       });
     });
   });
 }
 
-window.openModal
+window.openModal = async function(kost, room, fromCheckout = false) {
+  currentKost = kost; currentRoom = room;
+  document.getElementById("modalTitle").textContent = fromCheckout ? `Detail Check-Out: ${kost} - ${room}` : `${kost} - ${room}`;
+
+  const path = fromCheckout ? `checkout/${kost}/${room}` : `kosts/${kost}/${room}`;
+  const snap = await db.ref(path).once("value");
+  currentData = snap.val() || {};
+
+  const fields = ["nama","hp","tanggalLahir","alamat","perusahaan","jenis","durasi","kendaraan","harga","deposit","tokenAwal","noRek","namaBank","namaRekening","catatan","namaKeluarga","hubunganKeluarga","hpKeluarga"];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = currentData[id] || "";
+  });
+  // Khusus tanggal check-in: pakai tanggalMasuk dari data, atau hari ini jika kosong
+  document.getElementById("tanggal").value = currentData.tanggalMasuk || new Date().toISOString().split("T")[0];
+  document.getElementById("statusPenghuni").value = currentData.statusPenghuni || "staying";
+
+  ["tokenAkhirCheckout", "selisihToken"].forEach(id => {
+    const label = document.querySelector(`label[for="${id}"]`);
+    if (label && label.parentElement) label.parentElement.style.display = fromCheckout ? "block" : "none";
+  });
+  document.getElementById("infoSelisih").style.display = fromCheckout ? "block" : "none";
+
+  if (fromCheckout) {
+    document.getElementById("tokenAkhirCheckout").value = currentData.tokenAkhir || "";
+    hitungSelisihToken(); // Hitung selisih jika ada data
+  }
+
+  const btns = document.getElementById("modalButtons");
+  btns.innerHTML = "";
+  if (!fromCheckout) {
+    if (currentData.nama) {
+      btns.innerHTML = `
+        <button class="btn-success" onclick="updateDataOnly()">UPDATE DATA</button>
+        <button class="btn-wa" onclick="shareFullData()">SHARE WA</button>
+        <button class="btn-danger full" onclick="openCheckoutModal()">CHECK-OUT</button>
+        <button class="btn-secondary full" onclick="closeModal()">TUTUP</button>`;
+    } else {
+      btns.innerHTML = `
+        <button class="btn-success full" onclick="simpanData()">SIMPAN</button>
+        <button class="btn-danger full" onclick="closeModal()">Batal</button>`;
+    }
+  } else {
+    btns.innerHTML = `
+      <button class="btn-success" onclick="updateDataOnly(true)">UPDATE DATA</button>
+      <button class="btn-wa" onclick="shareFullData()">SHARE WA</button>
+      <button class="btn-secondary full" onclick="closeModal()">TUTUP</button>`;
+  }
+  document.getElementById("modal").classList.remove("hidden");
+};
+
 window.hitungSelisihToken = function() {
   const awal = Number(document.getElementById("tokenAwal").value) || 0;
   const akhir = Number(document.getElementById("tokenAkhirCheckout").value) || 0;
   const selisih = akhir - awal;
   document.getElementById("selisihToken").value = selisih;
-  document.getElementById("infoSelisih").textContent = `Selisih Token: ${selisih} kWh (Akhir - Awal)`;
+  document.getElementById("infoSelisih").textContent = selisih < 0 ? "Selisih negatif, cek input!" : "";
+};
+
+window.simpanData = function() {
+  const nama = document.getElementById("nama").value.trim();
+  const hp = document.getElementById("hp").value.trim();
+  if (!nama || !hp) return alert("Nama dan HP wajib diisi!");
+  const data = updateDataOnly(); // Reuse the function to get data
+  db.ref(`kosts/${currentKost}/${currentRoom}`).set(data).then(() => {
+    closeModal(); alert("Data tersimpan!");
+  });
 };
 
 window.updateDataOnly = function(isFromCheckout = false) {
@@ -127,6 +188,8 @@ window.updateDataOnly = function(isFromCheckout = false) {
     hp: document.getElementById("hp").value.trim(),
     statusPenghuni: document.getElementById("statusPenghuni").value,
     tanggalLahir: document.getElementById("tanggalLahir").value || null,
+    alamat: document.getElementById("alamat").value.trim(),
+    perusahaan: document.getElementById("perusahaan").value.trim(),
     jenis: document.getElementById("jenis").value,
     durasi: document.getElementById("durasi").value,
     kendaraan: document.getElementById("kendaraan").value,
@@ -140,28 +203,24 @@ window.updateDataOnly = function(isFromCheckout = false) {
     catatan: document.getElementById("catatan").value.trim(),
     namaKeluarga: document.getElementById("namaKeluarga")?.value.trim() || "",
     hubunganKeluarga: document.getElementById("hubunganKeluarga")?.value || "",
-    hpKeluarga: document.getElementById("hpKeluarga")?.value.trim() || "",
-    // === TAMBAHAN BARU ===
-    alamat: document.getElementById("alamat")?.value.trim() || "",
-    perusahaan: document.getElementById("perusahaan")?.value.trim() || ""
+    hpKeluarga: document.getElementById("hpKeluarga")?.value.trim() || ""
   };
-
   if (isFromCheckout) {
     data.tokenAkhir = Number(document.getElementById("tokenAkhirCheckout").value) || 0;
-    data.selisihToken = Number(document.getElementById("selisihToken").value);
+    data.selisihToken = data.tokenAkhir - (data.tokenAwal || 0);
+    db.ref(`checkout/${currentKost}/${currentRoom}`).update(data).then(() => {
+      closeModal(); alert("Update berhasil!");
+    });
+  } else {
+    db.ref(`kosts/${currentKost}/${currentRoom}`).update(data).then(() => {
+      closeModal(); alert("Update berhasil!");
+    });
   }
-
-  if (!data.nama || !data.hp || !data.tanggalMasuk || !data.harga) return alert("Field wajib diisi!");
-
-  const path = isFromCheckout ? `checkout/${currentKost}/${currentRoom}` : `kosts/${currentKost}/${currentRoom}`;
-  db.ref(path).update(data).then(() => {
-    closeModal();
-    alert("Data berhasil disimpan!");
-  });
+  return data;
 };
 
 window.shareFullData = async function() {
-  // Ambil data terbaru dari database (bukan dari form yang kadang belum ke-update)
+  // Ambil data terbaru dari database
   const path = currentData.checkout ? `checkout/${currentKost}/${currentRoom}` : `kosts/${currentKost}/${currentRoom}`;
   const snap = await db.ref(path).once("value");
   const d = snap.val() || {};
@@ -196,12 +255,6 @@ window.shareFullData = async function() {
 
   pesan += `\nTeam Kostory`;
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
-};
-
-window.kirimUlangTahun = function(nama, hp) {
-  const pesan = `Halo Kak*${nama}*!!! 🎉🎂\n\n*SELAMAT ULANG TAHUN Kak!!* 🥳🔥\nSemoga hari ini penuh hal baik dan kebahagiaan!, Kami berdoa semoga kakak diberikan Panjang umur, selalu sehat dan semakin sukses 💪\n\nKostory senang bisa jadi bagian kecil dari cerita Perjalanan hidup kakak\n\nSalam Kostorian\nTeam Kostory`;
-  const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
-  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
 window.laporKost = async function(namaKost) {
@@ -249,41 +302,36 @@ window.laporKost = async function(namaKost) {
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
+
+window.kirimUlangTahun = function(nama, hp) {
+  const pesan = `Selamat ulang tahun Kak ${nama}! 🎉\n\nSemoga sehat selalu dan sukses terus ya. Terima kasih sudah kost di Kostory. 🏡\n\nTeam Kostory`;
+  const phone = hp.replace(/^0/,"62").replace(/[^0-9]/g,"");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
+};
+
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
-  const list = document.getElementById("listPenghuni");
-  list.innerHTML = "Memuat...";
-
-  const today = new Date();
-  const isTanggal1 = today.getDate() === 1;
-  const all = [];
-
+  const list = [];
   for (const kost of allowedKosts) {
-    const snap = await db.ref(`kosts/${kost}`).once("value");
-    const rooms = snap.val() || {};
-    Object.entries(rooms).forEach(([room, d]) => {
-      if (d && d.nama) {
-        if (isTanggal1 && d.lunas) {
-          db.ref(`kosts/${kost}/${room}`).update({lunas:null, tanggalLunas:null, jumlahLunas:null});
-        }
-        all.push({kost, room, ...d, hariUlangTahun: hariKeUlangTahun(d.tanggalLahir)});
+    for (const room of kosts[kost]) {
+      const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
+      const d = snap.val();
+      if (d && d.nama && !d.checkout) {
+        list.push({kost, room, nama: d.nama, hp: d.hp, tanggalLahir: d.tanggalLahir});
       }
-    });
+    }
   }
-
-  all.sort((a,b) => a.hariUlangTahun - b.hariUlangTahun);
-
-  list.innerHTML = all.map(p => {
+  list.sort((a,b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
+  document.getElementById("listPenghuni").innerHTML = list.map(p => {
     const hariIni = isHariIniUlangTahun(p.tanggalLahir);
-    return `
-    <div class="penghuni-item">
+    const tgl = p.tanggalLahir ? formatDate(p.tanggalLahir) : "Belum diisi";
+    return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
       <div>
-        <strong>${p.nama}</strong>${p.lunas ? ` <span class="status-lunas">Lunas ${formatDate(p.tanggalLunas)}</span>` : ""}
-        <br><small>${p.jenis} • ${p.statusPenghuni || "staying"} • Check-in: ${formatDate(p.tanggalMasuk)} • ${hitungLamaTinggal(p.tanggalMasuk)}</small>
-        <br><small style="color:#e11d48;font-weight:bold">Ulang tahun: ${hariIni ? "HARI INI!" : p.hariUlangTahun + " hari lagi"}</small>
+        <strong>${p.nama}</strong><br>
+        <small>${p.kost} - ${p.room} • Ulang Tahun: ${tgl}</small>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="tagih-btn" onclick="bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
         <button class="lunas-btn" onclick="bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
         <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:bold" 
@@ -362,12 +410,13 @@ window.openCheckoutModal = function() {
 
 window.prosesCheckout = function() {
   const tgl = document.getElementById("tanggalCheckout").value;
+  const tokenAkhir = Number(document.getElementById("tokenAkhir").value) || 0;
   if (!tgl) return alert("Isi tanggal!");
-  const finalData = {...currentData, checkout:true, tanggalCheckout:tgl};
+  const finalData = {...currentData, checkout:true, tanggalCheckout:tgl, tokenAkhir, selisihToken: tokenAkhir - (currentData.tokenAwal || 0)};
   db.ref(`checkout/${currentKost}/${currentRoom}`).set(finalData).then(() => {
     db.ref(`kosts/${currentKost}/${currentRoom}`).remove().then(() => {
       closeModal(); alert("Check-out berhasil!");
-      loadDashboard(); // Refresh dashboard biar box kamar langsung kosong
+      loadDashboard();
     });
   });
 };
