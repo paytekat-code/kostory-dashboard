@@ -202,33 +202,22 @@ window.updateDataOnly = function(isFromCheckout = false) {
   });
 };
 
-window.shareFullData = function() {
-  const d = {
-    nama: document.getElementById("nama").value.trim(),
-    hp: document.getElementById("hp").value.trim(),
-    tanggalMasuk: document.getElementById("tanggal").value,
-    tanggalCheckout: currentData.tanggalCheckout || null,
-    harga: Number(document.getElementById("harga").value),
-    deposit: Number(document.getElementById("deposit").value) || 0,
-    tokenAwal: Number(document.getElementById("tokenAwal").value),
-    tokenAkhir: currentData.tokenAkhir || "-",
-    selisihToken: currentData.selisihToken || "-",
-    namaBank: document.getElementById("namaBank").value.trim(),
-    noRek: document.getElementById("noRek").value.trim(),
-    namaRekening: document.getElementById("namaRekening").value.trim(),
-    catatan: document.getElementById("catatan").value.trim(),
-    namaKeluarga: document.getElementById("namaKeluarga")?.value.trim() || "",
-    hubunganKeluarga: document.getElementById("hubunganKeluarga")?.value || "",
-    hpKeluarga: document.getElementById("hpKeluarga")?.value.trim() || ""
-  };
+window.shareFullData = async function() {
+  // Ambil data terbaru dari database (bukan dari form yang kadang belum ke-update)
+  const path = currentData.checkout ? `checkout/${currentKost}/${currentRoom}` : `kosts/${currentKost}/${currentRoom}`;
+  const snap = await db.ref(path).once("value");
+  const d = snap.val() || {};
 
-  const lamaTinggal = d.tanggalCheckout ? hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout) : hitungLamaTinggal(d.tanggalMasuk);
+  const lamaTinggal = d.tanggalCheckout 
+    ? hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout) 
+    : hitungLamaTinggal(d.tanggalMasuk);
+
   const status = d.tanggalCheckout ? "CHECK-OUT" : "MASIH MENETAP";
 
   let pesan = `*DATA PENGHUNI KOSTORY*\n\n` +
     `Kost: ${currentKost} | Kamar: ${currentRoom}\n` +
-    `Nama: ${d.nama}\n` +
-    `HP: ${d.hp}\n` +
+    `Nama: ${d.nama || "-"}\n` +
+    `HP: ${d.hp || "-"}\n` +
     `Alamat Asal: ${d.alamat || "-"}\n` +
     `Perusahaan/Sekolah: ${d.perusahaan || "-"}\n` +
     `Check-in: ${formatDate(d.tanggalMasuk)}\n` +
@@ -238,8 +227,8 @@ window.shareFullData = function() {
     `Harga/Bulan: Rp ${d.harga?.toLocaleString() || "-"}\n` +
     `Deposit: Rp ${d.deposit?.toLocaleString() || "0"}\n` +
     `Token Awal: ${d.tokenAwal || "-"}\n` +
-    `Token Akhir: ${d.tokenAkhir}\n` +
-    `Selisih Token: ${d.selisihToken} kWh\n` +
+    `Token Akhir: ${d.tokenAkhir || "-"}\n` +
+    `Selisih Token: ${d.selisihToken ? d.selisihToken + " kWh" : "-"}\n` +
     `Rekening: ${d.namaBank || "-"} - ${d.noRek || "-"} a.n ${d.namaRekening || "-"}\n` +
     `Catatan: ${d.catatan || "-"}\n`;
 
@@ -265,20 +254,29 @@ window.laporKost = async function(namaKost) {
   for (const room of rooms) {
     const snap = await db.ref(`kosts/${namaKost}/${room}`).once("value");
     const d = snap.val();
-    if (d && d.nama) {
+    if (d && d.nama && !d.checkout) {
       terisi++;
       const lamaHari = Math.floor((today - new Date(d.tanggalMasuk)) / 86400000);
-      penghuniList.push({room, nama: d.nama, hp: d.hp||"-", durasi: d.durasi, lamaHari});
+      penghuniList.push({
+        room,
+        nama: d.nama,
+        hp: d.hp || "-",
+        durasi: d.durasi || "Bulanan",
+        tanggalMasuk: d.tanggalMasuk  // penting: simpan tanggalMasuk di object
+      });
       if (d.kendaraan === "Mobil") mobilList.push(d.nama);
       if (d.kendaraan === "Motor") motorList.push(d.nama);
-    } else kosongList.push(room);
+    } else {
+      kosongList.push(room);
+    }
   }
 
-  penghuniList.sort((a,b) => b.lamaHari - a.lamaHari);
+  // Urutkan dari yang paling lama tinggal
+  penghuniList.sort((a, b) => new Date(b.tanggalMasuk) - new Date(a.tanggalMasuk));
 
   let daftar = "";
   penghuniList.forEach((p, i) => {
-        daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(d.tanggalMasuk)}\n`;
+    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk)}\n`;
   });
 
   const pesan = `*LAPORAN HARIAN*\n${formatDate(today)}\n\n` +
@@ -293,7 +291,6 @@ window.laporKost = async function(namaKost) {
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
-
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
