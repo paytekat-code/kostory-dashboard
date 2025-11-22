@@ -322,7 +322,21 @@ window.kirimUlangTahun = function(nama, hp) {
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
-  document.getElementById("listPenghuni").innerHTML = "Memuat...";
+
+  // === RESET LUNAS OTOMATIS SETIAP TANGGAL 1 ===
+  const today = new Date();
+  if (today.getDate() === 1) {
+    const updates = {};
+    for (const kost of allowedKosts) {
+      for (const room of kosts[kost]) {
+        updates[`kosts/${kost}/${room}/lunas`] = false;
+        updates[`kosts/${kost}/${room}/tanggalLunas`] = null;
+        updates[`kosts/${kost}/${room}/jumlahLunas`] = 0;
+      }
+    }
+    db.ref().update(updates).catch(() => {});
+  }
+
   const list = [];
   for (const kost of allowedKosts) {
     for (const room of kosts[kost]) {
@@ -335,7 +349,6 @@ window.showPenghuniList = async function() {
           nama: d.nama,
           hp: d.hp || "",
           tanggalLahir: d.tanggalLahir,
-          tanggalMasuk: d.tanggalMasuk || null,  // Fix: Tambah ini
           lunas: d.lunas || false,
           tanggalLunas: d.tanggalLunas || "",
           jumlahLunas: d.jumlahLunas || 0
@@ -370,7 +383,7 @@ window.showPenghuniList = async function() {
     return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
       <div>
         <strong>${p.nama}</strong><br>
-        <small>${p.kost} - ${p.room} • Check-in: ${formatDate(p.tanggalMasuk) || "-"}</small><br>
+        <small>${p.kost} - ${p.room}</small><br>
         ${statusBayar}
         <br><small style="color:#555;font-style:italic;">
           ${p.tanggalLahir ? 
@@ -389,7 +402,6 @@ window.showPenghuniList = async function() {
       </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
-};
 };window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
