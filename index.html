@@ -177,7 +177,26 @@
     </div>
   </div>
 </div>
+<!-- PAGE DAFTAR CHECK-IN -->
+<div id="checkinListPage" class="hidden">
+  <div id="header">
+    <h1>Daftar Check-in Penghuni</h1>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-wa" onclick="laporCheckinWA()">LAPORAN CHECK-IN KE WA</button>
+      <button class="btn" onclick="backToDashboard()">Kembali</button>
+    </div>
+  </div>
 
+  <div class="checkout-group" style="background:#ecfdf5;border-color:#86efac">
+    <h2 style="color:#166534">Check-in Bulan Ini (<span id="countBulanIni">0</span>)</h2>
+    <div id="listCheckinBulanIni"></div>
+  </div>
+
+  <div class="checkout-group" style="background:#fefce8;border-color:#fde047">
+    <h2 style="color:#a16207">Check-in Bulan Lalu (<span id="countBulanLalu">0</span>)</h2>
+    <div id="listCheckinBulanLalu"></div>
+  </div>
+</div>
 <!-- MODAL TAGIH -->
 <div id="tagihModal" class="modal hidden">
   <div class="modal-content">
