@@ -297,7 +297,7 @@ window.laporKost = async function(namaKost) {
     daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${formatDate(p.tanggalMasuk)} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk)}\n`;
   });
 
-  const pesan = `*LAPORAN HARIAN*\n${formatDate(today)}\n\n` +
+  const pesan = `*DATA PENGHUNI*\n${formatDate(today)}\n\n` +
     `*${namaKost}*\n` +
     `Terisi: ${terisi}/${rooms.length} (${Math.round(terisi/rooms.length*100)}%)\n` +
     `Kosong: ${kosongList.join(", ") || "Tidak ada"}\n\n` +
