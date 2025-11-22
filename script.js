@@ -112,49 +112,7 @@ function loadDashboard() {
   });
 }
 
-window.openModal = async function(kost, room, fromCheckout = false) {
-  currentKost = kost; currentRoom = room;
-  document.getElementById("modalTitle").textContent = fromCheckout ? `Detail Check-Out: ${kost} - ${room}` : `${kost} - ${room}`;
-
-  const path = fromCheckout ? `checkout/${kost}/${room}` : `kosts/${kost}/${room}`;
-  const snap = await db.ref(path).once("value");
-  currentData = snap.val() || {};
-
-  const fields = ["nama","hp","tanggalLahir","alamat","perusahaan","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan","namaKeluarga","hubunganKeluarga","hpKeluarga"];
-  fields.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = currentData[id] || (id === "tanggal" ? new Date().toISOString().split("T")[0] : "");
-  });
-  document.getElementById("statusPenghuni").value = currentData.statusPenghuni || "staying";
-
-  ["tokenAkhirCheckout", "selisihToken"].forEach(id => {
-    const label = document.querySelector(`label[for="${id}"]`);
-    if (label && label.parentElement) label.parentElement.style.display = fromCheckout ? "block" : "none";
-  });
-  document.getElementById("infoSelisih").style.display = fromCheckout ? "block" : "none";
-
-  if (fromCheckout) {
-    document.getElementById("tokenAkhirCheckout").value = currentData.tokenAkhir || "";
-    hitungSelisihToken();
-  }
-
-  const btn = document.getElementById("modalButtons");
-  if (fromCheckout) {
-    btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Tutup</button>
-      <button class="btn-wa" onclick="shareFullData()">SHARE WA</button>
-      <button class="btn full" onclick="updateDataOnly(true)">UPDATE</button>`;
-  } else if (currentData.nama) {
-    btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Batal</button>
-      <button class="btn-wa" onclick="shareFullData()">SHARE WA</button>
-      <button class="btn-success" onclick="openCheckoutModal()">CHECK-OUT</button>
-      <button class="btn full" onclick="updateDataOnly()">UPDATE</button>`;
-  } else {
-    btn.innerHTML = `<button class="btn-danger" onclick="closeModal()">Batal</button>
-      <button class="btn-success full" onclick="updateDataOnly()">SIMPAN & CHECK-IN</button>`;
-  }
-  document.getElementById("modal").classList.remove("hidden");
-};
-
+window.openModal
 window.hitungSelisihToken = function() {
   const awal = Number(document.getElementById("tokenAwal").value) || 0;
   const akhir = Number(document.getElementById("tokenAkhirCheckout").value) || 0;
@@ -271,12 +229,12 @@ window.laporKost = async function(namaKost) {
     }
   }
 
-  // Urutkan dari yang paling lama tinggal
-  penghuniList.sort((a, b) => new Date(b.tanggalMasuk) - new Date(a.tanggalMasuk));
+  // Urutkan dari terlama (check-in awal) ke terbaru
+  penghuniList.sort((a, b) => new Date(a.tanggalMasuk) - new Date(b.tanggalMasuk));
 
   let daftar = "";
   penghuniList.forEach((p, i) => {
-    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk)}\n`;
+    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | Check-in: ${formatDate(p.tanggalMasuk)} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk)}\n`;
   });
 
   const pesan = `*LAPORAN HARIAN*\n${formatDate(today)}\n\n` +
