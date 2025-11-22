@@ -576,3 +576,126 @@ window.laporCheckout = async function() {
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
+// === FUNGSI BARU: DAFTAR CHECK-IN ===
+window.showCheckinList = async function() {
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("checkoutListPage").classList.add("hidden");
+  document.getElementById("penghuniListPage").classList.add("hidden");
+  document.getElementById("checkinListPage").classList.remove("hidden");
+
+  await loadCheckinList();
+};
+
+async function loadCheckinList() {
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+  const bulanIni = [];
+  const bulanLalu = [];
+
+  for (const kost of allowedKosts) {
+    for (const room of kosts[kost]) {
+      const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
+      const d = snap.val();
+      if (d && d.nama && d.tanggalMasuk) {
+        const tglMasuk = new Date(d.tanggalMasuk);
+        const isCheckout = !!d.checkout;
+
+        const item = {
+          kost,
+          room,
+          nama: d.nama,
+          tanggalMasuk: d.tanggalMasuk,
+          durasi: d.durasi || "Bulanan",
+          tokenAwal: d.tokenAwal || 0,
+          status: isCheckout ? "CHECK-OUT" : "Masih Tinggal"
+        };
+
+        const m = tglMasuk.getMonth();
+        const y = tglMasuk.getFullYear();
+
+        if (m === thisMonth && y === thisYear) {
+          bulanIni.push(item);
+        } else if (m === lastMonth && y === lastMonthYear) {
+          bulanLalu.push(item);
+        }
+      }
+    }
+  }
+
+  // Urutkan terbaru dulu
+  bulanIni.sort((a,b) => new Date(b.tanggalMasuk) - new Date(a.tanggalMasuk));
+  bulanLalu.sort((a,b) => new Date(b.tanggalMasuk) - new Date(a.tanggalMasuk));
+
+  const renderItem = (d, i) => `
+    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}')">
+      <strong>${i+1}. ${d.room} | ${d.nama}</strong><br>
+      <small>${formatDate(d.tanggalMasuk)} • ${d.durasi} • Token awal: ${d.tokenAwal} • ${d.status}</small>
+    </div>`;
+
+  document.getElementById("listCheckinBulanIni").innerHTML = 
+    bulanIni.map(renderItem).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-in bulan ini</p>";
+  
+  document.getElementById("listCheckinBulanLalu").innerHTML = 
+    bulanLalu.map(renderItem).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-in bulan lalu</p>";
+
+  document.getElementById("countBulanIni").textContent = bulanIni.length;
+  document.getElementById("countBulanLalu").textContent = bulanLalu.length;
+}
+
+// === LAPORAN CHECK-IN KE WHATSAPP ===
+window.laporCheckinWA = async function() {
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+  const bulanIni = [];
+  const bulanLalu = [];
+
+  for (const kost of allowedKosts) {
+    for (const room of kosts[kost]) {
+      const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
+      const d = snap.val();
+      if (d && d.nama && d.tanggalMasuk) {
+        const tglMasuk = new Date(d.tanggalMasuk);
+        const m = tglMasuk.getMonth();
+        const y = tglMasuk.getFullYear();
+        const status = d.checkout ? "CHECK-OUT" : "Masih Tinggal";
+
+        const item = `${room} | ${d.nama} | ${formatDate(d.tanggalMasuk)} | ${d.durasi || "Bulanan"} | ${d.tokenAwal || "-"} | ${status}`;
+
+        if (m === thisMonth && y === thisYear) {
+          bulanIni.push(item);
+        } else if (m === lastMonth && y === lastMonthYear) {
+          bulanLalu.push(item);
+        }
+      }
+    }
+  }
+
+  let pesan = "*Laporan Check-in*\n";
+  pesan += formatDate(now) + "\n\n";
+
+  pesan += `*Bulan Ini*: ${bulanIni.length} Orang\n`;
+  if (bulanIni.length > 0) {
+    bulanIni.forEach((l, i) => pesan += `${i+1}. ${l}\n`);
+  } else {
+    pesan += "Belum ada check-in\n";
+  }
+
+  pesan += `\n*Bulan Lalu*: ${bulanLalu.length} Orang\n`;
+  if (bulanLalu.length > 0) {
+    bulanLalu.forEach((l, i) => pesan += `${i+1}. ${l}\n`);
+  } else {
+    pesan += "Belum ada check-in\n";
+  }
+
+  pesan += "\nTeam Kostory";
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
