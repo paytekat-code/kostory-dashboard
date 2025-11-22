@@ -319,7 +319,21 @@ window.kirimUlangTahun = function(nama, hp) {
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
-  
+
+  // === RESET LUNAS OTOMATIS SETIAP TANGGAL 1 ===
+  const today = new Date();
+  if (today.getDate() === 1) {
+    const updates = {};
+    for (const kost of allowedKosts) {
+      for (const room of kosts[kost]) {
+        updates[`kosts/${kost}/${room}/lunas`] = false;
+        updates[`kosts/${kost}/${room}/tanggalLunas`] = null;
+        updates[`kosts/${kost}/${room}/jumlahLunas`] = 0;
+      }
+    }
+    db.ref().update(updates).catch(() => {});
+  }
+
   const list = [];
   for (const kost of allowedKosts) {
     for (const room of kosts[kost]) {
@@ -327,9 +341,9 @@ window.showPenghuniList = async function() {
       const d = snap.val();
       if (d && d.nama && !d.checkout) {
         list.push({
-          kost, 
-          room, 
-          nama: d.nama, 
+          kost,
+          room,
+          nama: d.nama,
           hp: d.hp || "",
           tanggalLahir: d.tanggalLahir,
           lunas: d.lunas || false,
@@ -340,13 +354,20 @@ window.showPenghuniList = async function() {
     }
   }
 
-  // Urut ulang tahun terdekat
   list.sort((a,b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
+
+  // Update header dengan tombol LAPOR PEMBAYARAN
+  document.querySelector("#penghuniListPage #header").innerHTML = `
+    <h1>Daftar Penghuni</h1>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
+      <button class="btn" onclick="backToDashboard()">Kembali</button>
+    </div>
+  `;
 
   document.getElementById("listPenghuni").innerHTML = list.map(p => {
     const hariIni = isHariIniUlangTahun(p.tanggalLahir);
 
-    // === STATUS PEMBAYARAN ===
     let statusBayar = "";
     if (p.lunas) {
       const tgl = formatDate(p.tanggalLunas);
@@ -356,30 +377,29 @@ window.showPenghuniList = async function() {
       statusBayar = `<span style="color:#dc2626;font-weight:bold">Belum Bayar</span>`;
     }
 
-   return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
-  <div>
-    <strong>${p.nama}</strong><br>
-    <small>${p.kost} - ${p.room}</small><br>
-    ${statusBayar}
-    <br><small style="color:#555;font-style:italic;">
-      ${p.tanggalLahir ? 
-        (hariIni ? "HARI INI ULANG TAHUN!" : 
-          `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) 
-        : "Tanggal lahir belum diisi"}
-    </small>
-  </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-    <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-    <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
-            onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
-      ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
-    </button>
-  </div>
-</div>`;
+    return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
+      <div>
+        <strong>${p.nama}</strong><br>
+        <small>${p.kost} - ${p.room}</small><br>
+        ${statusBayar}
+        <br><small style="color:#555;font-style:italic;">
+          ${p.tanggalLahir ? 
+            (hariIni ? "HARI INI ULANG TAHUN!" : 
+              `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) 
+            : "Tanggal lahir belum diisi"}
+        </small>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+        <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+        <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
+                onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
+          ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
+        </button>
+      </div>
+    </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
-};
-window.showCheckoutList = async function() {
+};window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
   const bulanIni = [], sebelumnya = [];
@@ -471,4 +491,33 @@ document.addEventListener("DOMContentLoaded", () => {
 window.logout = function() {
   localStorage.removeItem("kostoryUser");
   location.reload();
+};
+window.laporPembayaran = async function() {
+  const list = [];
+  for (const kost of allowedKosts) {
+    for (const room of kosts[kost]) {
+      const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
+      const d = snap.val();
+      if (d && d.nama && !d.checkout) {
+        const status = d.lunas ? "Lunas" : "Belum bayar";
+        const tgl = d.lunas ? formatDate(d.tanggalLunas) : "-";
+        const jumlah = d.lunas ? "Rp. " + Number(d.jumlahLunas).toLocaleString("id-ID") : "-";
+        list.push({ nama: d.nama, room, status, tgl, jumlah });
+      }
+    }
+  }
+
+  let pesan = "*LAPORAN PEMBAYARAN*\n";
+  pesan += formatDate(new Date()) + "\n\n";
+
+  if (list.length === 0) {
+    pesan += "Belum ada penghuni aktif.";
+  } else {
+    list.forEach((p, i) => {
+      pesan += `${i+1}. ${p.nama} | ${p.room} | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
+    });
+  }
+
+  pesan += "\nTeam Kostory";
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
