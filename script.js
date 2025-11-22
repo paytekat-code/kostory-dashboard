@@ -505,7 +505,8 @@ window.laporPembayaran = async function() {
         const status = d.lunas ? "Lunas" : "Belum bayar";
         const tgl = d.lunas ? formatDate(d.tanggalLunas) : "-";
         const jumlah = d.lunas ? "Rp. " + Number(d.jumlahLunas).toLocaleString("id-ID") : "-";
-        list.push({ room, nama: d.nama, status, tgl, jumlah });
+        const tglMasuk = formatDate(d.tanggalMasuk) || "-";
+        list.push({ room, nama: d.nama, status, tgl, jumlah, tglMasuk });
       }
     }
   }
@@ -517,7 +518,7 @@ window.laporPembayaran = async function() {
     pesan += "Belum ada penghuni aktif.";
   } else {
    list.forEach((p, i) => {
-  pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
+  pesan += `${i+1}. ${p.room} | ${p.nama} (${p.tglMasuk}) | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
 });
   }
 
