@@ -226,6 +226,7 @@ window.shareFullData = function() {
     `Kost: ${currentKost} | Kamar: ${currentRoom}\n` +
     `Nama: ${d.nama}\n` +
     `HP: ${d.hp}\n` +
+    `Alamat: ${d.Alamat || "-"}\n`;
     `Check-in: ${formatDate(d.tanggalMasuk)}\n` +
     `Check-out: ${d.tanggalCheckout ? formatDate(d.tanggalCheckout) : "-"}\n` +
     `Lama Menghuni: ${lamaTinggal}\n` +
