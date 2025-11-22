@@ -319,37 +319,60 @@ window.kirimUlangTahun = function(nama, hp) {
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
+  
   const list = [];
   for (const kost of allowedKosts) {
     for (const room of kosts[kost]) {
       const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
       const d = snap.val();
       if (d && d.nama && !d.checkout) {
-        list.push({kost, room, nama: d.nama, hp: d.hp, tanggalLahir: d.tanggalLahir});
+        list.push({
+          kost, 
+          room, 
+          nama: d.nama, 
+          hp: d.hp || "",
+          tanggalLahir: d.tanggalLahir,
+          lunas: d.lunas || false,
+          tanggalLunas: d.tanggalLunas || "",
+          jumlahLunas: d.jumlahLunas || 0
+        });
       }
     }
   }
+
+  // Urut ulang tahun terdekat
   list.sort((a,b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
+
   document.getElementById("listPenghuni").innerHTML = list.map(p => {
     const hariIni = isHariIniUlangTahun(p.tanggalLahir);
-    const tgl = p.tanggalLahir ? formatDate(p.tanggalLahir) : "Belum diisi";
+
+    // === STATUS PEMBAYARAN ===
+    let statusBayar = "";
+    if (p.lunas) {
+      const tgl = formatDate(p.tanggalLunas);
+      const jumlah = Number(p.jumlahLunas).toLocaleString("id-ID");
+      statusBayar = `<span style="color:#166534;font-weight:bold">Lunas ${tgl} sebesar Rp ${jumlah}</span>`;
+    } else {
+      statusBayar = `<span style="color:#dc2626;font-weight:bold">Belum Bayar</span>`;
+    }
+
     return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
       <div>
         <strong>${p.nama}</strong><br>
-        <small>${p.kost} - ${p.room} • Ulang Tahun: ${tgl}</small>
+        <small>${p.kost} - ${p.room}</small><br>
+        ${statusBayar}
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="tagih-btn" onclick="bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-        <button class="lunas-btn" onclick="bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-        <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:bold" 
-                onclick="kirimUlangTahun('${p.nama}','${p.hp}')">
-          ${hariIni ? 'HARI INI! ' : ''}🎂 Ulang Tahun
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+        <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+        <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
+                onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
+          ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
         </button>
       </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
-
 window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
