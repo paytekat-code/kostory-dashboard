@@ -399,31 +399,80 @@ window.showPenghuniList = async function() {
       </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
-};window.showCheckoutList = async function() {
+window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
-  const bulanIni = [], sebelumnya = [];
-  const now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
+
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth(); // 0-11
+
+  // Bulan ini
+  const bulanIniStart = new Date(thisYear, thisMonth, 1);
+  const bulanIniEnd = new Date(thisYear, thisMonth + 1, 0); // akhir bulan ini
+
+  // Bulan lalu
+  const bulanLaluYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+  const bulanLaluMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const bulanLaluStart = new Date(bulanLaluYear, bulanLaluMonth, 1);
+  const bulanLaluEnd = new Date(bulanLaluYear, bulanLaluMonth + 1, 0);
+
   const snap = await db.ref("checkout").once("value");
   const all = snap.val() || {};
+
+  const bulanIni = [];
+  const bulanLalu = [];
 
   Object.keys(all).forEach(kost => {
     Object.keys(all[kost] || {}).forEach(room => {
       const d = all[kost][room];
-      if (d && d.tanggalCheckout) {
-        const item = {kost, room, ...d, coDate: new Date(d.tanggalCheckout)};
-        (item.coDate.getMonth() === thisMonth && item.coDate.getFullYear() === thisYear ? bulanIni : sebelumnya).push(item);
+      if (d && d.tanggalCheckout && d.tanggalMasuk) {
+        const coDate = new Date(d.tanggalCheckout);
+        const item = {
+          room,
+          nama: d.nama || "-",
+          durasi: d.durasi || "Bulanan",
+          tglCheckout: formatDate(d.tanggalCheckout),
+          lama: hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout),
+          dateObj: coDate
+        };
+
+        if (coDate >= bulanIniStart && coDate <= bulanIniEnd) {
+          bulanIni.push(item);
+        } else if (coDate >= bulanLaluStart && coDate <= bulanLaluEnd) {
+          bulanLalu.push(item);
+        }
       }
     });
   });
 
-  bulanIni.sort((a,b) => b.coDate - a.coDate);
-  sebelumnya.sort((a,b) => b.coDate - a.coDate);
+  // Urutkan dari terbaru ke terlama
+  bulanIni.sort((a, b) => b.dateObj - a.dateObj);
+  bulanLalu.sort((a, b) => b.dateObj - a.dateObj);
 
-  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)"><strong>${i+1}. ${d.nama}</strong><br><small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small></div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada</p>";
-  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map(d => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)"><strong>${d.nama}</strong><br><small>${formatDate(d.tanggalCheckout)}</small></div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada</p>";
+  // Update header dengan tombol LAPORAN CHECK-OUT
+  document.querySelector("#checkoutListPage #header").innerHTML = `
+    <h1>Daftar Check-Out</h1>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-wa" onclick="laporCheckout()">LAPORAN CHECK-OUT</button>
+      <button class="btn" onclick="backToDashboard()">Kembali</button>
+    </div>
+  `;
+
+  document.getElementById("listBulanIni").innerHTML = bulanIni.length > 0
+    ? bulanIni.map((d, i) => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
+        <strong>${i+1}. ${d.room} | ${d.nama}</strong><br>
+        <small>${d.durasi} • ${d.tglCheckout} • ${d.lama}</small>
+      </div>`).join("")
+    : "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
+
+  document.getElementById("listSebelumnya").innerHTML = bulanLalu.length > 0
+    ? bulanLalu.map((d, i) => `<div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
+        <strong>${i+1}. ${d.room} | ${d.nama}</strong><br>
+        <small>${d.durasi} • ${d.tglCheckout} • ${d.lama}</small>
+      </div>`).join("")
+    : "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan lalu</p>";
 };
-
 window.bukaTagih = function(kost, room, nama, hp) {
   currentKost = kost; currentRoom = room;
   window.currentNamaTagih = nama;
@@ -516,6 +565,69 @@ window.laporPembayaran = async function() {
    list.forEach((p, i) => {
   pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
 });
+  }
+
+  pesan += "\nTeam Kostory";
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
+window.laporCheckout = async function() {
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth();
+
+  // Bulan ini & bulan lalu
+  const bulanIniStart = new Date(thisYear, thisMonth, 1);
+  const bulanLaluYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+  const bulanLaluMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const bulanLaluStart = new Date(bulanLaluYear, bulanLaluMonth, 1);
+
+  const snap = await db.ref("checkout").once("value");
+  const all = snap.val() || {};
+
+  const bulanIni = [];
+  const bulanLalu = [];
+
+  Object.keys(all).forEach(kost => {
+    Object.keys(all[kost] || {}).forEach(room => {
+      const d = all[kost][room];
+      if (d && d.tanggalCheckout && d.tanggalMasuk) {
+        const coDate = new Date(d.tanggalCheckout);
+        const item = {
+          room,
+          nama: d.nama || "Tanpa Nama",
+          durasi: d.durasi || "Bulanan",
+          tgl: formatDate(d.tanggalCheckout),
+          lama: hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)
+        };
+        if (coDate >= bulanIniStart) {
+          bulanIni.push(item);
+        } else if (coDate >= bulanLaluStart) {
+          bulanLalu.push(item);
+        }
+      }
+    });
+  });
+
+  let pesan = "*LAPORAN CHECK-OUT*\n";
+  pesan += formatDate(new Date()) + "\n\n";
+
+  if (bulanIni.length > 0) {
+    pesan += "*Bulan ini*\n";
+    bulanIni.forEach((p, i) => {
+      pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${p.tgl} | ${p.lama}\n`;
+    });
+    pesan += "\n";
+  }
+
+  if (bulanLalu.length > 0) {
+    pesan += "*Bulan lalu*\n";
+    bulanLalu.forEach((p, i) => {
+      pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${p.tgl} | ${p.lama}\n`;
+    });
+  }
+
+  if (bulanIni.length === 0 && bulanLalu.length === 0) {
+    pesan += "Belum ada check-out dalam 2 bulan terakhir.";
   }
 
   pesan += "\nTeam Kostory";
