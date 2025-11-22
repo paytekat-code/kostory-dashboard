@@ -120,7 +120,7 @@ window.openModal = async function(kost, room, fromCheckout = false) {
   const snap = await db.ref(path).once("value");
   currentData = snap.val() || {};
 
-  const fields = ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan","namaKeluarga","hubunganKeluarga","hpKeluarga"];
+  const fields = ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","harga","deposit","tanggalMasuk","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan","alamat","namaKeluarga","hubunganKeluarga","hpKeluarga"];
   fields.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = currentData[id] || (id === "tanggal" ? new Date().toISOString().split("T")[0] : "");
@@ -169,6 +169,7 @@ window.updateDataOnly = function(isFromCheckout = false) {
     hp: document.getElementById("hp").value.trim(),
     statusPenghuni: document.getElementById("statusPenghuni").value,
     tanggalLahir: document.getElementById("tanggalLahir").value || null,
+    alamat: document.getElementById("alamat").value.trim(),
     jenis: document.getElementById("jenis").value,
     durasi: document.getElementById("durasi").value,
     kendaraan: document.getElementById("kendaraan").value,
