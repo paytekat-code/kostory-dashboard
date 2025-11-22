@@ -502,7 +502,7 @@ window.laporPembayaran = async function() {
         const status = d.lunas ? "Lunas" : "Belum bayar";
         const tgl = d.lunas ? formatDate(d.tanggalLunas) : "-";
         const jumlah = d.lunas ? "Rp. " + Number(d.jumlahLunas).toLocaleString("id-ID") : "-";
-        list.push({ nama: d.nama, room, status, tgl, jumlah });
+        list.push({ room, nama: d.nama, status, tgl, jumlah });
       }
     }
   }
@@ -513,9 +513,9 @@ window.laporPembayaran = async function() {
   if (list.length === 0) {
     pesan += "Belum ada penghuni aktif.";
   } else {
-    list.forEach((p, i) => {
-      pesan += `${i+1}. ${p.nama} | ${p.room} | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
-    });
+   list.forEach((p, i) => {
+  pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
+});
   }
 
   pesan += "\nTeam Kostory";
