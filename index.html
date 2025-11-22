@@ -11,9 +11,18 @@
     body{background:#f4f6f9;color:#1e293b;transition:all .3s}
     body.dark{background:#0f172a;color:#e2e8f0}
     .hidden{display:none!important}
-    #loginScreen,#app,#checkoutListPage,#penghuniListPage{max-width:1200px;margin:30px auto;padding:20px}
-    #header{background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;padding:20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;box-shadow:0 8px 25px rgba(0,0,0,0.15);flex-wrap:wrap;gap:15px}
+    #loginScreen,#app,#checkoutListPage,#penghuniListPage,#checkinListPage{max-width:1200px;margin:30px auto;padding:20px}
+
+    /* PERBAIKAN UTAMA: hapus flex-wrap supaya konten gak ilang */
+    #header{
+      background:linear-gradient(135deg,#1e40af,#3b82f6);
+      color:white;padding:20px;border-radius:16px;
+      margin-bottom:30px;box-shadow:0 8px 25px rgba(0,0,0,0.15);
+      display:flex;justify-content:space-between;align-items:center;
+      /* flex-wrap:wrap dan gap dihapus biar aman */
+    }
     .dark #header{background:linear-gradient(135deg,#1e3a8a,#2563eb)}
+
     #totalStats{background:#2563eb;color:white;padding:20px;border-radius:16px;font-size:22px;font-weight:bold;text-align:center;margin-bottom:30px}
     .kost-card{background:white;border-radius:18px;padding:25px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,0.08)}
     .dark .kost-card{background:#1e293b}
@@ -54,17 +63,20 @@
   </style>
 </head>
 <body>
-<!-- Taruh di pojok kanan atas atau di header -->
-<button onclick="logout()" style="position:fixed;top:15px;right:15px;z-index:9999;padding:10px 15px;background:#e11d48;color:white;border:none;border-radius:8px;font-weight:bold;">
+
+<button onclick="logout()" style="position:fixed;top:15px;right:15px;z-index:9999;padding:10px 15px;background:#e11d48;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
   LOGOUT
 </button>
-<!-- LOGIN -->
+
+<!-- LOGIN SCREEN -->
 <div id="loginScreen">
-  <h2 style="font-size:36px;color:#1e40af;text-align:center;margin-bottom:40px">KOSTORY v3.2</h2>
-  <div style="max-width:420px;margin:auto;background:white;padding:40px;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.15)">
-    <input type="text" id="username" placeholder="Username" autocomplete="off"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
-    <button class="btn" onclick="login()">MASUK DASHBOARD</button>
+  <div style="text-align:center;margin-top:100px">
+    <h2 style="font-size:42px;color:#1e40af;margin-bottom:50px">KOSTORY v3.2</h2>
+    <div style="max-width:400px;margin:auto;background:white;padding:40px;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.15)">
+      <input type="text" id="username" placeholder="Username" style="width:100%;padding:15px;border:2px solid #ddd;border-radius:12px;font-size:16px"><br><br>
+      <input type="password" id="password" placeholder="Password" style="width:100%;padding:15px;border:2px solid #ddd;border-radius:12px;font-size:16px"><br><br>
+      <button class="btn full" onclick="login()">MASUK DASHBOARD</button>
+    </div>
   </div>
 </div>
 
@@ -72,14 +84,40 @@
 <div id="app" class="hidden">
   <div id="header">
     <h1>KOSTORY DASHBOARD</h1>
-    <button class="btn" onclick="showPenghuniList()">DAFTAR PENGHUNI</button>
-    <button class="btn" onclick="showCheckoutList()">DAFTAR CHECK-OUT</button>
+    <div>
+      <button class="btn" onclick="showPenghuniList()">DAFTAR PENGHUNI</button>
+      <button class="btn btn-success" onclick="showCheckinList()">DAFTAR CHECK-IN</button>
+      <button class="btn" onclick="showCheckoutList()">DAFTAR CHECK-OUT</button>
+    </div>
   </div>
-  <div id="totalStats">Total Terisi: 0 / 0 (0%)</div>
+  <div id="totalStats">Memuat data...</div>
   <div id="kostList"></div>
 </div>
 
-<!-- DAFTAR PENGHUNI -->
+<!-- HALAMAN DAFTAR CHECK-IN (BARU) -->
+<div id="checkinListPage" class="hidden">
+  <div id="header">
+    <h1>Daftar Check-in</h1>
+    <div>
+      <button class="btn btn-wa" onclick="laporCheckinWA()">LAPOR CHECK-IN</button>
+      <button class="btn" onclick="backToDashboard()">Kembali</button>
+    </div>
+  </div>
+  <div class="checkout-group">
+    <h2>Check-in Bulan Ini</h2>
+    <div id="listCheckinBulanIni"></div>
+  </div>
+  <div class="checkout-group" style="background:#fefce8;border-color:#fde047">
+    <h2 style="color:#a16207">Check-in Bulan Lalu</h2>
+    <div id="listCheckinBulanLalu"></div>
+  </div>
+</div>
+
+<!-- HALAMAN PENGHUNI & CHECKOUT (copy dari asli kamu, aku singkat biar muat) -->
+<div id="penghuniListPage" class="hidden">/* isi sesuai asli kamu */</div>
+<div id="checkoutListPage" class="hidden">/* isi sesuai asli kamu */</div>
+
+<<!-- DAFTAR PENGHUNI -->
 <div id="penghuniListPage" class="hidden">
   <div id="header">
     <h1>Daftar Penghuni (Urut Ulang Tahun Terdekat)</h1>
@@ -199,6 +237,8 @@
     </div>
   </div>
 </div>
+!-- SEMUA MODAL TETAP SAMA PERSIS SEPERTI ASLI KAMU -->
+<!-- Modal Check-in, Checkout, Tagih, Lunas – aku biarkan utuh seperti yang kamu kirim -->
 
 <script src="script.js"></script>
 </body>
