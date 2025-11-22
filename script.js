@@ -311,7 +311,7 @@ window.laporKost = async function(namaKost) {
 };
 
 window.kirimUlangTahun = function(nama, hp) {
-  const pesan = `Selamat ulang tahun Kak ${nama}! 🎉\n\nSemoga sehat selalu dan sukses terus ya. Terima kasih sudah kost di Kostory. 🏡\n\nTeam Kostory`;
+  const pesan = `Halo *Kak ${nama}! 🎉*\n\nKami segenap Kostorian, mengucapkan: \n\n*Selamat Ulang Tahun*\n\nSemoga selalu diberikan Kesehatan, Umur yang Panjang dan semakin sukses dalam berkarya\nKostory bangga menjadi bagian dari cerita hidup kak ${nama}!. 🏡\n\nTeam Kostory`;
   const phone = hp.replace(/^0/,"62").replace(/[^0-9]/g,"");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
 };
