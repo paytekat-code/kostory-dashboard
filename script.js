@@ -120,7 +120,7 @@ window.openModal = async function(kost, room, fromCheckout = false) {
   const snap = await db.ref(path).once("value");
   currentData = snap.val() || {};
 
-  const fields = ["nama","hp","tanggalLahir","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan","namaKeluarga","hubunganKeluarga","hpKeluarga"];
+  const fields = ["nama","hp","tanggalLahir","alamat","perusahaan","jenis","durasi","kendaraan","harga","deposit","tanggal","tokenAwal","noRek","namaBank","namaRekening","catatan","namaKeluarga","hubunganKeluarga","hpKeluarga"];
   fields.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = currentData[id] || (id === "tanggal" ? new Date().toISOString().split("T")[0] : "");
@@ -182,7 +182,10 @@ window.updateDataOnly = function(isFromCheckout = false) {
     catatan: document.getElementById("catatan").value.trim(),
     namaKeluarga: document.getElementById("namaKeluarga")?.value.trim() || "",
     hubunganKeluarga: document.getElementById("hubunganKeluarga")?.value || "",
-    hpKeluarga: document.getElementById("hpKeluarga")?.value.trim() || ""
+    hpKeluarga: document.getElementById("hpKeluarga")?.value.trim() || "",
+    // === TAMBAHAN BARU ===
+    alamat: document.getElementById("alamat")?.value.trim() || "",
+    perusahaan: document.getElementById("perusahaan")?.value.trim() || ""
   };
 
   if (isFromCheckout) {
@@ -226,6 +229,8 @@ window.shareFullData = function() {
     `Kost: ${currentKost} | Kamar: ${currentRoom}\n` +
     `Nama: ${d.nama}\n` +
     `HP: ${d.hp}\n` +
+    `Alamat Asal: ${d.alamat || "-"}\n` +
+    `Perusahaan/Sekolah: ${d.perusahaan || "-"}\n` +
     `Check-in: ${formatDate(d.tanggalMasuk)}\n` +
     `Check-out: ${d.tanggalCheckout ? formatDate(d.tanggalCheckout) : "-"}\n` +
     `Lama Menghuni: ${lamaTinggal}\n` +
@@ -273,7 +278,7 @@ window.laporKost = async function(namaKost) {
 
   let daftar = "";
   penghuniList.forEach((p, i) => {
-    daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(p.tanggalMasuk || today)}\n`;
+        daftar += `${i+1}. ${p.room} | ${p.nama} | ${p.hp} | ${p.durasi} | ${hitungLamaTinggal(d.tanggalMasuk)}\n`;
   });
 
   const pesan = `*LAPORAN HARIAN*\n${formatDate(today)}\n\n` +
