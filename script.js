@@ -25,7 +25,14 @@ const passwordDb = { "admin":"ramenuno20","mekar":"kopipait69","satria":"cilukba
 
 let currentUser = null, allowedKosts = [], currentKost = null, currentRoom = null, currentData = null;
 
-function formatDate(d) { if(!d) return "-"; return new Date(d).toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"}); }
+function formatDate(d) {
+  if (!d) return "-";
+  const date = new Date(d);
+  const hari = date.getDate();
+  const bulan = date.toLocaleDateString("id-ID", { month: "short" }).replace(".", "");
+  const tahun = date.getFullYear().toString().slice(-2);
+  return `${hari} ${bulan} ${tahun}`;
+}
 function hitungLamaTinggal(masuk, keluar = new Date()) {
   const diff = Math.floor((new Date(keluar) - new Date(masuk)) / 86400000);
   const tahun = Math.floor(diff / 365);
