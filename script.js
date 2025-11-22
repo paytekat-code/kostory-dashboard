@@ -344,15 +344,17 @@ window.showPenghuniList = async function() {
       const d = snap.val();
       if (d && d.nama && !d.checkout) {
         list.push({
-          kost,
-          room,
-          nama: d.nama,
-          hp: d.hp || "",
-          tanggalLahir: d.tanggalLahir,
-          lunas: d.lunas || false,
-          tanggalLunas: d.tanggalLunas || "",
-          jumlahLunas: d.jumlahLunas || 0
-        });
+  kost,
+  room,
+  nama: d.nama,
+  hp: d.hp || "",
+  tanggalLahir: d.tanggalLahir,
+  || null,
+  tanggalMasuk: d.tanggalMasuk || null,  // INI YANG BARU DITAMBAH
+  lunas: d.lunas || false,
+  tanggalLunas: d.tanggalLunas || "",
+  jumlahLunas: d.jumlahLunas || 0
+});
       }
     }
   }
