@@ -85,10 +85,13 @@ function loadDashboard() {
     if (!allowedKosts.includes(namaKost)) return;
     totalKamar += kosts[namaKost].length;
     const card = document.createElement("div"); card.className = "kost-card";
-    card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px">
-        <h3>${namaKost}</h3>
-        <button class="btn btn-wa" onclick="laporKost('${namaKost}')">LAPOR</button>
-      </div>
+ card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px">
+    <h3>${namaKost}</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-wa" onclick="laporKost('${namaKost}')">LAPOR</button>
+      <button class="btn" style="background:#7c3aed;color:white" onclick="laporCiCo('${namaKost}')">Ci-Co</button>
+    </div>
+  </div>
       <div class="stats">Terisi: <span class="occ">0</span> / ${kosts[namaKost].length}</div>
       <div class="room-grid"></div>`;
     container.appendChild(card);
@@ -519,5 +522,86 @@ window.laporPembayaran = async function() {
   }
 
   pesan += "\nTeam Kostory";
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
+window.laporCiCo = async function(namaKost) {
+  const rooms = kosts[namaKost];
+  const today = new Date();
+  const thisMonth = today.getMonth();
+  const thisYear = today.getFullYear();
+  const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+  let ciThis = [], ciLast = [], coThis = [], coLast = [];
+
+  // Ambil data aktif (check-in
+  for (const room of rooms) {
+    const snapAktif = await db.ref(`kosts/${namaKost}/${room}`).once("value");
+    const d = snapAktif.val();
+    if (d && d.nama && d.tanggalMasuk) {
+      const tglMasuk = new Date(d.tanggalMasuk);
+      if (tglMasuk.getMonth() === thisMonth && tglMasuk.getFullYear() === thisYear) {
+        ciThis.push({room, nama: d.nama, durasi: d.durasi || "Bulanan", tglMasuk: d.tanggalMasuk, tokenAwal: d.tokenAwal || "-"});
+      } else if (tglMasuk.getMonth() === lastMonth && tglMasuk.getFullYear() === lastMonthYear) {
+        ciLast.push({room, nama: d.nama, durasi: d.durasi || "Bulanan", tglMasuk: d.tanggalMasuk, tokenAwal: d.tokenAwal || "-"});
+      }
+    }
+  }
+
+  // Ambil data check-out
+  const snapCo = await db.ref(`checkout/${namaKost}`).once("value");
+  const dataCo = snapCo.val() || {};
+  for (const room in dataCo) {
+    const d = dataCo[room];
+    if (d && d.tanggalCheckout) {
+      const tglCo = new Date(d.tanggalCheckout);
+      const item = {
+        room,
+        nama: d.nama || "-",
+        durasi: d.durasi || "Bulanan",
+        tglMasuk: d.tanggalMasuk ? formatDate(d.tanggalMasuk) : "-",
+        tglKeluar: formatDate(d.tanggalCheckout),
+        tokenAwal: d.tokenAwal || "-",
+        tokenAkhir: d.tokenAkhir || "-"
+      };
+      if (tglCo.getMonth() === thisMonth && tglCo.getFullYear() === thisYear) {
+        coThis.push(item);
+      } else if (tglCo.getMonth() === lastMonth && tglCo.getFullYear() === lastMonthYear) {
+        coLast.push(item);
+      }
+    }
+  }
+
+  // Urutkan dari terbaru
+  ciThis.sort((a,b) => new Date(b.tglMasuk) - new Date(a.tglMasuk));
+  coThis.sort((a,b) => new Date(b.tglKeluar) - new Date(a.tglKeluar));
+
+  let pesan = `*LAPORAN CI-CO ${namaKost}*\n${formatDate(today)}\n\n`;
+
+  pesan += `*Check in Bulan ini :* ${ciThis.length} orang\n`;
+  ciThis.forEach((p,i) => {
+    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${formatDate(p.tglMasuk)} | - | ${p.tokenAwal} | - | Masih Tinggal\n`;
+  });
+  if (ciThis.length === 0) pesan += "Tidak ada\n";
+  pesan += "\n";
+
+  pesan += `*Check in Bulan lalu :* ${ciLast.length} orang\n`;
+  if (ciLast.length === 0) pesan += "Tidak ada\n";
+
+  pesan += `\n*Check Out Bulan ini :* ${coThis.length} orang\n`;
+  coThis.forEach((p,i) => {
+    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${p.tglMasuk} | ${p.tglKeluar} | ${p.tokenAwal} | ${p.tokenAkhir} | Check-out\n`;
+  });
+  if (coThis.length === 0) pesan += "Tidak ada\n";
+  pesan += "\n";
+
+  pesan += `*Check Out Bulan Lalu :* ${coLast.length} orang\n`;
+  coLast.forEach((p,i) => {
+    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${p.tglMasuk} | ${p.tglKeluar} | ${p.tokenAwal} | ${p.tokenAkhir} | Check-out\n`;
+  });
+  if (coLast.length === 0) pesan += "Tidak ada\n";
+
+  pesan += `\nTeam Kostory ❤️`;
+
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
