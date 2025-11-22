@@ -356,21 +356,27 @@ window.showPenghuniList = async function() {
       statusBayar = `<span style="color:#dc2626;font-weight:bold">Belum Bayar</span>`;
     }
 
-    return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
-      <div>
-        <strong>${p.nama}</strong><br>
-        <small>${p.kost} - ${p.room}</small><br>
-        ${statusBayar}
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-        <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-        <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
-                onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
-          ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
-        </button>
-      </div>
-    </div>`;
+   return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
+  <div>
+    <strong>${p.nama}</strong><br>
+    <small>${p.kost} - ${p.room}</small><br>
+    ${statusBayar}
+    <br><small style="color:#555;font-style:italic;">
+      ${p.tanggalLahir ? 
+        (hariIni ? "HARI INI ULANG TAHUN!" : 
+          `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) 
+        : "Tanggal lahir belum diisi"}
+    </small>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+    <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+    <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
+            onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
+      ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
+    </button>
+  </div>
+</div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
 window.showCheckoutList = async function() {
