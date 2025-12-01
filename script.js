@@ -323,9 +323,12 @@ window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
 
-  // === RESET LUNAS OTOMATIS SETIAP TANGGAL 1 ===
+    // === RESET LUNAS OTOMATIS – HANYA SEKALI TIAP TANGGAL 1 TIAP BULAN ===
   const today = new Date();
-  if (today.getDate() === 1) {
+  const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-1`; // contoh: 2025-12-1
+  const lastReset = localStorage.getItem("kostory_lastLunasReset");
+
+  if (today.getDate() === 1 && lastReset !== todayKey) {
     const updates = {};
     for (const kost of allowedKosts) {
       for (const room of kosts[kost]) {
@@ -334,7 +337,12 @@ window.showPenghuniList = async function() {
         updates[`kosts/${kost}/${room}/jumlahLunas`] = 0;
       }
     }
-    db.ref().update(updates).catch(() => {});
+    db.ref().update(updates)
+      .then(() => {
+        localStorage.setItem("kostory_lastLunasReset", todayKey);
+        console.log("Semua status lunas berhasil di-reset untuk bulan ini");
+      })
+      .catch(err => console.error("Gagal reset lunas:", err));
   }
 
   const list = [];
