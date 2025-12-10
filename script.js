@@ -444,6 +444,10 @@ window.showPenghuniList = async function() {
                 onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
           ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
         </button>
+        <button style="background:#f59e0b;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;" 
+                onclick="event.stopPropagation(); bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp || ''}')">
+          Perawatan
+        </button>
       </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
@@ -743,3 +747,70 @@ window.laporCiCo = async function(namaKost) {
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
+// ====================== FULL JS: IZIN PERAWATAN (TANPA UBAH INDEX.HTML) ======================
+
+// Buat modal perawatan sekali saja saat halaman pertama kali dibuka
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("perawatanModal")) return; // sudah ada, skip
+
+  const modalHTML = `
+    <div id="perawatanModal" class="modal hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:9999;">
+      <div style="background:white;padding:25px;border-radius:12px;width:90%;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+        <h3 style="margin:0 0 15px 0;color:#1f2937;">Izin Perawatan Kamar</h3>
+        <p style="margin:0 0 15px 0;color:#4b5563;">Pilih tanggal rencana perawatan:</p>
+        <input type="date" id="tanggalPerawatan" style="width:100%;padding:12px;margin-bottom:20px;border:1px solid #d1d5db;border-radius:8px;font-size:16px;">
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn-secondary" onclick="document.getElementById('perawatanModal').classList.add('hidden')">
+            Batal
+          </button>
+          <button class="btn-wa" onclick="kirimIzinPerawatan()">Kirim WA</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
+});
+
+// Fungsi buka modal + simpan data sementara
+window.bukaIzinPerawatan = function(kost, room, nama, hp) {
+  window.currentNamaPerawatan = nama;
+  window.currentHpPerawatan = hp || "";
+
+  // default 3 hari ke depan
+  const defaultDate = new Date();
+  defaultDate.setDate(defaultDate.getDate() + 3);
+  document.getElementById("tanggalPerawatan").value = defaultDate.toISOString().split("T")[0];
+
+  document.getElementById("perawatanModal").classList.remove("hidden");
+};
+
+// Fungsi kirim WA
+window.kirimIzinPerawatan = function() {
+  const tgl = document.getElementById("tanggalPerawatan").value;
+  if (!tgl) return alert("Pilih tanggal dulu ya kak!");
+
+  const tanggalFormat = new Date(tgl).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+
+  const pesan = `Hai Kak *${window.currentNamaPerawatan}*,\n\n` +
+    `Mau ngasih info ya kak\n\n` +
+    `Kami rencana mau ada *perawatan kamar* nanti tanggal *${tanggalFormat}*.\n\n` +
+    `Kalau ada barang kakak yang lagi dipakai atau butuh dipindahin, atau perlu pindah waktu, kabarin aja ya kak.\n\n` +
+    `Bisa ngabarin ke penjaga kost, atau langsung ke mimin di WA:\n` +
+    `081383210009\n\n` +
+    `Makasih banyak atas pengertiannya ya kak!\n\n` +
+    `Salam Kostorian\nTim Kostory`;
+
+  if (!window.currentHpPerawatan || window.currentHpPerawatan.trim() === "") {
+    alert("Nomor HP kosong, tidak bisa kirim WA ke " + window.currentNamaPerawatan);
+    return;
+  }
+
+  const phone = window.currentHpPerawatan.replace(/^0/, "62").replace(/[^0-9]/g, "");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
+
+  document.getElementById("perawatanModal").classList.add("hidden");
+};
