@@ -372,7 +372,7 @@ window.kirimPerpisahan = function(nama, hp) {
     alert("Nomor HP tidak tersedia untuk " + nama);
     return;
   }
-  const pesan = `Halo kak *${nama}*\n\nTerima kasih banyak sudah menjadi bagian dari keluarga besar *Kostory* selama ini.\nKami sangat senang bisa menemani perjalanan kakak di sini.\n\nSemoga kakak selalu sehat, sukses, dan bahagia di tempat yang baru ya!\nKapan-kapan main lagi ke Kostory, pintu selalu terbuka untuk kakak!\n\nSalam hangat dari kami semua,\nTim Kostory`;
+  const pesan = `Kak *${nama}*\n\n Kami Tim Kostory, mengucapkan banyak Terima kasih atas kepercayaan kakak tinggal sementara di *Kostory*.\nKami sangat senang menjadi cerita perjalanan kakak di sini.\n\nSemoga kakak selalu sehat, dan semakin sukses dimasa depan\n\nKami mohon maaf Jika masih ada kekurangan selama kakak tinggal, silahkan kembali jika membutuhkan tempat tinggal.\n\nSalam Kostorian,\nTim Kostory \n\nUntuk Info dan Pemesanan Kontak kami di : 081383210009 (WA only). `;
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
