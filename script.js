@@ -427,7 +427,7 @@ window.showPenghuniList = async function() {
     return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
       <div>
         <strong>${p.nama}</strong><br>
-        <small>${p.kost} - ${p.room}</small><br>
+        <small>${p.kost} - ${p.room} - ${formatDate(p.tanggalMasuk)}</small><br>
         ${statusBayar}
         <br><small style="color:#555;font-style:italic;">
           ${p.tanggalLahir ? (hariIni ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
