@@ -263,7 +263,7 @@ window.shareFullData = async function() {
     pesan += `Keluarga Darurat: ${d.namaKeluarga} (${d.hubunganKeluarga || "-"})\nHP Keluarga: ${d.hpKeluarga || "-"}\n`;
   }
 
-  pesan += `\nTeam Kostory`;
+  pesan += `\nPowered by KostoryApps`;
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
@@ -314,7 +314,7 @@ window.laporKost = async function(namaKost) {
 };
 
 window.kirimUlangTahun = function(nama, hp) {
-  const pesan = `Halo *Kak ${nama}! 🎉*\n\nKami segenap Kostorian, mengucapkan: \n\n*Selamat Ulang Tahun*\n\nSemoga selalu diberikan Kesehatan, Umur yang Panjang dan semakin sukses dalam berkarya\nKostory bangga menjadi bagian dari cerita hidup kak ${nama}!. 🏡\n\nTeam Kostory`;
+  const pesan = `Halo *Kak ${nama}! 🎉*\n\nKami segenap Kostorian, mengucapkan: \n\n*Selamat Ulang Tahun*\n\nSemoga selalu diberikan Kesehatan, Umur yang Panjang dan semakin sukses dalam berkarya\nKostory bangga menjadi bagian dari cerita hidup kak ${nama}!. 🏡\n\nSalam Kostorian!.\nTeam Kostory`;
   const phone = hp.replace(/^0/,"62").replace(/[^0-9]/g,"");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
 };
@@ -530,7 +530,7 @@ window.laporPembayaran = async function() {
 });
   }
 
-  pesan += "\nTeam Kostory";
+  pesan += "\nPowered by KostoryApp 2025";
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 window.laporCiCo = async function(namaKost) {
