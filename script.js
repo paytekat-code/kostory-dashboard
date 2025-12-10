@@ -435,14 +435,18 @@ window.showPenghuniList = async function() {
           ${p.tanggalLahir ? (hariIni ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
         </small>
       </div>
-      <div style="flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-        <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-        <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
-                onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
-          ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
-        </button>
-      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+  <button style="background:#10b981;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;" 
+          onclick="event.stopPropagation(); kirimWelcome('${p.nama}','${p.hp}','${p.kost}')">
+    Welcome
+  </button>
+  <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+  <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+  <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
+          onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
+    ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
+  </button>
+</div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
@@ -685,3 +689,13 @@ window.laporCiCo = async function(namaKost) {
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
+window.kirimWelcome = function(nama, hp, kost) {
+  if (!hp || hp.trim() === "") {
+    alert("Nomor HP kosong untuk " + nama);
+    return;
+  }
+  const pesan = `Selamat datang kak *${nama}* di *${kost}*!\n\nKami senang sekali kakak sudah bergabung jadi keluarga besar Kostory\n\nIni peraturan singkat kami ya kak supaya sama-sama nyaman:\n\n1. Pembayaran Perpanjangan kost maks 1 hari sebelum Sewa habis, Jika lebih dikenakan denda Rp.25.000/hari.\n2. Hanya orangtua/anak/kakak/adik yang boleh nginap, lainya ngobrol di teras.🤪\n3. Jam malam 23.00 WIB (pintu akan dikunci)\n4. Dilarang masak dan nyuci di kamar (ada dapur umum)\n5. Listrik token pribadi, isi sendiri ya kak\n6. Tiap 2 minggu kamar akan dibersihin, ingetin penjaga jika lupa.\n7. Parkir ngikutin aturan penjaga, jangan ngatur sendiri.\n8. Ga boleh taro sembarang barang seperti di meja dapur, selasar dll.\n9. merokok/Vape didalam kost -> denda 500rb perkejadian.\n10. Berteriak-teriak, bertengkar, mabok, ngobat -> minimal dikeluarin 💪 \n11. *Penting!* ; Penjaga Kost adalah teman tinggal, bukan pembantu, Jadi mohon saling jaga kenyamanan bareng ya kak.\n\nKalau ada komplen langsung ke penjaga ato chat WA mimin : 081383210009  😊 \n\nSekali lagi, selamat menempati kamar baru! Semoga betah & kerasan\n\nSalam hangat,\nTim Kostory`;
+  
+  const phone = hp.replace(/^0/, "62).replace(/[^0-9]/g, "");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
+};
