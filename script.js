@@ -308,7 +308,7 @@ window.laporKost = async function(namaKost) {
     `*Kendaraan:*\n` +
     `Mobil (${mobilList.length}): ${mobilList.join(", ") || "-"}\n` +
     `Motor (${motorList.length}): ${motorList.join(", ") || "-"}\n\n` +
-    `Team Kostory`;
+    `Powered by KostoryApps`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
