@@ -567,5 +567,121 @@ window.prosesCheckout = function() {
 };
 
 // ====================== LAPOR PEMBAYARAN & CI-CO ======================
-window.laporPembayaran = async function() { /* sama seperti sebelumnya */ };
-window.laporCiCo = async function(namaKost) { /* sama seperti versi lama kamu */ };
+window.laporPembayaran = async function() {
+  const list = [];
+  for (const kost of allowedKosts) {
+    for (const room of kosts[kost]) {
+      const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
+      const d = snap.val();
+      if (d && d.nama && !d.checkout) {
+        const status = d.lunas ? "Lunas" : "Belum bayar";
+        const tgl = d.lunas ? formatDate(d.tanggalLunas) : "-";
+        const jumlah = d.lunas ? "Rp. " + Number(d.jumlahLunas).toLocaleString("id-ID") : "-";
+        const tglMasuk = formatDate(d.tanggalMasuk) || "-";
+        list.push({ room, nama: d.nama, status, tgl, jumlah, tglMasuk });
+      }
+    }
+  }
+
+  let pesan = "*LAPORAN PEMBAYARAN*\n";
+  pesan += formatDate(new Date()) + "\n\n";
+
+  if (list.length === 0) {
+    pesan += "Belum ada penghuni aktif.";
+  } else {
+   list.forEach((p, i) => {
+  pesan += `${i+1}. ${p.room} | ${p.nama} (${p.tglMasuk}) | ${p.status} | ${p.tgl} | ${p.jumlah}\n`;
+});
+  }
+
+  pesan += "\nPowered by KostoryApp 2025";
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
+window.laporCiCo = async function(namaKost) {
+  const rooms = kosts[namaKost];
+  const today = new Date();
+  const thisMonth = today.getMonth();
+  const thisYear = today.getFullYear();
+  const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+  let ciThis = [], ciLast = [], coThis = [], coLast = [];
+
+  // Ambil data aktif (check-in
+  for (const room of rooms) {
+    const snapAktif = await db.ref(`kosts/${namaKost}/${room}`).once("value");
+    const d = snapAktif.val();
+    if (d && d.nama && d.tanggalMasuk) {
+      const tglMasuk = new Date(d.tanggalMasuk);
+      if (tglMasuk.getMonth() === thisMonth && tglMasuk.getFullYear() === thisYear) {
+        ciThis.push({room, nama: d.nama, durasi: d.durasi || "Bulanan", tglMasuk: d.tanggalMasuk, tokenAwal: d.tokenAwal || "-"});
+      } else if (tglMasuk.getMonth() === lastMonth && tglMasuk.getFullYear() === lastMonthYear) {
+        ciLast.push({room, nama: d.nama, durasi: d.durasi || "Bulanan", tglMasuk: d.tanggalMasuk, tokenAwal: d.tokenAwal || "-"});
+      }
+    }
+  }
+
+  // Ambil data check-out
+  const snapCo = await db.ref(`checkout/${namaKost}`).once("value");
+  const dataCo = snapCo.val() || {};
+  for (const room in dataCo) {
+    const d = dataCo[room];
+    if (d && d.tanggalCheckout) {
+      const tglCo = new Date(d.tanggalCheckout);
+      const item = {
+        room,
+        nama: d.nama || "-",
+        durasi: d.durasi || "Bulanan",
+        tglMasuk: d.tanggalMasuk ? formatDate(d.tanggalMasuk) : "-",
+        tglKeluar: formatDate(d.tanggalCheckout),
+        tokenAwal: d.tokenAwal || "-",
+        tokenAkhir: d.tokenAkhir || "-"
+      };
+      if (tglCo.getMonth() === thisMonth && tglCo.getFullYear() === thisYear) {
+        coThis.push(item);
+      } else if (tglCo.getMonth() === lastMonth && tglCo.getFullYear() === lastMonthYear) {
+        coLast.push(item);
+      }
+    }
+  }
+
+  // Urutkan dari terbaru
+  ciThis.sort((a,b) => new Date(b.tglMasuk) - new Date(a.tglMasuk));
+  coThis.sort((a,b) => new Date(b.tglKeluar) - new Date(a.tglKeluar));
+
+  let pesan = `*LAPORAN CI-CO ${namaKost}*\n${formatDate(today)}\n\n`;
+
+  pesan += `*Check in Bulan ini :* ${ciThis.length} orang\n`;
+  ciThis.forEach((p,i) => {
+    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${formatDate(p.tglMasuk)} | - | ${p.tokenAwal} | - | Masih Tinggal\n`;
+  });
+  if (ciThis.length === 0) pesan += "Tidak ada\n";
+  pesan += "\n";
+
+  pesan += `*Check in Bulan lalu :* ${ciLast.length} orang\n`;
+  if (ciLast.length > 0) {
+    ciLast.forEach((p, i) => {
+      pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${formatDate(p.tglMasuk)} | - | ${p.tokenAwal} | - | Masih Tinggal\n`;
+    });
+  } else {
+    pesan += "Tidak ada\n";
+  }
+
+  pesan += `\n*Check Out Bulan ini :* ${coThis.length} orang\n`;
+  coThis.forEach((p,i) => {
+    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${p.tglMasuk} | ${p.tglKeluar} | ${p.tokenAwal} | ${p.tokenAkhir} | Check-out\n`;
+  });
+  if (coThis.length === 0) pesan += "Tidak ada\n";
+  pesan += "\n";
+
+  pesan += `*Check Out Bulan Lalu :* ${coLast.length} orang\n`;
+  coLast.forEach((p,i) => {
+    pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${p.tglMasuk} | ${p.tglKeluar} | ${p.tokenAwal} | ${p.tokenAkhir} | Check-out\n`;
+  });
+  if (coLast.length === 0) pesan += "Tidak ada\n";
+
+  pesan += `\nPowered by KostoryApps ❤️`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
+
