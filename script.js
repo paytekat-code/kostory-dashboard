@@ -21,29 +21,20 @@ const kosts = {
 };
 
 const hakAkses = { 
-  "admin":"all",
-  "mekar":"Kostory Mekar",
-  "satria":"Kostory Satria",
-  "mitra":"Kostory Mitra",
-  "ecokost":"Ecokost by Kostory",
-  "mitraya":"Mitraya by Kostory",
-  "inaya":"Inaya Bukit by Kostory" 
+  "admin":"all","mekar":"Kostory Mekar","satria":"Kostory Satria","mitra":"Kostory Mitra",
+  "ecokost":"Ecokost by Kostory","mitraya":"Mitraya by Kostory","inaya":"Inaya Bukit by Kostory" 
 };
 
 const passwordDb = { 
-  "admin":"ramenuno20",
-  "mekar":"kopipait69",
-  "satria":"cilukba123",
-  "mitra":"ayamgeprek77",
-  "ecokost":"mirebus08",
-  "mitraya":"odading88",
-  "inaya":"nasiuduk21" 
+  "admin":"ramenuno20","mekar":"kopipait69","satria":"cilukba123","mitra":"ayamgeprek77",
+  "ecokost":"mirebus08","mitraya":"odading88","inaya":"nasiuduk21" 
 };
 
 let currentUser = null;
-let allowedKosts = [];        // <-- diisi sekali setelah login
+let allowedKosts = [];
 let currentKost = null, currentRoom = null, currentData = null;
 
+// ====================== HELPER FUNCTIONS ======================
 function formatDate(d) {
   if (!d) return "-";
   const date = new Date(d);
@@ -87,7 +78,7 @@ function backToDashboard() {
   document.getElementById("app").classList.remove("hidden");
 }
 
-// ====================== LOGIN & HAK AKSES ======================
+// ====================== LOGIN ======================
 window.login = function() {
   const user = document.getElementById("username").value.trim().toLowerCase();
   const pass = document.getElementById("password").value;
@@ -173,6 +164,18 @@ function loadDashboard() {
     });
   });
 }
+
+// ====================== WELCOME MESSAGE (BARU!) ======================
+window.kirimWelcome = function(nama, hp, kost) {
+  if (!hp || hp.trim() === "") {
+    alert("Nomor HP kosong untuk " + nama);
+    return;
+  }
+  const pesan = `Selamat datang kak *${nama}* di *${kost}*!\n\nKami senang sekali kakak sudah bergabung jadi keluarga besar Kostory\n\nIni peraturan singkat kami ya kak supaya sama-sama nyaman:\n\n1. Pembayaran kost maks tgl 5 setiap bulan\n2. Dilarang bawa teman nginap tanpa izin\n3. Jam malam 23.00 WIB (pintu otomatis terkunci)\n4. Dilarang masak di kamar (ada dapur umum)\n5. Listrik token pribadi, isi sendiri ya kak\n6. Sampah dipilah: biru = organik, kuning = anorganik\n7. Parkir motor di basement, mobil di depan gerbang\n\nKalau ada yang kurang jelas langsung WA ke nomor ini aja ya kak. Kami siap bantu 24 jam!\n\nSekali lagi, selamat menempati kamar baru! Semoga betah & kerasan\n\nSalam hangat,\nTim Kostory`;
+  
+  const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
+};
 
 // ====================== MODAL INPUT ======================
 window.openModal = async function(kost, room, fromCheckout = false) {
@@ -382,7 +385,6 @@ window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
 
-  // Reset lunas otomatis tiap tanggal 1
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-1`;
   const lastReset = localStorage.getItem("kostory_lastLunasReset");
@@ -395,9 +397,7 @@ window.showPenghuniList = async function() {
         updates[`kosts/${kost}/${room}/jumlahLunas`] = 0;
       }
     }
-    db.ref().update(updates).then(() => {
-      localStorage.setItem("kostory_lastLunasReset", todayKey);
-    });
+    db.ref().update(updates).then(() => localStorage.setItem("kostory_lastLunasReset", todayKey));
   }
 
   const list = [];
@@ -405,9 +405,7 @@ window.showPenghuniList = async function() {
     for (const room of kosts[kost]) {
       const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
       const d = snap.val();
-      if (d && d.nama && !d.checkout) {
-        list.push({kost, room, ...d});
-      }
+      if (d && d.nama && !d.checkout) list.push({kost, room, ...d});
     }
   }
 
@@ -435,7 +433,11 @@ window.showPenghuniList = async function() {
           ${p.tanggalLahir ? (hariIni ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
         </small>
       </div>
-      <div style="flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button style="background:#10b981;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;" 
+                onclick="event.stopPropagation(); kirimWelcome('${p.nama}','${p.hp || ''}','${p.kost}')">
+          Welcome
+        </button>
         <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
         <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
         <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
@@ -447,6 +449,62 @@ window.showPenghuniList = async function() {
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
 
+// === showCheckoutList (sudah pakai filter akses) ===
+window.showCheckoutList = async function() {
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("checkoutListPage").classList.remove("hidden");
+
+  const bulanIni = [], sebelumnya = [];
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const minMonth = ((thisMonth - 2) + 12) % 12;
+  const minYear = thisMonth - 2 < 0 ? thisYear - 1 : thisYear;
+
+  for (const kost of allowedKosts) {
+    const snap = await db.ref(`checkout/${kost}`).once("value");
+    const dataKost = snap.val() || {};
+    for (const room in dataKost) {
+      const d = dataKost[room];
+      if (d && d.tanggalCheckout) {
+        const coDate = new Date(d.tanggalCheckout);
+        const item = {kost, room, ...d, coDate};
+        if (coDate.getMonth() === thisMonth && coDate.getFullYear() === thisYear) {
+          bulanIni.push(item);
+        } else if (coDate.getFullYear() > minYear || (coDate.getFullYear() === minYear && coDate.getMonth() >= minMonth)) {
+          sebelumnya.push(item);
+        }
+      }
+    }
+  }
+
+  bulanIni.sort((a,b) => b.coDate - a.coDate);
+  sebelumnya.sort((a,b) => b.coDate - a.coDate);
+
+  document.querySelector("#checkoutListPage #header").innerHTML = `
+    <h1>Daftar Check-out</h1>
+    <button class="btn" onclick="backToDashboard()">Kembali</button>`;
+
+  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `
+    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <strong>${i+1}. ${d.nama}</strong><br>
+          <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
+        </div>
+        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp || ''}')" 
+                style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
+          Kirim Perpisahan
+        </button>
+      </div>
+    </div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
+
+  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map(d => `
+    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
+      <strong>${d.nama}</strong><br>
+      <small>${formatDate(d.tanggalCheckout)} • ${d.kost} - ${d.room}</small>
+    </div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data 3 bulan terakhir</p>";
+};
 // ====================== DAFTAR CHECK-OUT (DENGAN FILTER AKSES) ======================
 window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
