@@ -415,86 +415,87 @@ window.showCheckoutList = async function() {
   document.getElementById("checkoutListPage").classList.remove("hidden");
 
   const bulanIni = [];
-  const sebelumnya = []; // maksimal 3 bulan terakhir
+  const sebelumnya = [];  // maks 3 bulan terakhir
 
   const now = new Date();
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
 
-  // Hitung batas 3 bulan ke belakang (tidak termasuk bulan ini)
-  const batasBulanLalu = [];
-  for (let i = 1; i <= 3; i++) {
-    const date = new Date(thisYear, thisMonth - i, 1);
-    batasBulanLalu.push({
-      month: date.getMonth(),
-      year: date.getFullYear()
-    });
+  // Pastikan allowedKosts selalu ada (kalau hilang karena refresh)
+  if (!Array.isArray(allowedKosts) || allowedKosts.length === 0) {
+    const saved = localStorage.getItem("kostoryUser");
+    if (saved && hakAkses[saved]) {
+      allowedKosts = hakAkses[saved] === "all" ? Object.keys(kosts) : [hakAkses[saved]];
+    } else {
+      alert("Sesi habis. Silakan login ulang.");
+      location.reload();
+      return;
+    }
   }
 
-  const snap = await db.ref("checkout").once("value");
-  const all = snap.val() || {};
+  // Hitung 3 bulan ke belakang (kecuali bulan ini)
+  const tigaBulanLalu = [];
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(thisYear, thisMonth - i, 1);
+    tigaBulanLalu.push({ m: d.getMonth(), y: d.getFullYear() });
+  }
 
-  Object.keys(all).forEach(kostName => {
-    if (!allowedKosts.includes(kostName)) return; // hanya kost yang boleh diakses user
+  try {
+    const snap = await db.ref("checkout").once("value");
+    const all = snap.val() || {};
 
-    Object.keys(all[kostName] || {}).forEach(room => {
-      const d = all[kostName][room];
-      if (!d || !d.tanggalCheckout) return;
+    Object.keys(all).forEach(kostName => {
+      // Hanya kost yang boleh dilihat user ini
+      if (!allowedKosts.includes(kostName)) return;
 
-      const coDate = new Date(d.tanggalCheckout);
-      const item = {
-        kost: kostName,
-        room: room,
-        nama: d.nama || "(tanpa nama)",
-        hp: (d.hp || "").replace(/[^0-9]/g, ""),
-        tanggalCheckout: d.tanggalCheckout,
-        tanggalMasuk: d.tanggalMasuk || "",
-        lama: hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)
-      };
+      Object.keys(all[kostName] || {}).forEach(room => {
+        const d = all[kostName][room];
+        if (!d || !d.tanggalCheckout) return;
 
-      // Bulan ini
-      if (coDate.getMonth() === thisMonth && coDate.getFullYear() === thisYear) {
-        bulanIni.push(item);
-      } 
-      // 3 bulan sebelumnya
-      else {
-        const adaDiBatas = batasBulanLalu.some(b => 
-          coDate.getMonth() === b.month && coDate.getFullYear() === b.year
-        );
-        if (adaDiBatas) sebelumnya.push(item);
-      }
+        const coDate = new Date(d.tanggalCheckout);
+        const item = {
+          kost: kostName,
+          room: room,
+          nama: d.nama || "Tanpa Nama",
+          hp: (d.hp || "").replace(/[^0-9]/g, ""),
+          tanggalCheckout: d.tanggalCheckout,
+          tanggalMasuk: d.tanggalMasuk || "",
+          lama: hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)
+        };
+
+        if (coDate.getMonth() === thisMonth && coDate.getFullYear() === thisYear) {
+          bulanIni.push(item);
+        } else {
+          const match = tigaBulanLalu.some(x => coDate.getMonth() === x.m && coDate.getFullYear() === x.y);
+          if (match) sebelumnya.push(item);
+        }
+      });
     });
-  });
 
-  // Urutkan dari terbaru
-  bulanIni.sort((a,b) => new Date(b.tanggalCheckout) - new Date(a.tanggalCheckout));
-  sebelumnya.sort((a,b) => new Date(b.tanggalCheckout) - new Date(a.tanggalCheckout));
+    // Urutkan terbaru dulu
+    bulanIni.sort((a,b) => new Date(b.tanggalCheckout) - new Date(a.tanggalCheckout));
+    sebelumnya.sort((a,b) => new Date(b.tanggalCheckout) - new Date(a.tanggalCheckout));
 
-  // Render bulan ini
-  document.getElementById("listBulanIni").innerHTML = bulanIni.length 
-    ? bulanIni.map((d, i) => `
+    // Render
+    document.getElementById("listBulanIni").innerHTML = bulanIni.length ? bulanIni.map((d,i) => `
       <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-        <div>
-          <strong>${i+1}. ${d.nama}</strong> <small style="color:#666">– ${d.kost}</small><br>
-          <small>${formatDate(d.tanggalCheckout)} • ${d.lama}</small>
-        </div>
-        ${d.hp ? `<button class="btn-wa-small" onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp}','${d.kost}')">WA Perpisahan</button>` : ''}
-      </div>`).join("")
-    : "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
+        <strong>${i+1}. ${d.nama}</strong> <small style="color:#777">– ${d.kost}</small><br>
+        <small>${formatDate(d.tanggalCheckout)} • ${d.lama}</small>
+        ${d.hp ? `<button class="btn-wa-small" onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}', '${d.hp}', '${d.kost}')">WA Perpisahan</button>` : ''}
+      </div>`).join("") : "<p style='text-align:center;color:#888;padding:40px'>Belum ada check-out bulan ini</p>";
 
-  // Render 3 bulan sebelumnya
-  document.getElementById("listSebelumnya").innerHTML = sebelumnya.length 
-    ? sebelumnya.map(d => `
+    document.getElementById("listSebelumnya").innerHTML = sebelumnya.length ? sebelumnya.map(d => `
       <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-        <div>
-          <strong>${d.nama}</strong> <small style="color:#666">– ${d.kost}</small><br>
-          <small>${formatDate(d.tanggalCheckout)} • ${d.lama}</small>
-        </div>
-        ${d.hp ? `<button class="btn-wa-small" onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp}','${d.kost}')">WA Perpisahan</button>` : ''}
-      </div>`).join("")
-    : "<p style='text-align:center;color:#666;padding:30px'>Tidak ada check-out 3 bulan terakhir</p>";
+        <strong>${d.nama}</strong> <small style="color:#777">– ${d.kost}</small><br>
+        <small>${formatDate(d.tanggalCheckout)} • ${d.lama}</small>
+        ${d.hp ? `<button class="btn-wa-small" onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}', '${d.hp}', '${d.kost}')">WA Perpisahan</button>` : ''}
+      </div>`).join("") : "<p style='text-align:center;color:#888;padding:40px'>Tidak ada check-out 3 bulan terakhir</p>";
+
+  } catch (err) {
+    console.error(err);
+    alert("Gagal memuat data check-out");
+  }
 };
-
 // === FUNGSI KIRIM PESAN PERPISAHAN ===
 window.kirimPerpisahan = function(nama, hp, kost) {
   if (!hp) return alert("Nomor HP kosong!");
