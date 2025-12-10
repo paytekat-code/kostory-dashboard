@@ -595,7 +595,13 @@ window.laporCiCo = async function(namaKost) {
   pesan += "\n";
 
   pesan += `*Check in Bulan lalu :* ${ciLast.length} orang\n`;
-  if (ciLast.length === 0) pesan += "Tidak ada\n";
+  if (ciLast.length > 0) {
+    ciLast.forEach((p, i) => {
+      pesan += `${i+1}. ${p.room} | ${p.nama} | ${p.durasi} | ${formatDate(p.tglMasuk)} | - | ${p.tokenAwal} | - | Masih Tinggal\n`;
+    });
+  } else {
+    pesan += "Tidak ada\n";
+  }
 
   pesan += `\n*Check Out Bulan ini :* ${coThis.length} orang\n`;
   coThis.forEach((p,i) => {
@@ -610,7 +616,7 @@ window.laporCiCo = async function(namaKost) {
   });
   if (coLast.length === 0) pesan += "Tidak ada\n";
 
-  pesan += `\nTeam Kostory ❤️`;
+  pesan += `\nPowered by KostoryApps ❤️`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
