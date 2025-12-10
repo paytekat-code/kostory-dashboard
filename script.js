@@ -411,17 +411,20 @@ window.showPenghuniList = async function() {
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 // === TARUH INI DI ATAS, BERSAMA FUNGSI LAIN (bukan di dalam fungsi lain) ===
+// ... [semua kode dari atas sampai sebelum showCheckoutList tetap sama]
+
+// === FUNGSI KIRIM PERPISAHAN (INI YANG BENAR, TETAP ADA) ===
 window.kirimPerpisahan = function(nama, hp) {
   if (!hp || hp.trim() === "") {
     alert("Nomor HP tidak tersedia untuk " + nama);
     return;
   }
-  const pesan = `Halo kak *${nama}*\n\nTerima kasih sudah menjadi bagian dari keluarga besar *Kostory* selama ini.\nKami senang bisa menjadi bagian cerita perjalanan kakak di sini.\n\nSemoga kakak selalu sehat dan semakin sukses disepanjang perjalanan kakak di masa depan.\n\nTim Kostory memohon maaf jika ada kekurangan saat kakak tinggal, dan Pintu Kostory selalu terbuka untuk kakak!, \n\nUntuk Info & Pemesanan kembali bisa menghubungi *Customer Service* : 081383210009 (WA only)\n\nSalam Kostorian!,\n*Tim Kostory*`;
+  const pesan = `Halo kak *${nama}* 🏡❤️\n\nTerima kasih banyak sudah menjadi bagian dari keluarga besar *Kostory* selama ini.\nKami sangat senang bisa menemani perjalanan kakak di sini.\n\nSemoga kakak selalu sehat, sukses, dan bahagia di tempat yang baru ya!\nKapan-kapan main lagi ke Kostory, pintu selalu terbuka untuk kakak! 😊\n\nSalam hangat dari kami semua,\nTim Kostory`;
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// === GANTI SELURUH FUNGSI showCheckoutList DENGAN YANG INI ===
+// === FUNGSI showCheckoutList (SUDAH BENAR, GANTI YANG LAMA DENGAN INI) ===
 window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
@@ -431,7 +434,6 @@ window.showCheckoutList = async function() {
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
   
-  // 3 bulan terakhir (termasuk bulan ini)
   const minMonth = ((thisMonth - 2) + 12) % 12;
   const minYear = thisMonth - 2 < 0 ? thisYear - 1 : thisYear;
 
@@ -445,14 +447,11 @@ window.showCheckoutList = async function() {
         const coDate = new Date(d.tanggalCheckout);
         const coMonth = coDate.getMonth();
         const coYear = coDate.getFullYear();
-
         const item = {kost, room, ...d, coDate};
 
-        // Bulan ini
         if (coMonth === thisMonth && coYear === thisYear) {
           bulanIni.push(item);
         }
-        // 3 bulan terakhir (kecuali bulan ini yang sudah masuk array atas)
         else if (coYear > minYear || (coYear === minYear && coMonth >= minMonth)) {
           sebelumnya.push(item);
         }
@@ -485,7 +484,8 @@ window.showCheckoutList = async function() {
     </div>`
   ).join("") || "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data 3 bulan terakhir</p>";
 };
- 
+
+// ... [semua fungsi lain setelah ini (bukaTagih, kirimTagihan, dll) tetap sama]
 window.bukaTagih = function(kost, room, nama, hp) {
   currentKost = kost; currentRoom = room;
   window.currentNamaTagih = nama;
