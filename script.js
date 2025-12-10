@@ -485,40 +485,7 @@ window.showCheckoutList = async function() {
     </div>`
   ).join("") || "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data 3 bulan terakhir</p>";
 };
-  // Fungsi kirim pesan perpisahan
-  window.kirimPerpisahan = function(nama, hp) {
-    if (!hp || hp.trim() === "") {
-      alert("Nomor HP tidak tersedia untuk " + nama);
-      return;
-    }
-    const pesan = `Halo kak *${nama}* 🏡❤️\n\nTerima kasih banyak sudah menjadi bagian dari keluarga besar *Kostory* selama ini.\nKami sangat senang bisa menemani perjalanan kakak di sini.\n\nSemoga kakak selalu sehat, sukses, dan bahagia di tempat yang baru ya!\nKapan-kapan main lagi ke Kostory, pintu selalu terbuka untuk kakak! 😊\n\nSalam hangat dari kami semua,\nTim Kostory`;
-    
-    const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
-    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
-  };
-
-  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `
-    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div>
-          <strong>${i+1}. ${d.nama}</strong><br>
-          <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
-        </div>
-        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp || ''}')" 
-                style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
-          👋 Kirim Perpisahan
-        </button>
-      </div>
-    </div>`
-  ).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
-
-  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map(d => `
-    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-      <strong>${d.nama}</strong><br>
-      <small>${formatDate(d.tanggalCheckout)} • ${d.kost} - ${d.room}</small>
-    </div>`
-  ).join("") || "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data 3 bulan terakhir</p>";
-};
+ 
 window.bukaTagih = function(kost, room, nama, hp) {
   currentKost = kost; currentRoom = room;
   window.currentNamaTagih = nama;
