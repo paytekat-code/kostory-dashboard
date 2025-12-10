@@ -447,7 +447,7 @@ window.kirimTagihan = function() {
   const tgl = document.getElementById("jatuhTempo").value;
   const nominal = document.getElementById("nominalTagihan").value;
   if (!tgl || !nominal) return alert("Isi semua!");
-  const pesan = `Hai Kak ${window.currentNamaTagih}\n\nKami informasikan masa kost akan berakhir pada *${formatDate(tgl)}*\nBiaya Perpanjangan sebesar: *Rp ${Number(nominal).toLocaleString()}*,mohon dilunasi 1 hari sebelum masa sewa kost berakhir.\n\nSegera informasikan kepada kami, jika sudah melakukan transfer atau jika kakak tidak akan memperpanjang Kost. \n\nInfo Pemesanan dan Customer Care, Silahkan Menghubungi : 081383210009 (WA only).\n\nTerima kasih.\nTim Kostory`;
+  const pesan = `Hai Kak ${window.currentNamaTagih}\n\nKami informasikan bahwa masa sewa kost kakak di Kostory akan berakhir pada *${formatDate(tgl)}*\n Untuk biaya perpanjanganya sebesar: *Rp ${Number(nominal).toLocaleString()}*,mohon dilunasi 1 hari sebelum masa sewa kost berakhir.\n\nSegera informasikan kepada kami ; apabila kakak sudah melakukan transfer atau jika kakak berencana tidak akan memperpanjang Kost. \n\nInfo Pemesanan dan Customer Care, Silahkan Menghubungi : 081383210009 (WA only).\n\nTerima kasih, Salam Kostorian!.\nTim Kostory`;
   const phone = window.currentHpTagih.replace(/^0/,"62").replace(/[^0-9]/g,"");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
   closeModal();
