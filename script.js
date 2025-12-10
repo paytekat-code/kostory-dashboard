@@ -410,6 +410,18 @@ window.showPenghuniList = async function() {
       </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
+// === TARUH INI DI ATAS, BERSAMA FUNGSI LAIN (bukan di dalam fungsi lain) ===
+window.kirimPerpisahan = function(nama, hp) {
+  if (!hp || hp.trim() === "") {
+    alert("Nomor HP tidak tersedia untuk " + nama);
+    return;
+  }
+  const pesan = `Halo kak *${nama}*\n\nTerima kasih banyak sudah menjadi bagian dari keluarga besar *Kostory* selama ini.\nKami sangat senang bisa menemani perjalanan kakak di sini.\n\nSemoga kakak selalu sehat, sukses, dan bahagia di tempat yang baru ya!\nKapan-kapan main lagi ke Kostory, pintu selalu terbuka untuk kakak!\n\nSalam hangat dari kami semua,\nTim Kostory`;
+  const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
+};
+
+// === GANTI SELURUH FUNGSI showCheckoutList DENGAN YANG INI ===
 window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
@@ -419,10 +431,9 @@ window.showCheckoutList = async function() {
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
   
-  // Batas 3 bulan ke belakang (termasuk bulan lalu & 2 bulan sebelumnya)
-  const minMonth = thisMonth - 2;
-  const minYear = minMonth < 0 ? thisYear - 1 : thisYear;
-  const minMonthNormalized = minMonth < 0 ? minMonth + 12 : minMonth;
+  // 3 bulan terakhir (termasuk bulan ini)
+  const minMonth = ((thisMonth - 2) + 12) % 12;
+  const minYear = thisMonth - 2 < 0 ? thisYear - 1 : thisYear;
 
   const snap = await db.ref("checkout").once("value");
   const all = snap.val() || {};
@@ -432,22 +443,19 @@ window.showCheckoutList = async function() {
       const d = all[kost][room];
       if (d && d.tanggalCheckout) {
         const coDate = new Date(d.tanggalCheckout);
-        const item = {kost, room, ...d, coDate};
-        
         const coMonth = coDate.getMonth();
         const coYear = coDate.getFullYear();
 
-        const isThisMonth = coMonth === thisMonth && coYear === thisYear;
-        const isWithinLast3Months = 
-          coYear > minYear || 
-          (coYear === minYear && coMonth >= minMonthNormalized);
+        const item = {kost, room, ...d, coDate};
 
-        if (isThisMonth) {
+        // Bulan ini
+        if (coMonth === thisMonth && coYear === thisYear) {
           bulanIni.push(item);
-        } else if (isWithinLast3Months) {
+        }
+        // 3 bulan terakhir (kecuali bulan ini yang sudah masuk array atas)
+        else if (coYear > minYear || (coYear === minYear && coMonth >= minMonth)) {
           sebelumnya.push(item);
         }
-        // Yang lebih dari 3 bulan lalu → diabaikan (tidak ditampilkan)
       }
     });
   });
@@ -455,6 +463,28 @@ window.showCheckoutList = async function() {
   bulanIni.sort((a,b) => b.coDate - a.coDate);
   sebelumnya.sort((a,b) => b.coDate - a.coDate);
 
+  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `
+    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <strong>${i+1}. ${d.nama}</strong><br>
+          <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
+        </div>
+        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp || ''}')" 
+                style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;white-space:nowrap;">
+          Kirim Perpisahan
+        </button>
+      </div>
+    </div>`
+  ).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
+
+  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map(d => `
+    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
+      <strong>${d.nama}</strong><br>
+      <small>${formatDate(d.tanggalCheckout)} • ${d.kost} - ${d.room}</small>
+    </div>`
+  ).join("") || "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data 3 bulan terakhir</p>";
+};
   // Fungsi kirim pesan perpisahan
   window.kirimPerpisahan = function(nama, hp) {
     if (!hp || hp.trim() === "") {
