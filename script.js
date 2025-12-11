@@ -671,7 +671,7 @@ window.kirimIzinPerawatan = function() {
     `Mau info dikit ya, kak.\n` +
     `Tanggal *${tanggalFormat}* kami rencana ada perawatan kamar kk.\n\n` +
     `Kalau ada barang Kakak yang perlu dipindahin, lagi dipakai, atau mau minta ganti jadwal, tinggal kabarin aja ya.\n\n` +
-    `Bisa lewat penjaga kost, atau langsung chat mimin di WA\n` +
+    `Bisa lewat Pengurus Kost, atau langsung chat minkost di WA\n` +
     `081383210009\n\n` +
     `Makasih banyak atas pengertiannya ya kak!\n\n` +
     `Salam Kostorian\nTim Kostory`;
