@@ -719,7 +719,7 @@ window.laporPembersihan = async function() {
         const jadwalBerikutnya = new Date(checkIn);
         jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
 
-        const sudahDibersihkanBaru2 = d.tanggalBersih && new Date(d.tanggalBersih) >= new Date(checkIn.getTime() + siklus*15*86400000);
+        const sudahDibersihkanBaru2 = d.tanggalBersih && new Date(d.tanggalBersih) >= new Date(checkIn.getTime() + siklus*14*86400000);
 const status = jadwalBerikutnya < hariIni ? "TELAT!" : 
               sudahDibersihkanBaru2 ? "SUDAH" : "BELUM";
 
