@@ -699,6 +699,7 @@ window.catatBersih = function(kost, room) {
   });
 };
 // ====================== LAPORAN PEMBERSIHAN KAMAR KE WA ======================
+// ====================== LAPORAN PEMBERSIHAN KAMAR (FORMAT BARU) ======================
 window.laporPembersihan = async function() {
   const today = new Date();
   const list = [];
@@ -711,53 +712,63 @@ window.laporPembersihan = async function() {
       if (d && d.nama && d.tanggalMasuk) {
         const checkIn = new Date(d.tanggalMasuk);
         const hariIni = new Date();
-        hariIni.setHours(0,0,0,0);
+        hariIni.setHours(0, 0, 0, 0);
 
-        // Hitung jadwal bersih berikutnya (setiap 15 hari dari check-in)
-        const hariSejakMasuk = Math.floor((hariIni - checkIn) / (1000*60*60*24));
+        // Hitung siklus 14 hari dari check-in
+        const hariSejakMasuk = Math.floor((hariIni - checkIn) / 86400000);
         const siklus = Math.floor(hariSejakMasuk / 14);
         const jadwalBerikutnya = new Date(checkIn);
         jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
 
-        const sudahDibersihkanBaru2 = d.tanggalBersih && new Date(d.tanggalBersih) >= new Date(checkIn.getTime() + siklus*15*86400000);
-const status = jadwalBerikutnya < hariIni ? "TELAT!" : 
-              sudahDibersihkanBaru2 ? "SUDAH" : "BELUM";
+        // Format tanggal singkat: 24 Nov 25
+        const fmt = (date) => date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "2-digit" }).replace(".", "");
 
-        const terakhirBersih = d.tanggalBersih ? formatDate(d.tanggalBersih) : "-";
+        const jadwalStr = fmt(jadwalBerikutnya);
+        const terakhirStr = d.tanggalBersih ? fmt(new Date(d.tanggalBersih)) : "-";
+
+        // Hitung status
+        let status = "-";
+        if (d.tanggalBersih) {
+          const terakhirDate = new Date(d.tanggalBersih);
+          const selisihHari = Math.floor((jadwalBerikutnya - terakhirDate) / 86400000);
+          status = selisihHari > 7 ? "Belum" : "Sudah";
+        }
 
         list.push({
-          kost,
           room,
-          nama: d.nama,
-          jadwal: formatDate(jadwalBerikutnya),
-          status,
-          terakhir: terakhirBersih
+          nama: d.nama.trim(),
+          jadwal: jadwalStr,
+          terakhir: terakhirStr,
+          status
         });
       }
     }
   }
 
-  // Urutkan berdasarkan nama kost dulu, lalu nomor kamar
+  // Urutkan per kost dulu, lalu nomor kamar
   list.sort((a, b) => {
-    if (a.kost !== b.kost) return a.kost.localeCompare(b.kost);
+    const kostA = Object.keys(kosts).find(k => kosts[k].includes(a.room));
+    const kostB = Object.keys(kosts).find(k => kosts[k].includes(b.room));
+    if (kostA !== kostB) return kostA.localeCompare(kostB);
     return a.room.localeCompare(b.room);
   });
 
-  let pesan = `*LAPORAN PEMBERSIHAN KAMAR*\n${formatDate(today)}\n\n`;
-  pesan += `No Kamar | Nama Penghuni | Jadwal Berikutnya | Status | Terakhir Bersih\n`;
-  pesan += `────────────────────────────────────\n`;
+  // Bangun pesan WhatsApp
+  let pesan = `*Laporan Pembersihan Kamar*\n`;
+  pesan += `${today.getDate()} ${today.toLocaleDateString("id-ID", { month: "long" })} ${today.getFullYear()}\n\n`;
 
   list.forEach(p => {
-    const statusText = p.status === "TELAT!" ? "TELAT!" : 
-                       p.status === "SUDAH BERSIH" ? "SUDAH" : "BELUM";
-    pesan += `${p.room.padEnd(6)} | ${p.nama.padEnd(12)} | ${p.jadwal} | ${statusText.padEnd(8)} | ${p.terakhir}\n`;
+    pesan += `${p.room} | ${p.nama} | ${p.jadwal} | ${p.terakhir} | ${p.status}\n`;
   });
+
+  if (list.length === 0) {
+    pesan += "Belum ada penghuni aktif.\n";
+  }
 
   pesan += `\nPowered by KostoryApps ❤️`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
-};
-// ====================== DAFTAR PENGHUNI (VERSI TERBARU + FITUR BERSIH KAMAR) ======================
+};// ====================== DAFTAR PENGHUNI (VERSI TERBARU + FITUR BERSIH KAMAR) ======================
 window.showPenghuniList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
