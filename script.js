@@ -380,108 +380,6 @@ window.kirimPerpisahan = function(nama, hp) {
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
 
-// ====================== DAFTAR PENGHUNI ======================
-window.showPenghuniList = async function() {
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("penghuniListPage").classList.remove("hidden");
-
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-1`;
-  const lastReset = localStorage.getItem("kostory_lastLunasReset");
-  if (today.getDate() === 1 && lastReset !== todayKey) {
-    const updates = {};
-    for (const kost of allowedKosts) {
-      for (const room of kosts[kost]) {
-        updates[`kosts/${kost}/${room}/lunas`] = false;
-        updates[`kosts/${kost}/${room}/tanggalLunas`] = null;
-        updates[`kosts/${kost}/${room}/jumlahLunas`] = 0;
-      }
-    }
-    db.ref().update(updates).then(() => localStorage.setItem("kostory_lastLunasReset", todayKey));
-  }
-
-  const list = [];
-  for (const kost of allowedKosts) {
-    for (const room of kosts[kost]) {
-      const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
-      const d = snap.val();
-      if (d && d.nama && !d.checkout) list.push({kost, room, ...d});
-    }
-  }
-
-  list.sort((a,b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
-
-  document.querySelector("#penghuniListPage #header").innerHTML = `
-    <h1>Daftar Penghuni</h1>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-  <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
-  <button class="btn" style="background:#f59e0b;color:white" onclick="laporPembersihan()">LAPOR BERSIH KAMAR</button>
-  <button class="btn" onclick="backToDashboard()">Kembali</button>
-</div>;
-
-  document.getElementById("listPenghuni").innerHTML = list.map(p => {
-    const hariIni = isHariIniUlangTahun(p.tanggalLahir);
-    let statusBayar = p.lunas 
-      ? `<span style="color:#166534;font-weight:bold">Lunas ${formatDate(p.tanggalLunas)} Rp ${Number(p.jumlahLunas).toLocaleString("id-ID")}</span>`
-      : `<span style="color:#dc2626;font-weight:bold">Belum Bayar</span>`;
-
-    return `<div class="penghuni-item" onclick="openModal('${p.kost}','${p.room}')">
-      <div>
-        <strong>${p.nama}</strong><br>
-        <small>${p.kost} - ${p.room} - ${formatDate(p.tanggalMasuk)} - Rp ${Number(p.harga || 0).toLocaleString("id-ID")} - ${p.durasi || "Bulanan"}</small><br>
-        ${statusBayar}
-        <br>
-<!-- === JADWAL BERSIH KAMAR (BARU) === -->
-${(() => {
-  if (!p.tanggalMasuk) return '';
-  
-  const checkIn = new Date(p.tanggalMasuk);
-  const hariIni = new Date();
-  hariIni.setHours(0,0,0,0);
-  
-  // Hitung jadwal bersih berikutnya (setiap 15 hari dari check-in)
-  const hariSejakMasuk = Math.floor((hariIni - checkIn) / (1000*60*60*24));
-  const siklus = Math.floor(hariSejakMasuk / 15);
-  const jadwalBerikutnya = new Date(checkIn);
-  jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 15);
-  
-  const telat = jadwalBerikutnya < hariIni;
-  const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-  
-  const terakhirDibersihkan = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-  
-  return `<small style="color:${telat ? '#dc2626' : '#f59e0b'}; font-weight:bold;">
-    Bersih berikutnya: ${formatJadwal} ${telat ? ' (TELAT!)' : ''} 
-    <button onclick="event.stopPropagation(); catatBersih('${p.kost}','${p.room}')" 
-            style="margin-left:8px; background:${telat?'#dc2626':'#10b981'}; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer;">
-      ✓ Dibersihkan Hari Ini
-    </button>
-    <div style="font-size:10px; color:#666; margin-top:2px;">Terakhir: ${terakhirDibersihkan}</div>
-  </small>`;
-})()}
-<br><small style="color:#555;font-style:italic;">
-  ${p.tanggalLahir ? (isHariIniUlangTahun(p.tanggalLahir) ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
-  </small>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button style="background:#10b981;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;" 
-                onclick="event.stopPropagation(); kirimWelcome('${p.nama}','${p.hp || ''}','${p.kost}')">
-          Welcome
-        </button>
-        <button class="tagih-btn" onclick="event.stopPropagation(); bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-        <button class="lunas-btn" onclick="event.stopPropagation(); bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-        <button style="background:${hariIni ? '#dc2626' : '#2563eb'};color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold" 
-                onclick="event.stopPropagation(); kirimUlangTahun('${p.nama}','${p.hp}')">
-          ${hariIni ? 'HARI INI!' : ''} Ulang Tahun
-        </button>
-        <button style="background:#f59e0b;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;" 
-                onclick="event.stopPropagation(); bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp || ''}')">
-          Perawatan
-        </button>
-      </div>
-    </div>`;
-  }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
-};
 
 // ====================== DAFTAR CHECK-OUT (DENGAN FILTER AKSES) ======================
 window.showCheckoutList = async function() {
@@ -821,8 +719,9 @@ window.laporPembersihan = async function() {
         const jadwalBerikutnya = new Date(checkIn);
         jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 15);
 
-        const status = jadwalBerikutnya < hariIni ? "TELAT!" : 
-                      d.tanggalBersih && new Date(d.tanggalBersih) >= jadwalBerikutnya ? "SUDAH BERSIH" : "BELUM";
+        const sudahDibersihkanBaru2 = d.tanggalBersih && new Date(d.tanggalBersih) >= new Date(checkIn.getTime() + siklus*15*86400000);
+const status = jadwalBerikutnya < hariIni ? "TELAT!" : 
+              sudahDibersihkanBaru2 ? "SUDAH" : "BELUM";
 
         const terakhirBersih = d.tanggalBersih ? formatDate(d.tanggalBersih) : "-";
 
