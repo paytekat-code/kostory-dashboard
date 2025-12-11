@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KOSTORY v3.2 - Daftar Check-out</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
+  <script type="module" src="firebase-config.js"></script>
+  <script src="script.js"></script>
+</head>
+<body>
+  <div id="checkoutListPage" class="hidden">
+    <div id="header">
+      <h1>Daftar Check-out</h1>
+      <span id="userName" style="font-size:18px;"></span>
+      <button onclick="logout()">Logout</button>
+    </div>
+    <button onclick="backToDashboard()">Kembali ke Dashboard</button>
+    <div id="checkoutList"></div>
+  </div>
+</body>
+</html>
