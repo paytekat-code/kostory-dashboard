@@ -715,9 +715,9 @@ window.laporPembersihan = async function() {
 
         // Hitung jadwal bersih berikutnya (setiap 15 hari dari check-in)
         const hariSejakMasuk = Math.floor((hariIni - checkIn) / (1000*60*60*24));
-        const siklus = Math.floor(hariSejakMasuk / 15);
+        const siklus = Math.floor(hariSejakMasuk / 14);
         const jadwalBerikutnya = new Date(checkIn);
-        jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 15);
+        jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
 
         const sudahDibersihkanBaru2 = d.tanggalBersih && new Date(d.tanggalBersih) >= new Date(checkIn.getTime() + siklus*15*86400000);
 const status = jadwalBerikutnya < hariIni ? "TELAT!" : 
@@ -794,9 +794,9 @@ window.showPenghuniList = async function() {
       const checkIn = new Date(p.tanggalMasuk);
       const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
       const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
-      const siklus = Math.floor(hariSejakMasuk / 15);
+      const siklus = Math.floor(hariSejakMasuk / 14);
       const jadwalBerikutnya = new Date(checkIn);
-      jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 15);
+      jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
       const telat = jadwalBerikutnya < hariIniDate;
       const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
       const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
