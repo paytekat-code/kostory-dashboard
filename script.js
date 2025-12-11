@@ -878,7 +878,7 @@ window.konfirmasiBersih = function(kost, room, nama, hp, tanggalBersih) {
 
   const pesan = `Halo Kak *${nama}*,
 
-Menurut catatan kami, kamar Kakak sudah selesai dibersihkan oleh staf pada tanggal *${tgl}*.
+Menurut catatan kami, kamar Kakak sudah selesai dibersihkan oleh Pengurus Kost pada tanggal *${tgl}*.
 
 Kalau dirasa masih ada bagian yang kurang rapi atau kurang bersih, kabari kami ya, Kak. Dengan senang hati kami bantu bereskan lagi.
 
