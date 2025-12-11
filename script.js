@@ -719,9 +719,26 @@ window.laporPembersihan = async function() {
         const jadwalBerikutnya = new Date(checkIn);
         jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
 
-        const sudahDibersihkanBaru2 = d.tanggalBersih && new Date(d.tanggalBersih) >= new Date(checkIn.getTime() + siklus*14*86400000);
-const status = jadwalBerikutnya < hariIni ? "TELAT!" : 
-              sudahDibersihkanBaru2 ? "SUDAH" : "BELUM";
+        // Logika baru: bersih valid kalau di rentang H-7 sampai H+7 dari jadwal berikutnya
+let status = "BELUM";
+if (d.tanggalBersih) {
+  const tglBersih = new Date(d.tanggalBersih);
+  tglBersih.setHours(0,0,0,0);
+  
+  const windowMulai = new Date(jadwalBerikutnya);
+  windowMulai.setDate(jadwalBerikutnya.getDate() - 7);
+  
+  const windowAkhir = new Date(jadwalBerikutnya);
+  windowAkhir.setDate(jadwalBerikutnya.getDate() + 7);
+  
+  if (tglBersih >= windowMulai && tglBersih <= windowAkhir) {
+    status = "SUDAH";
+  }
+}
+
+if (jadwalBerikutnya < hariIni) {
+  status = "TELAT!";
+}
 
         const terakhirBersih = d.tanggalBersih ? formatDate(d.tanggalBersih) : "-";
 
