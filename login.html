@@ -24,18 +24,26 @@
     <p id="error" style="color:red;margin-top:15px"></p>
   </div>
 
+  <!-- INI YANG DIPERBAIKI -->
   <script type="module">
-    import { firebaseConfig } from './firebase-config.js';
-    import { passwordDb } from './firebase-config.js';
+    // Import Firebase SDK dulu
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js";
 
-    firebase.initializeApp(firebaseConfig);
+    // Import config lokal
+    import { firebaseConfig, passwordDb } from './firebase-config.js';
 
-    // Kalau sudah pernah login sebelumnya → langsung masuk
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Cek apakah sudah pernah login
     const savedUser = localStorage.getItem("kostoryUser");
     if (savedUser && passwordDb[savedUser.toLowerCase()]) {
       location.href = "dashboard.html";
     }
 
+    // Event login
     document.getElementById("btnLogin").onclick = () => {
       const user = document.getElementById("username").value.trim().toLowerCase();
       const pass = document.getElementById("password").value;
