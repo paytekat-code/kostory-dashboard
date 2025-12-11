@@ -31,9 +31,9 @@ const hakAkses = {
   "inaya": "Inaya Bukit by Kostory"
 };
 
-// Password user (hanya untuk demo, jangan dipakai di produksi)
+// Password user (fix typo admin)
 const passwordDb = { 
-  "": "ramenuno20",
+  "admin": "ramenuno20",
   "mekar": "kopipait69",
   "satria": "cilukba123",
   "mitra": "ayamgeprek77",
@@ -42,10 +42,5 @@ const passwordDb = {
   "inaya": "nasiuduk21"
 };
 
-// Export semua biar bisa dipakai di file lain
-export { 
-  firebaseConfig, 
-  kosts, 
-  hakAkses, 
-  passwordDb 
-};
+// Export semua
+export { firebaseConfig, kosts, hakAkses, passwordDb };
