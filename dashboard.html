@@ -1,29 +1,36 @@
-import { firebaseConfig } from './firebase-config.js';
-import { formatDate, hitungLamaTinggal, closeModal } from './utils.js';
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KOSTORY v3.2 - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="header">
+      <div>
+        <h1>KOSTORY v3.2</h1>
+        <p>Selamat datang, <strong id="userName"></strong></p>
+      </div>
+      <div>
+        <button class="btn" onclick="location.href='penghuni.html'">Daftar Penghuni</button>
+        <button class="btn" onclick="location.href='checkout.html'">Check-out</button>
+        <button class="btn-danger" onclick="logout()">Logout</button>
+      </div>
+    </div>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    <div id="totalStats">Memuat statistik...</div>
+    <div id="kostList"></div>
+  </div>
 
-const kosts = { /* sama seperti sebelumnya */ };
-const hakAkses = { /* sama */ };
+  <!-- Modal Tambah/Edit Penghuni (sama persis seperti versi lama) -->
+  <div id="penghuniModal" class="modal hidden"> ... (sama persis seperti yang kamu punya) ... </div>
+  <div id="checkoutModal" class="modal hidden"> ... </div>
+  <div id="tagihModal" class="modal hidden"> ... </div>
+  <div id="lunasModal" class="modal hidden"> ... </div>
+  <div id="perawatanModal" class="modal hidden"> ... </div>
 
-let currentUser = localStorage.getItem("kostoryUser");
-let allowedKosts = hakAkses[currentUser] === "all" ? Object.keys(kosts) : [hakAkses[currentUser]];
-
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("#userName").forEach(el => el.textContent = currentUser.toUpperCase());
-  loadDashboard();
-});
-
-function loadDashboard() {
-  // sama seperti versi sebelumnya: buat card kost + grid room
-  // ... (kode load room grid + onValue status)
-}
-
-window.bukaModal = function(kost, room, editKey = null) {
-  // sama seperti sebelumnya
-};
-
-window.simpanPenghuni = function() {
-  // sama seperti sebelumnya
-};
+  <script type="module" src="./dashboard.js"></script>
+</body>
+</html>
