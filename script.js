@@ -796,10 +796,10 @@ window.kirimIzinPerawatan = function() {
   });
 
   const pesan = `Hai Kak *${window.currentNamaPerawatan}*,\n\n` +
-    `Mau ngasih info ya kak\n\n` +
-    `Kami rencana mau ada *perawatan kamar* nanti tanggal *${tanggalFormat}*.\n\n` +
-    `Kalau ada barang kakak yang lagi dipakai atau butuh dipindahin, atau perlu pindah waktu, kabarin aja ya kak.\n\n` +
-    `Bisa ngabarin ke penjaga kost, atau langsung ke mimin di WA:\n` +
+    `Mau info dikit ya, kak.\n` +
+    `Tanggal *${tanggalFormat}* kami rencana ada perawatan kamar kk.\n\n` +
+    `Kalau ada barang Kakak yang perlu dipindahin, lagi dipakai, atau mau minta ganti jadwal, tinggal kabarin aja ya.\n\n` +
+    `Bisa lewat penjaga kost, atau langsung chat mimin di WA\n` +
     `081383210009\n\n` +
     `Makasih banyak atas pengertiannya ya kak!\n\n` +
     `Salam Kostorian\nTim Kostory`;
