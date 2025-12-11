@@ -821,14 +821,14 @@ window.showPenghuniList = async function() {
           ${p.tanggalLahir ? (hariIni ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
         </small>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-  <button class="btn" style="background:#10b981;color:white;" onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
-  <button class="btn tagih-btn" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-  <button class="btn lunas-btn" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-  <button class="btn" style="background:${hariIni?'#dc2626':'#2563eb'};color:white;" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;justify-content:flex-end;">
+  <button class="btn-mini" onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
+  <button class="btn-mini" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+  <button class="btn-mini" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+  <button class="btn-mini" style="background:${hariIni?'#dc2626':'#2563eb'};" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
     ${hariIni?'HARI INI!':'Ulang Tahun'}
   </button>
-  <button class="btn" style="background:#f59e0b;color:white;" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
+  <button class="btn-mini" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
     Perawatan
   </button>
 </div>
