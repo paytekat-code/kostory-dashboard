@@ -758,7 +758,7 @@ window.laporPembersihan = async function() {
 
   list.forEach((p, i) => {
     const no = (i + 1).toString().padStart(2, "0");   // 01, 02, 03, …
-    pesan += `${no}. ${p.room} | ${p.nama} | ${p.jadwal} | ${p.terakhir} | ${p.status}\n`;
+    pesan += `${no}. ${p.room} | ${p.nama} | ${p.jadwal} | ${p.terakhir} | *${p.status}*\n`;
 });
 
   if (list.length === 0) {
