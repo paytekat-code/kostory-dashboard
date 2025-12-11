@@ -811,14 +811,17 @@ window.showPenghuniList = async function() {
       const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
       const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
       const siklus = Math.floor(hariSejakMasuk / 14);
-      const jadwalBerikutnya = new Date(checkIn);
-      jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
-      const telat = jadwalBerikutnya < hariIniDate;
-      const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+const jadwalAktif = new Date(checkIn);
+jadwalAktif.setDate(checkIn.getDate() + siklus * 14);
+const formatJadwal = jadwalAktif.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+// Telat kalau sudah lewat jadwal aktif +7 hari
+const windowAkhir = new Date(jadwalAktif.getTime() + 7 * 86400000);
+const telat = hariIniDate > windowAkhir;
       const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
       bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
-        Bersih berikutnya: ${formatJadwal} ${telat?'(TELAT!)':''}
+        Bersih siklus ini: ${formatJadwal} ${telat?'(TELAT!)':''}
         <button onclick="event.stopPropagation();catatBersih('${p.kost}','${p.room}')" 
                 style="margin-left:8px;background:${telat?'#dc2626':'#10b981'};color:white;border:none;padding:3px 8px;border-radius:5px;font-size:10px;">
           Dibersihkan
