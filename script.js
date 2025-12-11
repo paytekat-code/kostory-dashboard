@@ -822,16 +822,16 @@ window.showPenghuniList = async function() {
         </small>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
-        <button class="tagih-btn" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-        <button class="lunas-btn" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-        <button style="background:${hariIni?'#dc2626':'#2563eb'};color:white;" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
-          ${hariIni?'HARI INI!':'Ulang Tahun'}
-        </button>
-        <button style="background:#f59e0b;color:white;font-size:11px;" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
-          Perawatan
-        </button>
-      </div>
+  <button class="btn" style="background:#10b981;color:white;" onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
+  <button class="btn tagih-btn" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+  <button class="btn lunas-btn" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+  <button class="btn" style="background:${hariIni?'#dc2626':'#2563eb'};color:white;" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
+    ${hariIni?'HARI INI!':'Ulang Tahun'}
+  </button>
+  <button class="btn" style="background:#f59e0b;color:white;" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
+    Perawatan
+  </button>
+</div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
