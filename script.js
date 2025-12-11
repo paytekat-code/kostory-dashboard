@@ -429,9 +429,38 @@ window.showPenghuniList = async function() {
         <strong>${p.nama}</strong><br>
         <small>${p.kost} - ${p.room} - ${formatDate(p.tanggalMasuk)} - Rp ${Number(p.harga || 0).toLocaleString("id-ID")} - ${p.durasi || "Bulanan"}</small><br>
         ${statusBayar}
-        <br><small style="color:#555;font-style:italic;">
-          ${p.tanggalLahir ? (hariIni ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
-        </small>
+        <br>
+<!-- === JADWAL BERSIH KAMAR (BARU) === -->
+${(() => {
+  if (!p.tanggalMasuk) return '';
+  
+  const checkIn = new Date(p.tanggalMasuk);
+  const hariIni = new Date();
+  hariIni.setHours(0,0,0,0);
+  
+  // Hitung jadwal bersih berikutnya (setiap 15 hari dari check-in)
+  const hariSejakMasuk = Math.floor((hariIni - checkIn) / (1000*60*60*24));
+  const siklus = Math.floor(hariSejakMasuk / 15);
+  const jadwalBerikutnya = new Date(checkIn);
+  jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 15);
+  
+  const telat = jadwalBerikutnya < hariIni;
+  const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  
+  const terakhirDibersihkan = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+  
+  return `<small style="color:${telat ? '#dc2626' : '#f59e0b'}; font-weight:bold;">
+    Bersih berikutnya: ${formatJadwal} ${telat ? ' (TELAT!)' : ''} 
+    <button onclick="event.stopPropagation(); catatBersih('${p.kost}','${p.room}')" 
+            style="margin-left:8px; background:${telat?'#dc2626':'#10b981'}; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer;">
+      ✓ Dibersihkan Hari Ini
+    </button>
+    <div style="font-size:10px; color:#666; margin-top:2px;">Terakhir: ${terakhirDibersihkan}</div>
+  </small>`;
+})()}
+<br><small style="color:#555;font-style:italic;">
+  ${p.tanggalLahir ? (hariIniUlangTahun(p.tanggalLahir) ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
+</small>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button style="background:#10b981;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;" 
@@ -813,4 +842,16 @@ window.kirimIzinPerawatan = function() {
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 
   document.getElementById("perawatanModal").classList.add("hidden");
+};
+// CATAT TANGGAL DIBERSIHKAN
+window.catatBersih = function(kost, room) {
+  if (!confirm("Tandai kamar ini sudah dibersihkan hari ini?")) return;
+  
+  const today = new Date().toISOString().split('T')[0];
+  db.ref(`kosts/${kost}/${room}`).update({
+    tanggalBersih: today
+  }).then(() => {
+    alert(`Kamar ${room} tercatat sudah dibersihkan pada ${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}`);
+    showPenghuniList(); // refresh list
+  });
 };
