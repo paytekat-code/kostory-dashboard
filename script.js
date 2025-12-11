@@ -719,23 +719,22 @@ window.laporPembersihan = async function() {
         const jadwalBerikutnya = new Date(checkIn);
         jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
 
-        // Logika baru: bersih valid kalau di rentang H-7 sampai H+7 dari jadwal berikutnya
+        // === LOGIKA BARU: Window H-7 sampai H+7 dari jadwal siklus aktif ===
 let status = "BELUM";
+
 if (d.tanggalBersih) {
   const tglBersih = new Date(d.tanggalBersih);
   tglBersih.setHours(0,0,0,0);
-  
-  const windowMulai = new Date(jadwalBerikutnya);
-  windowMulai.setDate(jadwalBerikutnya.getDate() - 7);
-  
-  const windowAkhir = new Date(jadwalBerikutnya);
-  windowAkhir.setDate(jadwalBerikutnya.getDate() + 7);
-  
+
+  const windowMulai = new Date(jadwalBerikutnya.getTime() - 7 * 86400000); // H-7 dari jadwal berikutnya
+  const windowAkhir = new Date(jadwalBerikutnya.getTime() + 7 * 86400000); // H+7 dari jadwal berikutnya
+
   if (tglBersih >= windowMulai && tglBersih <= windowAkhir) {
     status = "SUDAH";
   }
 }
 
+// TELAT kalau jadwal berikutnya sudah lewat hari ini
 if (jadwalBerikutnya < hariIni) {
   status = "TELAT!";
 }
