@@ -459,8 +459,8 @@ ${(() => {
   </small>`;
 })()}
 <br><small style="color:#555;font-style:italic;">
-  ${p.tanggalLahir ? (hariIniUlangTahun(p.tanggalLahir) ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
-</small>
+  ${p.tanggalLahir ? (isHariIniUlangTahun(p.tanggalLahir) ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
+  </small>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button style="background:#10b981;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;" 
@@ -482,62 +482,6 @@ ${(() => {
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
 
-// === showCheckoutList (sudah pakai filter akses) ===
-window.showCheckoutList = async function() {
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("checkoutListPage").classList.remove("hidden");
-
-  const bulanIni = [], sebelumnya = [];
-  const now = new Date();
-  const thisMonth = now.getMonth();
-  const thisYear = now.getFullYear();
-  const minMonth = ((thisMonth - 2) + 12) % 12;
-  const minYear = thisMonth - 2 < 0 ? thisYear - 1 : thisYear;
-
-  for (const kost of allowedKosts) {
-    const snap = await db.ref(`checkout/${kost}`).once("value");
-    const dataKost = snap.val() || {};
-    for (const room in dataKost) {
-      const d = dataKost[room];
-      if (d && d.tanggalCheckout) {
-        const coDate = new Date(d.tanggalCheckout);
-        const item = {kost, room, ...d, coDate};
-        if (coDate.getMonth() === thisMonth && coDate.getFullYear() === thisYear) {
-          bulanIni.push(item);
-        } else if (coDate.getFullYear() > minYear || (coDate.getFullYear() === minYear && coDate.getMonth() >= minMonth)) {
-          sebelumnya.push(item);
-        }
-      }
-    }
-  }
-
-  bulanIni.sort((a,b) => b.coDate - a.coDate);
-  sebelumnya.sort((a,b) => b.coDate - a.coDate);
-
-  document.querySelector("#checkoutListPage #header").innerHTML = `
-    <h1>Daftar Check-out</h1>
-    <button class="btn" onclick="backToDashboard()">Kembali</button>`;
-
-  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `
-    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div>
-          <strong>${i+1}. ${d.nama}</strong><br>
-          <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
-        </div>
-        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp || ''}')" 
-                style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
-          Kirim Perpisahan
-        </button>
-      </div>
-    </div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
-
-  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map(d => `
-    <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-      <strong>${d.nama}</strong><br>
-      <small>${formatDate(d.tanggalCheckout)} • ${d.kost} - ${d.room}</small>
-    </div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data 3 bulan terakhir</p>";
-};
 // ====================== DAFTAR CHECK-OUT (DENGAN FILTER AKSES) ======================
 window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
