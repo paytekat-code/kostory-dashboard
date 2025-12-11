@@ -3,50 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KOSTORY v3.2 - Login</title>
+  <title>KOSTORY v3.2 – Login</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body{background:#1e293b;display:flex;align-items:center;justify-content:center;height:100vh}
-    .login-box{background:white;padding:50px;border-radius:20px;box-shadow:0 15px 35px rgba(0,0,0,0.3);width:90%;max-width:400px;text-align:center}
-    h2{color:#1e40af;margin-bottom:30px;font-size:32px}
-    input{width:100%;padding:16px;margin:10px 0;border:2px solid #e2e8f0;border-radius:12px;font-size:16px}
-    button{background:#1d4ed8;color:white;width:100%;padding:16px;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;margin-top:15px}
+    body{background:#1e293b;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .login-box{background:white;padding:50px 40px;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,0.4);width:90%;max-width:420px;text-align:center}
+    h2{color:#1e40af;margin-bottom:10px}
+    input{width:100%;padding:16px;margin:10px 0;border:2px solid #ddd;border-radius:12px;font-size:16px}
+    button{background:#1d4ed8;color:white;width:100%;padding:16px;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px}
     button:hover{background:#1e40af}
   </style>
 </head>
 <body>
   <div class="login-box">
     <h2>KOSTORY</h2>
-    <p style="color:#64748b;margin-bottom:20px">v3.2 Multi-Lokasi</p>
+    <p style="color:#64748b;margin-bottom:25px">v3.2 Multi-Lokasi</p>
     <input type="text" id="username" placeholder="Username" autocomplete="off">
     <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">LOGIN</button>
+    <button id="btnLogin">LOGIN</button>
+    <p id="error" style="color:red;margin-top:15px"></p>
   </div>
 
   <script type="module">
     import { firebaseConfig } from './firebase-config.js';
+    import { passwordDb } from './firebase-config.js';
+
     firebase.initializeApp(firebaseConfig);
 
-    const passwordDb = { 
-      "admin":"ramenuno20","mekar":"kopipait69","satria":"cilukba123","mitra":"ayamgeprek77",
-      "ecokost":"mirebus08","mitraya":"odading88","inaya":"nasiuduk21" 
-    };
+    // Kalau sudah pernah login sebelumnya → langsung masuk
+    const savedUser = localStorage.getItem("kostoryUser");
+    if (savedUser && passwordDb[savedUser.toLowerCase()]) {
+      location.href = "dashboard.html";
+    }
 
-    window.login = function() {
+    document.getElementById("btnLogin").onclick = () => {
       const user = document.getElementById("username").value.trim().toLowerCase();
       const pass = document.getElementById("password").value;
+
       if (passwordDb[user] && passwordDb[user] === pass) {
         localStorage.setItem("kostoryUser", user);
         location.href = "dashboard.html";
       } else {
-        alert("Username atau password salah!");
+        document.getElementById("error").textContent = "Username atau password salah!";
       }
     };
-
-    // auto login kalau udah pernah masuk
-    if (localStorage.getItem("kostoryUser")) {
-      location.href = "dashboard.html";
-    }
   </script>
 </body>
 </html>
