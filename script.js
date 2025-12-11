@@ -715,10 +715,31 @@ window.laporPembersihan = async function() {
 
         // Hitung jadwal bersih berikutnya (setiap 15 hari dari check-in)
         const hariSejakMasuk = Math.floor((hariIni - checkIn) / (1000*60*60*24));
-        const siklus = Math.floor(hariSejakMasuk / 14);
-        const jadwalBerikutnya = new Date(checkIn);
-        jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
+        let siklus = Math.floor(hariSejakMasuk / 14);
+let jadwalAktif = new Date(checkIn);
+jadwalAktif.setDate(checkIn.getDate() + siklus * 14);
 
+// Kalau sudah lewat jadwal aktif +7 hari, pindah ke siklus berikutnya
+const windowAkhir = new Date(jadwalAktif.getTime() + 7 * 86400000);
+if (hariIni > windowAkhir) {
+  siklus += 1;
+  jadwalAktif = new Date(checkIn);
+  jadwalAktif.setDate(checkIn.getDate() + siklus * 14);
+}
+
+const status = jadwalAktif < hariIni ? "TELAT!" : 
+              d.tanggalBersih ? "SUDAH" : "BELUM";
+
+const terakhirBersih = d.tanggalBersih ? formatDate(d.tanggalBersih) : "-";
+
+list.push({
+  kost,
+  room,
+  nama: d.nama,
+  jadwal: formatDate(jadwalAktif),
+  status,
+  terakhir: terakhirBersih
+});
         // === LOGIKA BARU: Window H-7 sampai H+7 dari jadwal siklus aktif ===
 let status = "BELUM";
 
@@ -811,13 +832,20 @@ window.showPenghuniList = async function() {
       const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
       const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
       const siklus = Math.floor(hariSejakMasuk / 14);
-const jadwalAktif = new Date(checkIn);
+let siklus = Math.floor(hariSejakMasuk / 14);
+let jadwalAktif = new Date(checkIn);
 jadwalAktif.setDate(checkIn.getDate() + siklus * 14);
-const formatJadwal = jadwalAktif.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 
-// Telat kalau sudah lewat jadwal aktif +7 hari
+// Kalau sudah lewat jadwal aktif +7 hari, pindah ke siklus berikutnya
 const windowAkhir = new Date(jadwalAktif.getTime() + 7 * 86400000);
-const telat = hariIniDate > windowAkhir;
+if (hariIniDate > windowAkhir) {
+  siklus += 1;
+  jadwalAktif = new Date(checkIn);
+  jadwalAktif.setDate(checkIn.getDate() + siklus * 14);
+}
+
+const telat = hariIniDate > jadwalAktif;
+const formatJadwal = jadwalAktif.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
       const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
       bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
