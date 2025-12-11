@@ -757,9 +757,10 @@ window.laporPembersihan = async function() {
   let pesan = `*Laporan Pembersihan Kamar*\n`;
   pesan += `${today.getDate()} ${today.toLocaleDateString("id-ID", { month: "long" })} ${today.getFullYear()}\n\n`;
 
-  list.forEach(p => {
-    pesan += `${p.room} | ${p.nama} | ${p.jadwal} | ${p.terakhir} | ${p.status}\n`;
-  });
+  list.forEach((p, i) => {
+    const no = (i + 1).toString().padStart(2, "0");   // 01, 02, 03, …
+    pesan += `${no}. ${p.room} | ${p.nama} | ${p.jadwal} | ${p.terakhir} | ${p.status}\n`;
+});
 
   if (list.length === 0) {
     pesan += "Belum ada penghuni aktif.\n";
