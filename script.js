@@ -153,8 +153,7 @@ function loadDashboard() {
           box.className = `room ${d.statusPenghuni || "staying"}`;
           box.innerHTML = `${room}<br><small>${d.nama}</small>`;
         } else {
-          terisi = Math.max(terisi - 1, 0);
-          totalTerisi = Math.max(totalTerisi - 1, 0);
+        
           box.className = "room kosong";
           box.innerHTML = `${room}<br><small>KOSONG</small>`;
         }
