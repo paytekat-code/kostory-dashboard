@@ -807,7 +807,15 @@ window.showPenghuniList = async function() {
                 style="margin-left:8px;background:${telat?'#dc2626':'#10b981'};color:white;border:none;padding:3px 8px;border-radius:5px;font-size:10px;">
           Dibersihkan
         </button>
-        <div style="font-size:10px;color:#666;">Terakhir: ${terakhir}</div>
+       <div style="font-size:10px;color:#666;margin-top:4px;">
+  Terakhir: ${terakhir}
+  ${p.tanggalBersih && currentUser === "admin" ? `
+    <button onclick="event.stopPropagation();konfirmasiBersih('${p.kost}','${p.room}','${p.nama}','${p.hp||''}','${p.tanggalBersih}')" 
+            style="margin-left:6px;background:#8b5cf6;color:white;border:none;padding:2px 7px;border-radius:8px;font-size:9px;cursor:pointer;">
+      Kirim WA Konfirmasi
+    </button>
+  ` : ''}
+</div>
       </small>`;
     }
 
@@ -821,17 +829,52 @@ window.showPenghuniList = async function() {
           ${p.tanggalLahir ? (hariIni ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
         </small>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
-        <button class="tagih-btn" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-        <button class="lunas-btn" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-        <button style="background:${hariIni?'#dc2626':'#2563eb'};color:white;" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
-          ${hariIni?'HARI INI!':'Ulang Tahun'}
-        </button>
-        <button style="background:#f59e0b;color:white;font-size:11px;" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
-          Perawatan
-        </button>
-      </div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;justify-content:flex-end;">
+  <button class="btn-mini" onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
+  <button class="btn-mini" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+  <button class="btn-mini" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+  <button class="btn-mini" style="background:${hariIni?'#dc2626':'#2563eb'};" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
+    ${hariIni?'HARI INI!':'Ulang Tahun'}
+  </button>
+  <button class="btn-mini" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
+    Perawatan
+  </button>
+</div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
+};
+// === KIRIM KONFIRMASI BERSIH KE PENGHUNI (KHUSUS ADMIN) ===
+window.konfirmasiBersih = function(kost, room, nama, hp, tanggalBersih) {
+  if (currentUser !== "admin") {
+    alert("Fitur ini hanya untuk Admin!");
+    return;
+  }
+
+  if (!hp || hp.trim() === "") {
+    alert("Nomor HP penghuni kosong!");
+    return;
+  }
+
+  if (!tanggalBersih) {
+    alert("Belum ada catatan tanggal bersih!");
+    return;
+  }
+
+  const tgl = new Date(tanggalBersih).toLocaleDateString("id-ID", {
+    day: "numeric", month: "long", year: "numeric"
+  });
+
+  const pesan = `Halo Kak *${nama}*,
+
+Menurut catatan kami, kamar Kakak sudah selesai dibersihkan oleh staf pada tanggal *${tgl}*.
+
+Kalau dirasa masih ada bagian yang kurang rapi atau kurang bersih, kabari kami ya, Kak. Dengan senang hati kami bantu bereskan lagi.
+
+Terima kasih banyak, Kak.
+
+Salam Kostorian!  
+Tim Kostory`;
+
+  const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
