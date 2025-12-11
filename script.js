@@ -116,7 +116,7 @@ function loadDashboard() {
   container.innerHTML = "<div style='text-align:center;padding:80px;color:#666'>Loading...</div>";
   document.getElementById("totalStats").innerHTML = "Memuat data...";
   let totalKamar = 0, totalTerisi = 0;
-
+  container.innerHTML = "";   // <--- TAMBAHKAN BARIS INI
   Object.keys(kosts).forEach(namaKost => {
     if (!allowedKosts.includes(namaKost)) return;
     totalKamar += kosts[namaKost].length;
