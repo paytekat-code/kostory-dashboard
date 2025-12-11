@@ -414,9 +414,10 @@ window.showPenghuniList = async function() {
   document.querySelector("#penghuniListPage #header").innerHTML = `
     <h1>Daftar Penghuni</h1>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
-      <button class="btn" onclick="backToDashboard()">Kembali</button>
-    </div>`;
+  <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
+  <button class="btn" style="background:#f59e0b;color:white" onclick="laporPembersihan()">LAPOR BERSIH KAMAR</button>
+  <button class="btn" onclick="backToDashboard()">Kembali</button>
+</div>;
 
   document.getElementById("listPenghuni").innerHTML = list.map(p => {
     const hariIni = isHariIniUlangTahun(p.tanggalLahir);
@@ -798,4 +799,62 @@ window.catatBersih = function(kost, room) {
     alert(`Kamar ${room} tercatat sudah dibersihkan pada ${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}`);
     showPenghuniList(); // refresh list
   });
+};
+// ====================== LAPORAN PEMBERSIHAN KAMAR KE WA ======================
+window.laporPembersihan = async function() {
+  const today = new Date();
+  const list = [];
+
+  for (const kost of allowedKosts) {
+    for (const room of kosts[kost]) {
+      const snap = await db.ref(`kosts/${kost}/${room}`).once("value");
+      const d = snap.val();
+
+      if (d && d.nama && d.tanggalMasuk) {
+        const checkIn = new Date(d.tanggalMasuk);
+        const hariIni = new Date();
+        hariIni.setHours(0,0,0,0);
+
+        // Hitung jadwal bersih berikutnya (setiap 15 hari dari check-in)
+        const hariSejakMasuk = Math.floor((hariIni - checkIn) / (1000*60*60*24));
+        const siklus = Math.floor(hariSejakMasuk / 15);
+        const jadwalBerikutnya = new Date(checkIn);
+        jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 15);
+
+        const status = jadwalBerikutnya < hariIni ? "TELAT!" : 
+                      d.tanggalBersih && new Date(d.tanggalBersih) >= jadwalBerikutnya ? "SUDAH BERSIH" : "BELUM";
+
+        const terakhirBersih = d.tanggalBersih ? formatDate(d.tanggalBersih) : "-";
+
+        list.push({
+          kost,
+          room,
+          nama: d.nama,
+          jadwal: formatDate(jadwalBerikutnya),
+          status,
+          terakhir: terakhirBersih
+        });
+      }
+    }
+  }
+
+  // Urutkan berdasarkan nama kost dulu, lalu nomor kamar
+  list.sort((a, b) => {
+    if (a.kost !== b.kost) return a.kost.localeCompare(b.kost);
+    return a.room.localeCompare(b.room);
+  });
+
+  let pesan = `*LAPORAN PEMBERSIHAN KAMAR*\n${formatDate(today)}\n\n`;
+  pesan += `No Kamar | Nama Penghuni | Jadwal Berikutnya | Status | Terakhir Bersih\n`;
+  pesan += `────────────────────────────────────\n`;
+
+  list.forEach(p => {
+    const statusText = p.status === "TELAT!" ? "TELAT!" : 
+                       p.status === "SUDAH BERSIH" ? "SUDAH" : "BELUM";
+    pesan += `${p.room.padEnd(6)} | ${p.nama.padEnd(12)} | ${p.jadwal} | ${statusText.padEnd(8)} | ${p.terakhir}\n`;
+  });
+
+  pesan += `\nPowered by KostoryApps ❤️`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
