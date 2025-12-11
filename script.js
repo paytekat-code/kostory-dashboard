@@ -730,7 +730,7 @@ window.laporPembersihan = async function() {
         if (d.tanggalBersih) {
           const terakhirDate = new Date(d.tanggalBersih);
           const selisihHari = Math.floor((jadwalBerikutnya - terakhirDate) / 86400000);
-          status = selisihHari > 7 ? "Belum" : "Sudah";
+          status = selisihHari > 7 ? "Belum dibersihkan" : "Sudah dibersihkan";
         }
 
         list.push({
