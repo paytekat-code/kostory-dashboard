@@ -1,21 +1,19 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KOSTORY v3.2 - Login</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
-  <script type="module" src="firebase-config.js"></script>
-  <script src="script.js"></script>
-</head>
-<body>
-  <div id="loginScreen">
-    <h2>Login KOSTORY</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-  </div>
-</body>
-</html>
+import { firebaseConfig } from './firebase-config.js';
+
+firebase.initializeApp(firebaseConfig);
+
+const passwordDb = { 
+  "admin":"ramenuno20","mekar":"kopipait69","satria":"cilukba123","mitra":"ayamgeprek77",
+  "ecokost":"mirebus08","mitraya":"odading88","inaya":"nasiuduk21" 
+};
+
+window.login = function() {
+  const user = document.getElementById("username").value.trim().toLowerCase();
+  const pass = document.getElementById("password").value;
+  if (passwordDb[user] && passwordDb[user] === pass) {
+    localStorage.setItem("kostoryUser", user);
+    window.location.href = "dashboard.html";
+  } else {
+    alert("Username atau password salah!");
+  }
+};
