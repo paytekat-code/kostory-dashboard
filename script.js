@@ -454,7 +454,7 @@ window.kirimTagihan = function() {
   const tgl = document.getElementById("jatuhTempo").value;
   const nominal = document.getElementById("nominalTagihan").value;
   if (!tgl || !nominal) return alert("Isi semua!");
-  const pesan = `Hai Kak ${window.currentNamaTagih}\n\nKami informasikan bahwa masa sewa kost kakak di Kostory akan berakhir pada *${formatDate(tgl)}*\nUntuk biaya perpanjangannya sebesar: *Rp ${Number(nominal).toLocaleString()}*, mohon dilunasi 1 hari sebelum masa sewa berakhir.\n\nTerima kasih, Salam Kostorian!\nTim Kostory`;
+  const pesan = `Hai Kak ${window.currentNamaTagih}👋\n\nMau ngingetin aja ya, masa sewa kamar Kakak di Kostory bakal berakhir tanggal *${formatDate(tgl)}*\nKalau Kakak mau lanjut, biaya perpanjangannya *Rp ${Number(nominal).toLocaleString()}*, Boleh banget dibayarkan maksimal 1 hari sebelum masa sewa habis ya, Kak..\n\nMakasih banyak 🙏.\nSalam Kostorian!\nTim Kostory`;
   const phone = window.currentHpTagih.replace(/^0/,"62").replace(/[^0-9]/g,"");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
   closeModal();
