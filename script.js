@@ -807,10 +807,10 @@ window.showPenghuniList = async function() {
       let level = "";
       let warna = "";
 
-      if (tahun >= 5) { level = "Sage"; warna = "#fbbf24"; }       // emas
-      else if (tahun >= 4) { level = "Emperor"; warna = "#dc2626"; } // merah
-      else if (tahun >= 3) { level = "King"; warna = "#92400e"; }    // coklat
-      else if (tahun >= 2) { level = "Ancestor"; warna = "#ec4899"; } // pink
+      if (tahun >= 5) { level = "Limit Sage"; warna = "#fbbf24"; }       // emas
+      else if (tahun >= 4) { level = "Sage"; warna = "#dc2626"; } // merah
+      else if (tahun >= 3) { level = "Emperor"; warna = "#92400e"; }    // coklat
+      else if (tahun >= 2) { level = "King"; warna = "#ec4899"; } // pink
       else if (tahun >= 1) { level = "Elder"; warna = "#16a34a"; }   // hijau
       // kurang dari 1 tahun → tidak ditampilkan
 
