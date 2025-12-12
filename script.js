@@ -858,37 +858,42 @@ window.showPenghuniList = async function(sortBy = "default") {
       if (level) loyalitasHTML = ` - <i style="color:${warna};font-weight:normal;">${level}</i>`;
     }
 
-    // Jadwal bersih kamar
-    let bersihHTML = "";
-    if (p.tanggalMasuk) {
-      const checkIn = new Date(p.tanggalMasuk);
-      const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
-      const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
-      const siklus = Math.floor(hariSejakMasuk / 14);
-      const jadwalBerikutnya = new Date(checkIn);
-      jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
-      const telat = jadwalBerikutnya < hariIniDate;
-      const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-      const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+         // Jadwal bersih kamar
+      let bersihHTML = "";
+      if (p.tanggalMasuk) {
+        const checkIn = new Date(p.tanggalMasuk);
+        const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
+        const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
+        const siklus = Math.floor(hariSejakMasuk / 14);
+        const jadwalBerikutnya = new Date(checkIn);
+        jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
+        const telat = jadwalBerikutnya < hariIniDate;
+        const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
-      bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
-        Jadwal pembersihan kamar: ${formatJadwal} ${telat?'(TELAT!)':''}
-        <button onclick="event.stopPropagation();catatBersih('${p.kost}','${p.room}')" 
-                style="margin-left:8px;background:${telat?'#dc2626':'#10b981'};color:white;border:none;padding:3px 8px;border-radius:5px;font-size:10px;">
-          Dibersihkan
-        </button>
-       <div style="font-size:10px;color:#666;margin-top:4px;">
-  Dibersihkan terakhir: ${terakhir}
-  ${p.tanggalBersih && currentUser === "admin" ? `
-    <button onclick="event.stopPropagation();konfirmasiBersih('${p.kost}','${p.room}','${p.nama}','${p.hp||''}','${p.tanggalBersih}')" 
-            style="margin-left:6px;background:#8b5cf6;color:white;border:none;padding:2px 7px;border-radius:8px;font-size:9px;cursor:pointer;">
-      Kirim WA Konfirmasi
-    </button>
-  ` : ''}
-</div>
-      </small>`;
-    }
+        // Hitung berapa hari sejak terakhir dibersihkan
+        let hariSejakBersih = "-";
+        if (p.tanggalBersih) {
+          const lastClean = new Date(p.tanggalBersih);
+          hariSejakBersih = Math.floor((hariIniDate - lastClean) / 86400000);
+        }
 
+        bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
+          Jadwal pembersihan kamar: ${formatJadwal} ${telat?'(TELAT!)':''}
+          <button onclick="event.stopPropagation();catatBersih('${p.kost}','${p.room}')" 
+                  style="margin-left:8px;background:${telat?'#dc2626':'#10b981'};color:white;border:none;padding:3px 8px;border-radius:5px;font-size:10px;">
+            Dibersihkan
+          </button>
+          ${currentUser === "admin" ? `
+          <button onclick="event.stopPropagation();ingatkanBersih('${p.kost}','${p.room}','${p.nama}','${hariSejakBersih}')" 
+                  style="margin-left:4px;background:#8b5cf6;color:white;border:none;padding:3px 8px;border-radius:5px;font-size:10px;">
+            Ingatkan
+          </button>` : ''}
+         <div style="font-size:10px;color:#666;margin-top:4px;">
+           Terakhir: ${terakhir}
+         </div>
+        </small>`;
+      }
     return `<div class="penghuni-item" style="cursor:pointer;" onclick="openModal('${p.kost}','${p.room}')">
       <div>
         <strong>${p.nama}${loyalitasHTML}</strong><br>
@@ -947,4 +952,20 @@ Tim Kostory`;
 
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
+};
+// ====================== TOMBOL INGATKAN BERSIH (HANYA ADMIN) ======================
+window.ingatkanBersih = function(kost, room, nama, hariSejakBersih) {
+  if (currentUser !== "admin") {
+    alert("Hanya admin yang bisa pakai fitur ini!");
+    return;
+  }
+
+  const hari = hariSejakBersih === "-" ? "lama banget" : hariSejakBersih + " hari";
+
+  const pesan = `Halo Guys, tau gak? kamarnya ${nama} (${room}), setelah aku cek ternyata udah ${hari} ga dibersihin sarang laba-labanya Spider web\n\nsekarang laba-labanya udah beranak pinak, kabarnya bapaknya lagi antri bikin Kartu Keluarga. cepet dibersihin ya sebelum bapaknya pulang dan jadi spiderman Spider`;
+
+  // Ganti nomor ini kalau mau kirim ke grup/pengurus tertentu
+  const nomorGrup = "6281383210009"; // nomor WA pengurus / grup
+
+  window.open(`https://api.whatsapp.com/send?phone=${nomorGrup}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
