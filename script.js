@@ -843,18 +843,21 @@ window.showPenghuniList = async function(sortBy = "default") {
       if (level) loyalitasHTML = ` - <i style="color:${warna};font-weight:normal;">${level}</i>`;
     }
 
-    // Jadwal bersih kamar
+        // Jadwal bersih kamar + hitung jadwalBerikutnya untuk tombol reminder
     let bersihHTML = "";
+    let jadwalBerikutnyaStr = "";  // <-- tambah variabel ini untuk tombol
     if (p.tanggalMasuk) {
       const checkIn = new Date(p.tanggalMasuk);
       const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
       const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
       const siklus = Math.floor(hariSejakMasuk / 14);
-      const jadwalBerikutnya = new Date(checkIn);
+      jadwalBerikutnya = new Date(checkIn);  // <-- deklarasikan ulang di sini biar global di scope ini
       jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
       const telat = jadwalBerikutnya < hariIniDate;
       const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
       const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+
+      jadwalBerikutnyaStr = jadwalBerikutnya.toISOString().split('T')[0];  // <-- simpan string tanggal untuk tombol
 
       bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
         Jadwal pembersihan kamar: ${formatJadwal} ${telat?'(TELAT!)':''}
@@ -894,15 +897,13 @@ window.showPenghuniList = async function(sortBy = "default") {
         <button class="btn-mini" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
           Perawatan
         </button>
-                <button class="btn-mini" style="background:#7c3aed;color:white;" 
-                onclick="event.stopPropagation();kirimReminderPengurus('${p.kost}','${p.room}','${p.nama}', '${jadwalBerikutnya.toISOString().split('T')[0]}', '${p.tanggalBersih || ''}')">
+        <button class="btn-mini" style="background:#7c3aed;color:white;" 
+                onclick="event.stopPropagation();kirimReminderPengurus('${p.kost}','${p.room}','${p.nama}', '${jadwalBerikutnyaStr}', '${p.tanggalBersih || ''}')">
           Reminder Pengurus
         </button>
       </div>
     </div>`;
-  }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
-};
-// === KIRIM KONFIRMASI BERSIH KE PENGHUNI (KHUSUS ADMIN) ===
+    // === KIRIM KONFIRMASI BERSIH KE PENGHUNI (KHUSUS ADMIN) ===
 window.konfirmasiBersih = function(kost, room, nama, hp, tanggalBersih) {
   if (currentUser !== "admin") {
     alert("Fitur ini hanya untuk Admin!");
