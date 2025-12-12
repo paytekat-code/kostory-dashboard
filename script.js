@@ -369,12 +369,27 @@ window.kirimUlangTahun = function(nama, hp) {
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
 };
 
-window.kirimPerpisahan = function(nama, hp) {
+window.kirimPerpisahan = function(nama, hp, tanggalCheckout, tanggalMasuk) {
   if (!hp || hp.trim() === "") {
     alert("Nomor HP tidak tersedia untuk " + nama);
     return;
   }
-  const pesan = `Kak *${nama}*\n\nTerima kasih banyak ya sudah mempercayakan waktunya untuk tinggal di *Kostory*. \nKami senang banget bisa jadi bagian kecil dari cerita perjalanan Kakak di sini.\n\nSemoga Kak ${nama} selalu sehat dan makin sukses ke depannya.\n\nMaaf kalau selama tinggal ada kekurangan dari kami. Kalau Kakak butuh tempat tinggal lagi, pintu Kostory selalu terbuka 😊.\n\nSalam Kostorian,\nTim Kostory \n\nInfo & Pemesanan : 081383210009 (WA only). `;
+  if (!tanggalCheckout || !tanggalMasuk) {
+    alert("Data tanggal check-in atau check-out tidak lengkap!");
+    return;
+  }
+  const lamaTinggal = hitungLamaTinggal(tanggalMasuk, tanggalCheckout);
+  const tglCheckout = formatDate(tanggalCheckout, true); // Gunakan full format
+  const pesan = `Halo Kak *${nama}*
+
+Menurut catatan kami kakak telah check-out dari Kostory pada tanggal ${tglCheckout}, dan telah tinggal selama ${lamaTinggal}.
+
+kami mengucapkan terimakasih banyak sudah tinggal selama itu, semoga kak ${nama} selalu sehat dan makin sukses ke depanya.
+
+Kami memohon maaf apabila selama kakak tinggal, masih banyak kekurangan kami yang harus kami evaluasi, kalo kakak butuh tempat tinggal lagi, Pintu kostory selalu terbuka 😊
+
+Salam Kostorian,
+Tim Kostory`;
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
@@ -426,10 +441,10 @@ window.showCheckoutList = async function() {
           <strong>${i+1}. ${d.nama}</strong><br>
           <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
         </div>
-        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp || ''}')" 
-                style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
-          Kirim Perpisahan
-        </button>
+        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp || ''}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
+        style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
+  Kirim Perpisahan
+</button>
       </div>
     </div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
 
