@@ -862,7 +862,7 @@ window.showPenghuniList = async function(sortBy = "default") {
       let bersihHTML = "";
       if (p.tanggalMasuk) {
         const checkIn = new Date(p.tanggalMasuk);
-        const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
+        const hariIniDate = new Date(); 
         const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
         const siklus = Math.floor(hariSejakMasuk / 14);
         const jadwalBerikutnya = new Date(checkIn);
@@ -875,7 +875,7 @@ window.showPenghuniList = async function(sortBy = "default") {
         let hariSejakBersih = "-";
         if (p.tanggalBersih) {
           const lastClean = new Date(p.tanggalBersih);
-          hariSejakBersih = Math.floor((hariIniDate - lastClean) / 86400000);
+          hariSejakBersih = Math.floor((hariIniDate - lastClean) / 86400000) + 1; // +1 biar sesuai persepsi manusia
         }
 
         bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
