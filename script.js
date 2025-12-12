@@ -843,21 +843,18 @@ window.showPenghuniList = async function(sortBy = "default") {
       if (level) loyalitasHTML = ` - <i style="color:${warna};font-weight:normal;">${level}</i>`;
     }
 
-        // Jadwal bersih kamar + hitung jadwalBerikutnya untuk tombol reminder
+    // Jadwal bersih kamar
     let bersihHTML = "";
-    let jadwalBerikutnyaStr = "";  // <-- tambah variabel ini untuk tombol
     if (p.tanggalMasuk) {
       const checkIn = new Date(p.tanggalMasuk);
       const hariIniDate = new Date(); hariIniDate.setHours(0,0,0,0);
       const hariSejakMasuk = Math.floor((hariIniDate - checkIn) / 86400000);
       const siklus = Math.floor(hariSejakMasuk / 14);
-      jadwalBerikutnya = new Date(checkIn);  // <-- deklarasikan ulang di sini biar global di scope ini
+      const jadwalBerikutnya = new Date(checkIn);
       jadwalBerikutnya.setDate(checkIn.getDate() + (siklus + 1) * 14);
       const telat = jadwalBerikutnya < hariIniDate;
       const formatJadwal = jadwalBerikutnya.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
       const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-
-      jadwalBerikutnyaStr = jadwalBerikutnya.toISOString().split('T')[0];  // <-- simpan string tanggal untuk tombol
 
       bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
         Jadwal pembersihan kamar: ${formatJadwal} ${telat?'(TELAT!)':''}
@@ -897,13 +894,11 @@ window.showPenghuniList = async function(sortBy = "default") {
         <button class="btn-mini" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
           Perawatan
         </button>
-        <button class="btn-mini" style="background:#7c3aed;color:white;" 
-                onclick="event.stopPropagation();kirimReminderPengurus('${p.kost}','${p.room}','${p.nama}', '${jadwalBerikutnyaStr}', '${p.tanggalBersih || ''}')">
-          Reminder Pengurus
-        </button>
       </div>
     </div>`;
-    // === KIRIM KONFIRMASI BERSIH KE PENGHUNI (KHUSUS ADMIN) ===
+  }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
+};
+// === KIRIM KONFIRMASI BERSIH KE PENGHUNI (KHUSUS ADMIN) ===
 window.konfirmasiBersih = function(kost, room, nama, hp, tanggalBersih) {
   if (currentUser !== "admin") {
     alert("Fitur ini hanya untuk Admin!");
@@ -937,28 +932,4 @@ Tim Kostory`;
 
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
-};
-// === REMINDER KE PENGURUS KOST (BUKA WA KOSONG, SEPERTI LAPOR KOST) ===
-window.kirimReminderPengurus = function(kost, room, nama, jadwal, terakhir) {
-  // Format tanggal jadi lebih enak dibaca
-  const formatFull = (dateStr) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric", month: "long", year: "numeric"
-    });
-  };
-
-  const jadwalFmt = formatFull(jadwal);
-  const terakhirFmt = formatFull(terakhir);
-
-  const pesan = `Halo Pengurus Kost ${kost} 👋\n\n` +
-    `Ini aku mau ngingetin ya..\n\n` +
-    `Kamar *${room}* an *${nama}*, jadwal dibersihinnya harusnya *sebelum ${jadwalFmt}*.\n\n` +
-    `Aku cek terakhir kali dibersihin tanggal *${terakhirFmt}*, itu udah lama banget..\n\n` +
-    `Saking lamanya, laba-laba yang ikut tinggal di kamar itu kabarnya sekarang udah ngantri bikin KTP. 😅🕷️\n\n` +
-    `Tolong dibersihin segera ya, sebelum KTP-nya jadi..\n\n` +
-    `Salam Kostorian!\nRapi - Bersih - Sigap 💪`;
-
-  // Buka WA kosong dengan pesan terisi (kamu pilih nomor/grup sendiri)
-  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
