@@ -857,7 +857,7 @@ window.showPenghuniList = async function(sortBy = "default") {
       const terakhir = p.tanggalBersih ? new Date(p.tanggalBersih).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
       bersihHTML = `<small style="color:${telat?'#dc2626':'#f59e0b'};font-weight:bold;display:block;margin:6px 0;">
-        Bersih berikutnya: ${formatJadwal} ${telat?'(TELAT!)':''}
+        Jadwal pembersihan kamar: ${formatJadwal} ${telat?'(TELAT!)':''}
         <button onclick="event.stopPropagation();catatBersih('${p.kost}','${p.room}')" 
                 style="margin-left:8px;background:${telat?'#dc2626':'#10b981'};color:white;border:none;padding:3px 8px;border-radius:5px;font-size:10px;">
           Dibersihkan
