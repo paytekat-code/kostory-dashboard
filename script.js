@@ -894,6 +894,10 @@ window.showPenghuniList = async function(sortBy = "default") {
         <button class="btn-mini" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
           Perawatan
         </button>
+                <button class="btn-mini" style="background:#7c3aed;color:white;" 
+                onclick="event.stopPropagation();kirimReminderPengurus('${p.kost}','${p.room}','${p.nama}', '${jadwalBerikutnya.toISOString().split('T')[0]}', '${p.tanggalBersih || ''}')">
+          Reminder Pengurus
+        </button>
       </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
@@ -932,4 +936,28 @@ Tim Kostory`;
 
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
+};
+// === REMINDER KE PENGURUS KOST (BUKA WA KOSONG, SEPERTI LAPOR KOST) ===
+window.kirimReminderPengurus = function(kost, room, nama, jadwal, terakhir) {
+  // Format tanggal jadi lebih enak dibaca
+  const formatFull = (dateStr) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("id-ID", {
+      day: "numeric", month: "long", year: "numeric"
+    });
+  };
+
+  const jadwalFmt = formatFull(jadwal);
+  const terakhirFmt = formatFull(terakhir);
+
+  const pesan = `Halo Pengurus Kost ${kost} 👋\n\n` +
+    `Ini aku mau ngingetin ya..\n\n` +
+    `Kamar *${room}* an *${nama}*, jadwal dibersihinnya harusnya *sebelum ${jadwalFmt}*.\n\n` +
+    `Aku cek terakhir kali dibersihin tanggal *${terakhirFmt}*, itu udah lama banget..\n\n` +
+    `Saking lamanya, laba-laba yang ikut tinggal di kamar itu kabarnya sekarang udah ngantri bikin KTP. 😅🕷️\n\n` +
+    `Tolong dibersihin segera ya, sebelum KTP-nya jadi..\n\n` +
+    `Salam Kostorian!\nRapi - Bersih - Sigap 💪`;
+
+  // Buka WA kosong dengan pesan terisi (kamu pilih nomor/grup sendiri)
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
