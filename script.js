@@ -792,12 +792,14 @@ window.showPenghuniList = async function(sortBy = "default") {
   document.querySelector("#penghuniListPage #header").innerHTML = `
     <h2>Daftar Penghuni</h2>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-      <select id="sortSelect" onchange="showPenghuniList(this.value)" style="padding:10px;border-radius:8px;border:2px solid #e2e8f0;font-size:15px;">
-        <option value="default" ${sortBy==='default' ? 'selected' : ''}>Urutkan: Default (Ultah Terdekat)</option>
-        <option value="lama" ${sortBy==='lama' ? 'selected' : ''}>Paling Lama Ngekos</option>
-        <option value="ultah" ${sortBy==='ultah' ? 'selected' : ''}>Ultah Terdekat</option>
-        <option value="bayar" ${sortBy==='bayar' ? 'selected' : ''}>Pembayaran Terbaru</option>
-        <option value="bersih" ${sortBy==='bersih' ? 'selected' : ''}>Dibersihkan Terbaru</option>
+     <select id="sortSelect" onchange="showPenghuniList(this.value)" style="padding:10px;border-radius:8px;border:2px solid #e2e8f0;font-size:15px;">
+  <option value="default" ${sortBy==='default' ? 'selected' : ''}>Urutkan: Default (Ultah Terdekat)</option>
+  <option value="lama" ${sortBy==='lama' ? 'selected' : ''}>Paling Lama Ngekos</option>
+  <option value="ultah" ${sortBy==='ultah' ? 'selected' : ''}>Ultah Terdekat</option>
+  <option value="bayar" ${sortBy==='bayar' ? 'selected' : ''}>Pembayaran Terbaru</option>
+  <option value="bersih" ${sortBy==='bersih' ? 'selected' : ''}>Dibersihkan Terbaru</option>
+  <option value="jadwalbersih" ${sortBy==='jadwalbersih' ? 'selected' : ''}>Jadwal Pembersihan Terdekat</option>
+  <option value="belumbayar" ${sortBy==='belumbayar' ? 'selected' : ''}>Belum Bayar Terlama</option>
       </select>
       <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
       <button class="btn" style="background:#f59e0b;color:white" onclick="laporPembersihan()">LAPOR BERSIH KAMAR</button>
@@ -816,7 +818,7 @@ window.showPenghuniList = async function(sortBy = "default") {
     }
   }
 
-  // Sorting logic
+    // Sorting logic
   if (sortBy === "lama") {
     list.sort((a, b) => new Date(a.tanggalMasuk) - new Date(b.tanggalMasuk)); // paling lama dulu
   } else if (sortBy === "ultah") {
@@ -833,11 +835,37 @@ window.showPenghuniList = async function(sortBy = "default") {
       const tb = b.tanggalBersih ? new Date(b.tanggalBersih) : new Date(0);
       return tb - ta; // terbaru dulu
     });
+  } else if (sortBy === "jadwalbersih") {
+    // Jadwal pembersihan terdekat (yang telat jadi paling atas)
+    list.sort((a, b) => {
+      const getNextCleanDate = (p) => {
+        if (!p.tanggalMasuk) return new Date(9999, 12, 31);
+        const checkIn = new Date(p.tanggalMasuk);
+        const hariSejakMasuk = Math.floor((new Date() - checkIn) / 86400000);
+        const siklus = Math.floor(hariSejakMasuk / 14);
+        const next = new Date(checkIn);
+        next.setDate(checkIn.getDate() + (siklus + 1) * 14);
+        return next;
+      };
+      return getNextCleanDate(a) - getNextCleanDate(b);
+    });
+  } else if (sortBy === "belumbayar") {
+    // Hanya yang belum lunas, urutkan dari yang paling lama belum bayar (tanggalLunas null atau paling lama)
+    const belumBayar = list.filter(p => !p.lunas);
+    const sudahBayar = list.filter(p => p.lunas);
+    
+    belumBayar.sort((a, b) => {
+      // Kalau ada yang pernah lunas sebelumnya tapi sekarang belum, prioritas yang lebih lama masuk
+      const ta = a.tanggalLunas ? new Date(a.tanggalLunas) : new Date(a.tanggalMasuk || 0);
+      const tb = b.tanggalLunas ? new Date(b.tanggalLunas) : new Date(b.tanggalMasuk || 0);
+      return ta - tb; // semakin lama = semakin atas
+    });
+    
+    list = [...belumBayar, ...sudahBayar]; // yang belum bayar di atas semua
   } else {
     // default: ultah terdekat
     list.sort((a, b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
   }
-
   document.getElementById("listPenghuni").innerHTML = list.map(p => {
     const hariIni = isHariIniUlangTahun(p.tanggalLahir);
     let statusBayar = p.lunas 
