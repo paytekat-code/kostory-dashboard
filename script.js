@@ -889,8 +889,13 @@ window.showPenghuniList = async function(sortBy = "default") {
                   style="margin-left:4px;background:#8b5cf6;color:white;border:none;padding:3px 8px;border-radius:5px;font-size:10px;">
             Ingatkan
           </button>` : ''}
-         <div style="font-size:10px;color:#666;margin-top:4px;">
+                  <div style="font-size:10px;color:#666;margin-top:4px;">
            Terakhir: ${terakhir}
+           ${p.tanggalBersih && currentUser === "admin" ? `
+             <button onclick="event.stopPropagation();konfirmasiBersih('${p.kost}','${p.room}','${p.nama}','${p.hp||''}','${p.tanggalBersih}')" 
+                     style="margin-left:6px;background:#8b5cf6;color:white;border:none;padding:2px 7px;border-radius:8px;font-size:9px;cursor:pointer;">
+               Kirim WA Konfirmasi
+             </button>` : ''}
          </div>
         </small>`;
       }
