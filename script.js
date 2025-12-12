@@ -783,6 +783,15 @@ window.laporPembersihan = async function() {
   pesan += `\nPowered by KostoryApps ❤️`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+  // Helper untuk jadwal bersih berikutnya
+function hitungJadwalBerikutnya(t) {
+  if (!t) return new Date(9999,0,1);
+  const ci = new Date(t);
+  const hari = Math.floor((Date.now() - ci) / 86400000);
+  const next = new Date(ci);
+  next.setDate(ci.getDate() + (Math.floor(hari/14)+1)*14);
+  return next;
+}
 };// ====================== DAFTAR PENGHUNI (VERSI TERBARU + FITUR BERSIH KAMAR) ======================
 window.showPenghuniList = async function(sortBy = "default") {
   document.getElementById("app").classList.add("hidden");
@@ -798,6 +807,8 @@ window.showPenghuniList = async function(sortBy = "default") {
         <option value="ultah" ${sortBy==='ultah' ? 'selected' : ''}>Ultah Terdekat</option>
         <option value="bayar" ${sortBy==='bayar' ? 'selected' : ''}>Pembayaran Terbaru</option>
         <option value="bersih" ${sortBy==='bersih' ? 'selected' : ''}>Dibersihkan Terbaru</option>
+        <option value="bersihJadwal" ${sortBy==='bersihJadwal'?'selected':''}>Jadwal Pembersihan Terdekat</option>
+       <option value="belumBayar" ${sortBy==='belumBayar'?'selected':''}>Belum Bayar Terlama</option>
       </select>
       <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
       <button class="btn" style="background:#f59e0b;color:white" onclick="laporPembersihan()">LAPOR BERSIH KAMAR</button>
@@ -833,6 +844,11 @@ window.showPenghuniList = async function(sortBy = "default") {
       const tb = b.tanggalBersih ? new Date(b.tanggalBersih) : new Date(0);
       return tb - ta; // terbaru dulu
     });
+  } else {
+      } else if (sortBy === "bersihJadwal") {
+    list.sort((a,b) => hitungJadwalBerikutnya(a.tanggalMasuk) - hitungJadwalBerikutnya(b.tanggalMasuk));
+  } else if (sortBy === "belumBayar") {
+    list.sort((a,b) => (a.lunas?1:-1) - (b.lunas?1:-1) || new Date(a.tanggalMasuk) - new Date(b.tanggalMasuk));
   } else {
     // default: ultah terdekat
     list.sort((a, b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
