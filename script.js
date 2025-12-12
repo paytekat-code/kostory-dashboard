@@ -382,11 +382,11 @@ window.kirimPerpisahan = function(nama, hp, tanggalCheckout, tanggalMasuk) {
   const tglCheckout = formatDate(tanggalCheckout, true); // Gunakan full format
   const pesan = `Halo Kak *${nama}*
 
-Menurut catatan kami kakak telah check-out dari Kostory pada tanggal ${tglCheckout}, dan telah tinggal selama ${lamaTinggal}.
+Menurut catatan kami, kakak telah check-out dari Kostory pada ${tglCheckout}, setelah tinggal selama ${lamaTinggal}.
 
-kami mengucapkan terimakasih banyak sudah tinggal selama itu, semoga kak ${nama} selalu sehat dan makin sukses ke depanya.
+Terima kasih banyak ya kak sudah mempercayakan waktunya tinggal di Kostory. Semoga kak ${nama} selalu sehat dan makin sukses ke depanya.
 
-Kami memohon maaf apabila selama kakak tinggal, masih banyak kekurangan kami yang harus kami evaluasi, kalo kakak butuh tempat tinggal lagi, Pintu kostory selalu terbuka 😊
+Maaf kalau selama tinggal ada kekurangan dari kami. Kalau Kak ${nama} butuh tempat tinggal lagi, pintu Kostory selalu terbuka 😊
 
 Salam Kostorian,
 Tim Kostory`;
