@@ -849,19 +849,26 @@ window.showPenghuniList = async function(sortBy = "default") {
       };
       return getNextCleanDate(a) - getNextCleanDate(b);
     });
-  } else if (sortBy === "belumbayar") {
-    // Hanya yang belum lunas, urutkan dari yang paling lama belum bayar (tanggalLunas null atau paling lama)
+    } else if (sortBy === "belumbayar") {
     const belumBayar = list.filter(p => !p.lunas);
     const sudahBayar = list.filter(p => p.lunas);
     
     belumBayar.sort((a, b) => {
-      // Kalau ada yang pernah lunas sebelumnya tapi sekarang belum, prioritas yang lebih lama masuk
-      const ta = a.tanggalLunas ? new Date(a.tanggalLunas) : new Date(a.tanggalMasuk || 0);
-      const tb = b.tanggalLunas ? new Date(b.tanggalLunas) : new Date(b.tanggalMasuk || 0);
-      return ta - tb; // semakin lama = semakin atas
+      const getTanggalNunggak = (p) => {
+        if (p.tanggalLunas) return new Date(p.tanggalLunas);
+        return new Date(p.tanggalMasuk || 0);
+      };
+      return getTanggalNunggak(a) - getTanggalNunggak(b); // paling lama nunggak di atas
     });
     
-    list = [...belumBayar, ...sudahBayar]; // yang belum bayar di atas semua
+    sudahBayar.sort((a, b) => {
+      const ta = a.tanggalLunas ? new Date(a.tanggalLunas) : new Date(0);
+      const tb = b.tanggalLunas ? new Date(b.tanggalLunas) : new Date(0);
+      return tb - ta; // lunas terbaru di atas (opsional)
+    });
+    
+    list.length = 0;
+    list.push(...belumBayar, ...sudahBayar);
   } else {
     // default: ultah terdekat
     list.sort((a, b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
