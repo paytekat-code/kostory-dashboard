@@ -798,7 +798,26 @@ window.showPenghuniList = async function() {
     let statusBayar = p.lunas 
       ? `<span style="color:#166534;font-weight:bold">Lunas ${formatDate(p.tanggalLunas)} Rp ${Number(p.jumlahLunas).toLocaleString("id-ID")}</span>`
       : `<span style="color:#dc2626;font-weight:bold">Belum Bayar</span>`;
+    // === HITUNG LEVEL LOYALITAS ===
+    let loyalitasHTML = "";
+    if (p.tanggalMasuk) {
+      const hariSejakMasuk = Math.floor((new Date() - new Date(p.tanggalMasuk)) / 86400000);
+      const tahun = Math.floor(hariSejakMasuk / 365);
 
+      let level = "";
+      let warna = "";
+
+      if (tahun >= 5) { level = "Sage"; warna = "#fbbf24"; }       // emas
+      else if (tahun >= 4) { level = "Emperor"; warna = "#dc2626"; } // merah
+      else if (tahun >= 3) { level = "King"; warna = "#92400e"; }    // coklat
+      else if (tahun >= 2) { level = "Ancestor"; warna = "#ec4899"; } // pink
+      else if (tahun >= 1) { level = "Elder"; warna = "#16a34a"; }   // hijau
+      // kurang dari 1 tahun → tidak ditampilkan
+
+      if (level) {
+        loyalitasHTML = ` - <i style="color:${warna};font-weight:normal;">${level}</i>`;
+      }
+    }
     // === JADWAL BERSIH KAMAR ===
     let bersihHTML = "";
     if (p.tanggalMasuk) {
@@ -832,7 +851,7 @@ window.showPenghuniList = async function() {
 
     return `<div class="penghuni-item" style="cursor:pointer;" onclick="openModal('${p.kost}','${p.room}')">
       <div>
-        <strong>${p.nama}</strong><br>
+        <strong>${p.nama}${loyalitasHTML}</strong><br>
         <small>${p.kost} - ${p.room} - ${formatDate(p.tanggalMasuk)} - Rp ${Number(p.harga||0).toLocaleString("id-ID")} - ${p.durasi||'Bulanan'} - ${hitungLamaTinggal(p.tanggalMasuk)}</small><br>
         ${statusBayar}
         ${bersihHTML}
