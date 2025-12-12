@@ -833,7 +833,7 @@ window.showPenghuniList = async function() {
     return `<div class="penghuni-item" style="cursor:pointer;" onclick="openModal('${p.kost}','${p.room}')">
       <div>
         <strong>${p.nama}</strong><br>
-        <small>${p.kost} - ${p.room} - ${formatDate(p.tanggalMasuk)} - Rp ${Number(p.harga||0).toLocaleString("id-ID")} - ${p.durasi||'Bulanan'}</small><br>
+        <small>${p.kost} - ${p.room} - ${formatDate(p.tanggalMasuk)} - Rp ${Number(p.harga||0).toLocaleString("id-ID")} - ${p.durasi||'Bulanan'} - ${hitungLamaTinggal(p.tanggalMasuk)}</small><br>
         ${statusBayar}
         ${bersihHTML}
         <small style="color:#555;font-style:italic;">
