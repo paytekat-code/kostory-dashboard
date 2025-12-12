@@ -369,23 +369,27 @@ window.kirimUlangTahun = function(nama, hp) {
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
 };
 
-window.kirimPerpisahan = function(nama, hp) {
+window.kirimPerpisahan = function(nama, hp, tanggalCheckout, tanggalMasuk) {
   if (!hp || hp.trim() === "") {
     alert("Nomor HP tidak tersedia untuk " + nama);
     return;
   }
-  const pesan = `Halo Kak *${nama}*
+  const tanggalFmt = formatDate(tanggalCheckout);
+  const lama = hitungLamaTinggal(tanggalMasuk, tanggalCheckout);
   
-Menurut catatan kami kakak telah check-out dari Kostory pada tanggal *${formatDate(tanggalCheckout)}*, dan telah tinggal selama ${hitungLamaTinggal(currentData.tanggal, tanggalCheckout)}.
+  const pesan = `Halo Kak *${nama}*
+ 
+Menurut catatan kami kakak telah check-out dari Kostory pada tanggal *${tanggalFmt}*, dan telah tinggal selama ${lama}.
 
 kami mengucapkan terimakasih banyak sudah tinggal selama itu, semoga kak ${nama.toLowerCase()} selalu sehat dan makin sukses ditempat yang baru.
 
-Kami memohon maaf apabila selama kakak tinggal, masih banyak kekurangan dalam pelayanan kami, Jika kakak butuh tempat tinggal lagi, Pintu kostory akan selalu terbuka
+Kami memohon maaf apabila selama kakak tinggal, masih banyak kekurangan dalam pelayanan kami, Jika kakak butuh tempat tinggal lagi, Pintu kostory akan selalu terbuka 😊
 
 Salam Kostorian,
 Tim Kostory
 
 Info & Pemesanan : 081383210009 (WA only).`;
+  
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
