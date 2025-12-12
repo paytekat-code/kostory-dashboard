@@ -363,20 +363,21 @@ window.laporKost = async function(namaKost) {
 };
 
 // ====================== UCAPAN ULANG TAHUN & PERPISAHAN ======================
-window.kirimUlangTahun = function(nama, hp) {
-  const pesan = `Kak *${nama}!*👋\n\nKami dari Tim Kostory ingin ngucapin: \n\n⭐*SELAMAT ULANG TAHUN*⭐\n\nSemoga Kakak selalu sehat, panjang umur, dan makin sukses!.\nKostory senang bisa jadi bagian dari perjuangan kakak.\n\nSalam Kostorian!\nTim Kostory`;
-  const phone = hp.replace(/^0/,"62").replace(/[^0-9]/g,"");
-  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
-};
-
-window.kirimPerpisahan = function(nama, hp, tanggalCheckout, tanggalMasuk) {
+window.kirimPerpisahan = function(nama, hp) {
   if (!hp || hp.trim() === "") {
     alert("Nomor HP tidak tersedia untuk " + nama);
     return;
   }
+
+  // Ambil tanggal dari variabel global (currentData dan tanggalCheckout dari prosesCheckout)
+  if (!currentData || !currentData.tanggal || !tanggalCheckout) {
+    alert("Data tanggal tidak lengkap untuk " + nama);
+    return;
+  }
+
   const tanggalFmt = formatDate(tanggalCheckout);
-  const lama = hitungLamaTinggal(tanggalMasuk, tanggalCheckout);
-  
+  const lama = hitungLamaTinggal(currentData.tanggal, tanggalCheckout);
+
   const pesan = `Halo Kak *${nama}*
  
 Menurut catatan kami kakak telah check-out dari Kostory pada tanggal *${tanggalFmt}*, dan telah tinggal selama ${lama}.
@@ -393,7 +394,6 @@ Info & Pemesanan : 081383210009 (WA only).`;
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
-
 
 // ====================== DAFTAR CHECK-OUT (DENGAN FILTER AKSES) ======================
 window.showCheckoutList = async function() {
