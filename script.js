@@ -962,7 +962,7 @@ window.ingatkanBersih = function(kost, room, nama, hariSejakBersih) {
 
   const hari = hariSejakBersih === "-" ? "lama banget" : hariSejakBersih + " hari";
 
-  const pesan = `Halo Guys, tau gak? kamarnya *${nama} (${room})*, setelah aku cek ternyata udah *${hari}* ga dibersihin sarang laba-labanya!🧐\n\nsekarang laba-labanya udah beranak pinak, kabarnya bapaknya lagi antri bikin Kartu Keluarga. cepet dibersihin ya sebelum bapaknya pulang dan jadi spiderman🫣 `;
+  const pesan = `Halo Guys.., mau ngingetin aja ; kamarnya Kak *${nama} (${room})*, setelah aku cek ternyata udah *${hari}* ga dibersihin!🧐\n\ncepet dibersihin ya sebelum laba-labanya jadi spiderman🫣 `;
 
   // Ganti nomor ini kalau mau kirim ke grup/pengurus tertentu
   const nomorGrup = "6281383210009"; // nomor WA pengurus / grup
