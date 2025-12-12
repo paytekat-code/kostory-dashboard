@@ -363,37 +363,22 @@ window.laporKost = async function(namaKost) {
 };
 
 // ====================== UCAPAN ULANG TAHUN & PERPISAHAN ======================
+window.kirimUlangTahun = function(nama, hp) {
+  const pesan = `Kak *${nama}!*👋\n\nKami dari Tim Kostory ingin ngucapin: \n\n⭐*SELAMAT ULANG TAHUN*⭐\n\nSemoga Kakak selalu sehat, panjang umur, dan makin sukses!.\nKostory senang bisa jadi bagian dari perjuangan kakak.\n\nSalam Kostorian!\nTim Kostory`;
+  const phone = hp.replace(/^0/,"62").replace(/[^0-9]/g,"");
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
+};
+
 window.kirimPerpisahan = function(nama, hp) {
   if (!hp || hp.trim() === "") {
     alert("Nomor HP tidak tersedia untuk " + nama);
     return;
   }
-
-  // Ambil tanggal dari variabel global (currentData dan tanggalCheckout dari prosesCheckout)
-  if (!currentData || !currentData.tanggal || !tanggalCheckout) {
-    alert("Data tanggal tidak lengkap untuk " + nama);
-    return;
-  }
-
-  const tanggalFmt = formatDate(tanggalCheckout);
-  const lama = hitungLamaTinggal(currentData.tanggal, tanggalCheckout);
-
-  const pesan = `Halo Kak *${nama}*
- 
-Menurut catatan kami kakak telah check-out dari Kostory pada tanggal *${tanggalFmt}*, dan telah tinggal selama ${lama}.
-
-kami mengucapkan terimakasih banyak sudah tinggal selama itu, semoga kak ${nama.toLowerCase()} selalu sehat dan makin sukses ditempat yang baru.
-
-Kami memohon maaf apabila selama kakak tinggal, masih banyak kekurangan dalam pelayanan kami, Jika kakak butuh tempat tinggal lagi, Pintu kostory akan selalu terbuka 😊
-
-Salam Kostorian,
-Tim Kostory
-
-Info & Pemesanan : 081383210009 (WA only).`;
-  
+  const pesan = `Kak *${nama}*\n\nTerima kasih banyak ya sudah mempercayakan waktunya untuk tinggal di *Kostory*. \nKami senang banget bisa jadi bagian kecil dari cerita perjalanan Kakak di sini.\n\nSemoga Kak ${nama} selalu sehat dan makin sukses ke depannya.\n\nMaaf kalau selama tinggal ada kekurangan dari kami. Kalau Kakak butuh tempat tinggal lagi, pintu Kostory selalu terbuka 😊.\n\nSalam Kostorian,\nTim Kostory \n\nInfo & Pemesanan : 081383210009 (WA only). `;
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
 };
+
 
 // ====================== DAFTAR CHECK-OUT (DENGAN FILTER AKSES) ======================
 window.showCheckoutList = async function() {
