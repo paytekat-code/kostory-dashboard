@@ -769,13 +769,21 @@ window.laporPembersihan = async function() {
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };// ====================== DAFTAR PENGHUNI (VERSI TERBARU + FITUR BERSIH KAMAR) ======================
-window.showPenghuniList = async function() {
+window.showPenghuniList = async function(sortBy = "default") {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("penghuniListPage").classList.remove("hidden");
 
+  // Header dengan dropdown sort
   document.querySelector("#penghuniListPage #header").innerHTML = `
     <h2>Daftar Penghuni</h2>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <select id="sortSelect" onchange="showPenghuniList(this.value)" style="padding:10px;border-radius:8px;border:2px solid #e2e8f0;font-size:15px;">
+        <option value="default" ${sortBy==='default' ? 'selected' : ''}>Urutkan: Default (Ultah Terdekat)</option>
+        <option value="lama" ${sortBy==='lama' ? 'selected' : ''}>Paling Lama Ngekos</option>
+        <option value="ultah" ${sortBy==='ultah' ? 'selected' : ''}>Ultah Terdekat</option>
+        <option value="bayar" ${sortBy==='bayar' ? 'selected' : ''}>Pembayaran Terbaru</option>
+        <option value="bersih" ${sortBy==='bersih' ? 'selected' : ''}>Dibersihkan Terbaru</option>
+      </select>
       <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
       <button class="btn" style="background:#f59e0b;color:white" onclick="laporPembersihan()">LAPOR BERSIH KAMAR</button>
       <button class="btn" onclick="backToDashboard()">Kembali</button>
@@ -793,32 +801,49 @@ window.showPenghuniList = async function() {
     }
   }
 
+  // Sorting logic
+  if (sortBy === "lama") {
+    list.sort((a, b) => new Date(a.tanggalMasuk) - new Date(b.tanggalMasuk)); // paling lama dulu
+  } else if (sortBy === "ultah") {
+    list.sort((a, b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
+  } else if (sortBy === "bayar") {
+    list.sort((a, b) => {
+      const ta = a.tanggalLunas ? new Date(a.tanggalLunas) : new Date(0);
+      const tb = b.tanggalLunas ? new Date(b.tanggalLunas) : new Date(0);
+      return tb - ta; // terbaru dulu
+    });
+  } else if (sortBy === "bersih") {
+    list.sort((a, b) => {
+      const ta = a.tanggalBersih ? new Date(a.tanggalBersih) : new Date(0);
+      const tb = b.tanggalBersih ? new Date(b.tanggalBersih) : new Date(0);
+      return tb - ta; // terbaru dulu
+    });
+  } else {
+    // default: ultah terdekat
+    list.sort((a, b) => hariKeUlangTahun(a.tanggalLahir) - hariKeUlangTahun(b.tanggalLahir));
+  }
+
   document.getElementById("listPenghuni").innerHTML = list.map(p => {
     const hariIni = isHariIniUlangTahun(p.tanggalLahir);
     let statusBayar = p.lunas 
       ? `<span style="color:#166534;font-weight:bold">Lunas ${formatDate(p.tanggalLunas)} Rp ${Number(p.jumlahLunas).toLocaleString("id-ID")}</span>`
       : `<span style="color:#dc2626;font-weight:bold">Belum Bayar</span>`;
-    // === HITUNG LEVEL LOYALITAS ===
+
+    // Level loyalitas
     let loyalitasHTML = "";
     if (p.tanggalMasuk) {
       const hariSejakMasuk = Math.floor((new Date() - new Date(p.tanggalMasuk)) / 86400000);
       const tahun = Math.floor(hariSejakMasuk / 365);
-
-      let level = "";
-      let warna = "";
-
-      if (tahun >= 5) { level = "🪽 Limit Sage"; warna = "#fbbf24"; }       // emas
-      else if (tahun >= 4) { level = "🧙‍♂️ Sage"; warna = "#dc2626"; } // merah
-      else if (tahun >= 3) { level = "🏰 Emperor"; warna = "#92400e"; }    // coklat
-      else if (tahun >= 2) { level = "👑 King"; warna = "#ec4899"; } // pink
-      else if (tahun >= 1) { level = "🕯️ Elder"; warna = "#16a34a"; }   // hijau
-      // kurang dari 1 tahun → tidak ditampilkan
-
-      if (level) {
-        loyalitasHTML = ` - <i style="color:${warna};font-weight:normal;">${level}</i>`;
-      }
+      let level = "", warna = "";
+      if (tahun >= 5) { level = "Sage"; warna = "#fbbf24"; }
+      else if (tahun >= 4) { level = "Emperor"; warna = "#dc2626"; }
+      else if (tahun >= 3) { level = "King"; warna = "#92400e"; }
+      else if (tahun >= 2) { level = "Ancestor"; warna = "#ec4899"; }
+      else if (tahun >= 1) { level = "Elder"; warna = "#16a34a"; }
+      if (level) loyalitasHTML = ` - <i style="color:${warna};font-weight:normal;">${level}</i>`;
     }
-    // === JADWAL BERSIH KAMAR ===
+
+    // Jadwal bersih kamar
     let bersihHTML = "";
     if (p.tanggalMasuk) {
       const checkIn = new Date(p.tanggalMasuk);
@@ -859,17 +884,17 @@ window.showPenghuniList = async function() {
           ${p.tanggalLahir ? (hariIni ? "HARI INI ULANG TAHUN!" : `${hariKeUlangTahun(p.tanggalLahir)} hari lagi ulang tahun`) : "Tanggal lahir belum diisi"}
         </small>
       </div>
-  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;justify-content:flex-end;">
-  <button class="btn-mini" onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
-  <button class="btn-mini" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
-  <button class="btn-mini" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
-  <button class="btn-mini" style="background:${hariIni?'#dc2626':'#2563eb'};" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
-    ${hariIni?'HARI INI!':'Ulang Tahun'}
-  </button>
-  <button class="btn-mini" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
-    Perawatan
-  </button>
-</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;justify-content:flex-end;">
+        <button class="btn-mini" onclick="event.stopPropagation();kirimWelcome('${p.nama}','${p.hp||''}','${p.kost}')">Welcome</button>
+        <button class="btn-mini" onclick="event.stopPropagation();bukaTagih('${p.kost}','${p.room}','${p.nama}','${p.hp}')">TAGIH</button>
+        <button class="btn-mini" onclick="event.stopPropagation();bukaLunas('${p.kost}','${p.room}')">LUNASI</button>
+        <button class="btn-mini" style="background:${hariIni?'#dc2626':'#2563eb'};" onclick="event.stopPropagation();kirimUlangTahun('${p.nama}','${p.hp}')">
+          ${hariIni?'HARI INI!':'Ulang Tahun'}
+        </button>
+        <button class="btn-mini" onclick="event.stopPropagation();bukaIzinPerawatan('${p.kost}','${p.room}','${p.nama}','${p.hp||''}')">
+          Perawatan
+        </button>
+      </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
 };
