@@ -967,5 +967,5 @@ window.ingatkanBersih = function(kost, room, nama, hariSejakBersih) {
   // Ganti nomor ini kalau mau kirim ke grup/pengurus tertentu
   const nomorGrup = "6281383210009"; // nomor WA pengurus / grup
 
-  window.open(`https://api.whatsapp.com/send?phone=${nomorGrup}&text=${encodeURIComponent(pesan)}`, "_blank");
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
 };
