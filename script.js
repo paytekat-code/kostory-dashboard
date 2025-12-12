@@ -835,11 +835,11 @@ window.showPenghuniList = async function(sortBy = "default") {
       const hariSejakMasuk = Math.floor((new Date() - new Date(p.tanggalMasuk)) / 86400000);
       const tahun = Math.floor(hariSejakMasuk / 365);
       let level = "", warna = "";
-      if (tahun >= 5) { level = "Sage"; warna = "#fbbf24"; }
-      else if (tahun >= 4) { level = "Emperor"; warna = "#dc2626"; }
-      else if (tahun >= 3) { level = "King"; warna = "#92400e"; }
-      else if (tahun >= 2) { level = "Ancestor"; warna = "#ec4899"; }
-      else if (tahun >= 1) { level = "Elder"; warna = "#16a34a"; }
+      if (tahun >= 5) { level = "🪽 Limit Sage"; warna = "#fbbf24"; }
+      else if (tahun >= 4) { level = "🧙‍♂️ Sage"; warna = "#dc2626"; }
+      else if (tahun >= 3) { level = "🏰 Emperor"; warna = "#92400e"; }
+      else if (tahun >= 2) { level = "👑 King"; warna = "#ec4899"; }
+      else if (tahun >= 1) { level = "🕯️ Elder"; warna = "#16a34a"; }
       if (level) loyalitasHTML = ` - <i style="color:${warna};font-weight:normal;">${level}</i>`;
     }
 
