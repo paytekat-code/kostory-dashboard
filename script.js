@@ -1146,3 +1146,81 @@ window.filterPenghuni = function() {
     }
   }
 };
+// Load announcements saat dashboard
+function loadAnnouncements() {
+  const list = document.getElementById("announcementList");
+  list.innerHTML = "<small>Memuat...</small>";
+  
+  db.ref("announcements").orderByChild("timestamp").limitToLast(50).on("value", snap => {
+    const data = snap.val() || {};
+    const posts = Object.entries(data).reverse(); // terbaru atas
+    
+    list.innerHTML = posts.map(([id, post]) => {
+      const date = formatDate(new Date(post.timestamp));
+      return `
+        <div style="background:white;padding:12px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+          <strong>${post.user || currentUser} - ${date}</strong><br>
+          <p style="margin:8px 0;white-space:pre-wrap;">${post.text}</p>
+          <div id="comments-${id}"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input type="text" id="input-${id}" placeholder="Tulis komentar..." style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;">
+            <button class="btn-mini" style="background:#25d366;" onclick="addComment('${id}')">Kirim</button>
+          </div>
+        </div>`;
+    }).join("") || "<p style='color:#666;text-align:center;padding:20px;'>Belum ada pengumuman</p>";
+    
+    // Load komentar tiap post
+    posts.forEach(([id]) => loadComments(id));
+  });
+  
+  // Auto cleanup: hapus post > 90 hari (jalan di background)
+  db.ref("announcements").once("value", snap => {
+    const now = Date.now();
+    snap.forEach(child => {
+      if (now - child.val().timestamp > 90*86400000) {
+        child.ref.remove();
+      }
+    });
+  });
+}
+
+function loadComments(postId) {
+  db.ref(`announcements/${postId}/comments`).orderByChild("timestamp").on("value", snap => {
+    const comments = snap.val() || {};
+    const div = document.getElementById(`comments-${postId}`);
+    div.innerHTML = Object.values(comments).map(c => 
+      `<small style="display:block;margin:6px 0;color:#444;">
+        <b>${c.user || currentUser}:</b> ${c.text} <i>(${formatDate(new Date(c.timestamp))})</i>
+      </small>`
+    ).join("");
+  });
+}
+
+window.postAnnouncement = function() {
+  const text = document.getElementById("newAnnouncement").value.trim();
+  if (!text) return alert("Isi dulu bro!");
+  
+  db.ref("announcements").push({
+    text,
+    user: currentUser,
+    timestamp: Date.now()
+  }).then(() => {
+    document.getElementById("newAnnouncement").value = "";
+  });
+};
+
+window.addComment = function(postId) {
+  const input = document.getElementById(`input-${postId}`);
+  const text = input.value.trim();
+  if (!text) return;
+  
+  db.ref(`announcements/${postId}/comments`).push({
+    text,
+    user: currentUser,
+    timestamp: Date.now()
+  }).then(() => input.value = "");
+};
+
+// Panggil saat loadDashboard
+// Di dalam loadDashboard(), tambahin:
+loadAnnouncements();
