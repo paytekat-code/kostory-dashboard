@@ -395,64 +395,104 @@ Tim Kostory`;
 };
 
 
-// ====================== DAFTAR CHECK-OUT (DENGAN FILTER AKSES) ======================
+// ====================== DAFTAR CHECK-OUT (VERSI BARU DENGAN SEARCH) ======================
 window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
 
-  const bulanIni = [], sebelumnya = [];
+  // Header dengan search bar
+  document.querySelector("#checkoutListPage #header").innerHTML = `
+    <h1>Daftar Check-out</h1>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:500px;margin:0 auto;">
+      <input type="text" id="searchCheckout" placeholder="Cari nama penghuni yang sudah check-out..." 
+             style="padding:12px;border-radius:8px;border:1px solid #ccc;font-size:16px;width:100%;box-sizing:border-box;"
+             onkeyup="filterCheckoutList()">
+      <button class="btn" onclick="backToDashboard()">Kembali</button>
+    </div>`;
+
+  const semuaCheckout = [];
   const now = new Date();
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
   const minMonth = ((thisMonth - 2) + 12) % 12;
   const minYear = thisMonth - 2 < 0 ? thisYear - 1 : thisYear;
 
-  // Hanya ambil data checkout dari kost yang boleh diakses user
+  // Kumpulkan SEMUA data checkout dari kost yang diizinkan (bukan hanya 3 bulan terakhir)
   for (const kost of allowedKosts) {
     const snap = await db.ref(`checkout/${kost}`).once("value");
     const dataKost = snap.val() || {};
 
     for (const room in dataKost) {
       const d = dataKost[room];
-      if (d && d.tanggalCheckout) {
+      if (d && d.tanggalCheckout && d.nama) {
         const coDate = new Date(d.tanggalCheckout);
-        const item = {kost, room, ...d, coDate};
-
-        if (coDate.getMonth() === thisMonth && coDate.getFullYear() === thisYear) {
-          bulanIni.push(item);
-        } else if (coDate.getFullYear() > minYear || (coDate.getFullYear() === minYear && coDate.getMonth() >= minMonth)) {
-          sebelumnya.push(item);
-        }
+        semuaCheckout.push({
+          kost,
+          room,
+          nama: d.nama.trim().toLowerCase(), // untuk pencarian case-insensitive
+          namaAsli: d.nama,                   // nama asli untuk ditampilkan
+          ...d,
+          coDate
+        });
       }
     }
   }
 
-  bulanIni.sort((a,b) => b.coDate - a.coDate);
-  sebelumnya.sort((a,b) => b.coDate - a.coDate);
+  // Urutkan dari yang terbaru
+  semuaCheckout.sort((a, b) => b.coDate - a.coDate);
 
-  document.querySelector("#checkoutListPage #header").innerHTML = `
-    <h1>Daftar Check-out</h1>
-    <button class="btn" onclick="backToDashboard()">Kembali</button>`;
+  // Simpan ke variabel global supaya bisa difilter
+  window.allCheckoutData = semuaCheckout;
 
-  document.getElementById("listBulanIni").innerHTML = bulanIni.map((d,i) => `
+  // Render awal (tampilkan semua)
+  renderCheckoutList(semuaCheckout);
+};
+
+// Fungsi untuk render ulang list berdasarkan data yang sudah difilter
+function renderCheckoutList(data) {
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+
+  const bulanIni = data.filter(d => 
+    d.coDate.getMonth() === thisMonth && d.coDate.getFullYear() === thisYear
+  );
+  const sebelumnya = data.filter(d => !(d.coDate.getMonth() === thisMonth && d.coDate.getFullYear() === thisYear));
+
+  document.getElementById("listBulanIni").innerHTML = bulanIni.length > 0 ? bulanIni.map((d, i) => `
     <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div>
-          <strong>${i+1}. ${d.nama}</strong><br>
+          <strong>${i+1}. ${d.namaAsli}</strong><br>
           <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
         </div>
-        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.nama}','${d.hp || ''}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
-        style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
-  Kirim Perpisahan
-</button>
+        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.namaAsli}','${d.hp || ''}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
+                style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
+          Kirim Perpisahan
+        </button>
       </div>
-    </div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
+    </div>`).join("") : "<p style='text-align:center;color:#666;padding:30px'>Belum ada check-out bulan ini</p>";
 
-  document.getElementById("listSebelumnya").innerHTML = sebelumnya.map(d => `
+  document.getElementById("listSebelumnya").innerHTML = sebelumnya.length > 0 ? sebelumnya.map(d => `
     <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
-      <strong>${d.nama}</strong><br>
+      <strong>${d.namaAsli}</strong><br>
       <small>${formatDate(d.tanggalCheckout)} • ${d.kost} - ${d.room}</small>
-    </div>`).join("") || "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data 3 bulan terakhir</p>";
+    </div>`).join("") : "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data check-out sebelumnya yang cocok dengan pencarian</p>";
+}
+
+// Fungsi filter saat mengetik di search box
+window.filterCheckoutList = function() {
+  const query = document.getElementById("searchCheckout").value.trim().toLowerCase();
+  if (!window.allCheckoutData) return;
+
+  let filtered = window.allCheckoutData;
+  if (query !== "") {
+    filtered = window.allCheckoutData.filter(item => 
+      item.nama.includes(query)
+    );
+  }
+
+  renderCheckoutList(filtered);
 };
 
 // ====================== TAGIH & LUNAS ======================
