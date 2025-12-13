@@ -364,7 +364,7 @@ window.laporKost = async function(namaKost) {
 
 // ====================== UCAPAN ULANG TAHUN & PERPISAHAN ======================
 window.kirimUlangTahun = function(nama, hp) {
-  const pesan = `Yo Kak *${nama}!*👋\n\nTim Kostory ingin ngucapin: \n\n⭐*Happy Birthday Kak ${nama}!*⭐\n\nSemoga lo selalu sehat strong, umur panjang plus bonus, rezeki mengalir kayak banjir, dan semua goal kk tercapai tanpa drama!.\nKostory bangga banget, bisa jadi saksi perjuangan kk di kost ini tiap hari..\n\nHari ini chill aja, tiup lilin, makan yang enak-enak, abis itu besok kita lanjut ngegas lagi!\n\nSalam Kostorian!🎈🔥🏠\nTim Kostory`;
+  const pesan = `Yo Kak *${nama}!*👋\n\nTim Kostory ingin ngucapin: \n\n⭐*Happy Birthday Kak ${nama}!*⭐\n\nSemoga kk selalu sehat strong, umur panjang sampe 100 tahun lagi, rezeki mengalir kayak banjir, dan semua goal kk tercapai tanpa drama!.\nKostory bangga banget, bisa jadi saksi perjuangan kk di kost ini tiap hari..\n\nHari ini chill aja, tiup lilin, makan yang enak-enak, abis itu besok lanjut ngegas lagi!\n\nSalam Kostorian!🎈🔥🏠\nTim Kostory`;
   const phone = hp.replace(/^0/,"62").replace(/[^0-9]/g,"");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,"_blank");
 };
