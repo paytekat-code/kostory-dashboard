@@ -77,7 +77,31 @@ function backToDashboard() {
   document.getElementById("checkoutListPage").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
 }
+function hitungTelatBayar(tanggalMasuk, tanggalLunas = null) {
+  if (!tanggalMasuk) return 0;
 
+  const masuk = new Date(tanggalMasuk);
+  const sekarang = new Date();
+
+  // Asumsi: pembayaran bulanan jatuh tempo setiap tanggal masuk (misal masuk tgl 15, jatuh tempo tgl 15 tiap bulan)
+  let jatuhTempo = new Date(masuk);
+  jatuhTempo.setMonth(sekarang.getMonth());
+  jatuhTempo.setFullYear(sekarang.getFullYear());
+
+  // Jika tanggal masuk > hari ini di bulan ini → jatuh tempo di bulan sebelumnya
+  if (jatuhTempo > sekarang) {
+    jatuhTempo.setMonth(jatuhTempo.getMonth() - 1);
+  }
+
+  // Jika sudah ada tanggal lunas, bandingkan dengan jatuh tempo
+  if (tanggalLunas) {
+    const lunas = new Date(tanggalLunas);
+    return lunas > jatuhTempo ? Math.floor((lunas - jatuhTempo) / 86400000) : 0;
+  }
+
+  // Belum lunas → hitung dari jatuh tempo sampai sekarang
+  return Math.max(0, Math.floor((sekarang - jatuhTempo) / 86400000));
+}
 // ====================== LOGIN ======================
 window.login = function() {
   const user = document.getElementById("username").value.trim().toLowerCase();
@@ -147,19 +171,36 @@ function loadDashboard() {
       grid.appendChild(box);
 
       db.ref(`kosts/${namaKost}/${room}`).on("value", s => {
-        const d = s.val();
-        if (d && d.nama && !d.checkout) {
-          terisi++; totalTerisi++;
-          box.className = `room ${d.statusPenghuni || "staying"}`;
-          box.innerHTML = `${room}<br><small>${d.nama}</small>`;
-        } else {
-        
-          box.className = "room kosong";
-          box.innerHTML = `${room}<br><small>KOSONG</small>`;
-        }
-        occ.textContent = terisi;
-        document.getElementById("totalStats").innerHTML = `Total Terisi: ${totalTerisi} / ${totalKamar} (${Math.round(totalTerisi/totalKamar*100)}%)`;
-      });
+  const d = s.val();
+
+  if (d && d.nama && !d.checkout) {
+    terisi++; 
+    totalTerisi++;
+
+    // Hitung keterlambatan bayar
+    const hariTelat = hitungTelatBayar(d.tanggalMasuk, d.tanggalLunas);
+
+    // Tentukan kelas dasar
+    let kelas = d.statusPenghuni || "staying";
+
+    // Tambahan teks kecil untuk telat bayar
+    let tambahan = `<small>${d.nama}</small>`;
+    if (hariTelat > 0) {
+      tambahan += `<br><small style="color:#dc2626;font-weight:bold;font-size:10px;">Telat ${hariTelat} hari</small>`;
+      // Optional: ubah warna box jadi merah jika telat
+      if (!kelas.includes("telat")) kelas += " telat";
+    }
+
+    box.className = `room ${kelas}`;
+    box.innerHTML = `${room}<br>${tambahan}`;
+  } else {
+    box.className = "room kosong";
+    box.innerHTML = `${room}<br><small>KOSONG</small>`;
+  }
+
+  occ.textContent = terisi;
+  document.getElementById("totalStats").innerHTML = `Total Terisi: ${totalTerisi} / ${totalKamar} (${Math.round(totalTerisi/totalKamar*100)}%)`;
+});
     });
   });
 }
