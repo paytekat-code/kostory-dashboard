@@ -211,7 +211,7 @@ window.kirimWelcome = function(nama, hp, kost) {
     alert("Nomor HP kosong untuk " + nama);
     return;
   }
-  const pesan = `Selamat bergabung kak *${nama}* di *${kost}*!\n\nSenang banget kk gabung jadi keluarga Kostory, Biar sama2 nyaman, ini aturan santai Kostory ya kak :\n\n1. Perpanjangan sewa Paling lambat H-1 sebelum habis, kalo telat kena Rp.25.000/hari.\n2. Hanya orangtua/anak/kakak/adik kandung yang boleh ke kamar/nginap, lainya hanya sampai teras.🤪\n3. Jam 11 malem pintu dikunci semua.\n4. Ga boleh masak dan nyuci di kamar.\n5. Listrik token pribadi, isi mandiri ya kak\n6. Kamar kk dibersihin tiap 2 minggu, ingetin pengurus Kost kalo lupa.\n7. Parkir ngikutin arahan Pengurus Kost, jangan asal taruh.\n8. Ga boleh taro barang pribadi ditempat umum (dapur, selasar dll).\n9. Ketauan merokok/Vape didalam kost -> denda 500rb perkejadian.\n10. Berteriak-teriak, berantem, mabok, ngobat, bertengkar sm pengurus-> minimal diCheckout 💪 \n11. Kebutuhan Pribadi kerjakan sendiri ya kak (cuci piring, bikin kopi, terima paket dll).\n12. Petugas Kost fokus bertugas mengurus Kost, bukan asisten pribadi yah🙏 \n\nKalau ada keluhan, langsung ke Pengurus Kost ato chat WA mimin : 081383210009  😊 \n\nSekali lagi, selamat menempati kamar baru! Semoga betah & kerasan\n\nSalam hangat,\nTim Kostory`;
+  const pesan = `Selamat bergabung kak *${nama}* di *${kost}*!\n\nSenang sekali kakak sudah bergabung jadi keluarga besar Kostory\n\nIni peraturan singkat kami ya kak supaya sama-sama nyaman:\n\n1. Perpanjangan kost maks 1 hari dilunasi sebelum Sewa habis, telat didenda Rp.25.000/hari.\n2. Hanya orangtua/anak/kakak/adik kandung yang boleh ke kamar/nginap, lainya hanya sampai teras.🤪\n3. Jam 23.00 WIB semua pintu akan dikunci.\n4. Dilarang masak dan nyuci di kamar.\n5. Listrik token pribadi, isi sendiri ya kak\n6. Tiap 2 minggu kamar akan dibersihin, ingetin pengurus Kost jika lupa.\n7. Parkir ngikutin aturan Pengurus Kost, jangan ngatur sendiri.\n8. Ga boleh taro barang pribadi ditempat umum seperti di dapur, selasar dll.\n9. Ketauan merokok/Vape didalam kost -> denda 500rb perkejadian.\n10. Berteriak-teriak, bertengkar, mabok, ngobat -> minimal dikeluarin 💪 \n11. ini *Penting!* ; Pengurus Kost adalah teman tinggal dan bercerita, bukan ART!, mohon saling menghormati dan menjaga sikap untuk kenyamanan bersama.\n\nKalau ada komplen bisa langsung ke Pengurus Kost ato chat WA mimin : 081383210009  😊 \n\nSekali lagi, selamat menempati kamar baru! Semoga betah & kerasan\n\nSalam hangat,\nTim Kostory`;
   
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
   window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`, "_blank");
@@ -1146,81 +1146,3 @@ window.filterPenghuni = function() {
     }
   }
 };
-// Load announcements saat dashboard
-function loadAnnouncements() {
-  const list = document.getElementById("announcementList");
-  list.innerHTML = "<small>Memuat...</small>";
-  
-  db.ref("announcements").orderByChild("timestamp").limitToLast(50).on("value", snap => {
-    const data = snap.val() || {};
-    const posts = Object.entries(data).reverse(); // terbaru atas
-    
-    list.innerHTML = posts.map(([id, post]) => {
-      const date = formatDate(new Date(post.timestamp));
-      return `
-        <div style="background:white;padding:12px;margin-bottom:12px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-          <strong>${post.user || currentUser} - ${date}</strong><br>
-          <p style="margin:8px 0;white-space:pre-wrap;">${post.text}</p>
-          <div id="comments-${id}"></div>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <input type="text" id="input-${id}" placeholder="Tulis komentar..." style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;">
-            <button class="btn-mini" style="background:#25d366;" onclick="addComment('${id}')">Kirim</button>
-          </div>
-        </div>`;
-    }).join("") || "<p style='color:#666;text-align:center;padding:20px;'>Belum ada pengumuman</p>";
-    
-    // Load komentar tiap post
-    posts.forEach(([id]) => loadComments(id));
-  });
-  
-  // Auto cleanup: hapus post > 90 hari (jalan di background)
-  db.ref("announcements").once("value", snap => {
-    const now = Date.now();
-    snap.forEach(child => {
-      if (now - child.val().timestamp > 90*86400000) {
-        child.ref.remove();
-      }
-    });
-  });
-}
-
-function loadComments(postId) {
-  db.ref(`announcements/${postId}/comments`).orderByChild("timestamp").on("value", snap => {
-    const comments = snap.val() || {};
-    const div = document.getElementById(`comments-${postId}`);
-    div.innerHTML = Object.values(comments).map(c => 
-      `<small style="display:block;margin:6px 0;color:#444;">
-        <b>${c.user || currentUser}:</b> ${c.text} <i>(${formatDate(new Date(c.timestamp))})</i>
-      </small>`
-    ).join("");
-  });
-}
-
-window.postAnnouncement = function() {
-  const text = document.getElementById("newAnnouncement").value.trim();
-  if (!text) return alert("Isi dulu bro!");
-  
-  db.ref("announcements").push({
-    text,
-    user: currentUser,
-    timestamp: Date.now()
-  }).then(() => {
-    document.getElementById("newAnnouncement").value = "";
-  });
-};
-
-window.addComment = function(postId) {
-  const input = document.getElementById(`input-${postId}`);
-  const text = input.value.trim();
-  if (!text) return;
-  
-  db.ref(`announcements/${postId}/comments`).push({
-    text,
-    user: currentUser,
-    timestamp: Date.now()
-  }).then(() => input.value = "");
-};
-
-// Panggil saat loadDashboard
-// Di dalam loadDashboard(), tambahin:
-loadAnnouncements();
