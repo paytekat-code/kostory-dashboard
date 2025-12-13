@@ -395,7 +395,7 @@ Tim Kostory`;
 };
 
 
-// ====================== DAFTAR CHECK-OUT (VERSI FIX SEARCH SEMUA DATA) ======================
+// ====================== DAFTAR CHECK-OUT (SEARCH LEBIH AKURAT - FIX 100%) ======================
 window.showCheckoutList = async function() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("checkoutListPage").classList.remove("hidden");
@@ -407,15 +407,13 @@ window.showCheckoutList = async function() {
       <input type="text" id="searchCheckout" placeholder="Cari nama penghuni yang sudah check-out..." 
              style="padding:12px;border-radius:8px;border:1px solid #ccc;font-size:16px;width:100%;box-sizing:border-box;"
              onkeyup="filterCheckoutList()">
+      <small style="color:#666;text-align:center;">Ketik sebagian nama → hasil paling cocok di atas</small>
       <button class="btn" onclick="backToDashboard()">Kembali</button>
     </div>`;
 
   const semuaCheckout = [];
-  const now = new Date();
-  const thisMonth = now.getMonth();
-  const thisYear = now.getFullYear();
 
-  // Kumpulkan SEMUA data checkout (tanpa batas bulan)
+  // Ambil SEMUA data checkout (tidak dibatasi bulan)
   for (const kost of allowedKosts) {
     const snap = await db.ref(`checkout/${kost}`).once("value");
     const dataKost = snap.val() || {};
@@ -427,8 +425,11 @@ window.showCheckoutList = async function() {
         semuaCheckout.push({
           kost,
           room,
-          nama: d.nama.trim().toLowerCase(), // untuk search case-insensitive
-          namaAsli: d.nama,
+          namaLower: d.nama.trim().toLowerCase(),
+          namaAsli: d.nama.trim(),
+          hp: d.hp || "",
+          tanggalMasuk: d.tanggalMasuk,
+          tanggalCheckout: d.tanggalCheckout,
           ...d,
           coDate
         });
@@ -436,17 +437,16 @@ window.showCheckoutList = async function() {
     }
   }
 
-  // Urutkan dari yang terbaru
+  // Urutkan default: terbaru dulu
   semuaCheckout.sort((a, b) => b.coDate - a.coDate);
 
-  // Simpan ke global supaya bisa difilter
+  // Simpan global untuk filter
   window.allCheckoutData = semuaCheckout;
 
-  // Render pertama kali (tampilkan semua tanpa filter search)
+  // Render pertama kali (tanpa search)
   renderCheckoutList(semuaCheckout, "");
 };
 
-// Fungsi render list (dipanggil ulang setiap kali search berubah)
 function renderCheckoutList(data, query = "") {
   const now = new Date();
   const thisMonth = now.getMonth();
@@ -456,16 +456,13 @@ function renderCheckoutList(data, query = "") {
   let sebelumnya = [];
 
   if (query === "") {
-    // Kalau belum ada pencarian → tampilkan seperti biasa (Bulan Ini + Sebelumnya)
-    bulanIni = data.filter(d => 
-      d.coDate.getMonth() === thisMonth && d.coDate.getFullYear() === thisYear
-    );
+    // Mode normal: pisah bulan ini & sebelumnya
+    bulanIni = data.filter(d => d.coDate.getMonth() === thisMonth && d.coDate.getFullYear() === thisYear);
     sebelumnya = data.filter(d => !(d.coDate.getMonth() === thisMonth && d.coDate.getFullYear() === thisYear));
   } else {
-    // Kalau ada pencarian → tampilkan SEMUA hasil yang cocok di satu list saja (tanpa pisah bulan)
-    bulanIni = data;               // pakai bagian "Bulan Ini" sebagai tempat hasil search
-    sebelumnya = [];               // sembunyikan bagian "Sebelumnya"
-    document.getElementById("listSebelumnya").previousElementSibling.textContent = "Hasil Pencarian";
+    // Mode search: semua hasil di satu list (bagian Bulan Ini)
+    bulanIni = data;
+    sebelumnya = [];
   }
 
   // Render Bulan Ini / Hasil Search
@@ -476,33 +473,40 @@ function renderCheckoutList(data, query = "") {
           <strong>${i+1}. ${d.namaAsli}</strong><br>
           <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
         </div>
-        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.namaAsli}','${d.hp || ''}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
+        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.namaAsli}','${d.hp}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
                 style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
           Kirim Perpisahan
         </button>
       </div>
     </div>`).join("") : `<p style='text-align:center;color:#666;padding:30px'>
-      ${query === "" ? "Belum ada check-out bulan ini" : "Tidak ditemukan penghuni dengan nama tersebut"}
+      ${query === "" ? "Belum ada check-out bulan ini" : "Tidak ditemukan nama tersebut"}
     </p>`;
 
-  // Render Sebelumnya (hanya muncul kalau belum search)
+  // Render Sebelumnya (hanya kalau tidak sedang search)
   document.getElementById("listSebelumnya").innerHTML = sebelumnya.length > 0 ? sebelumnya.map(d => `
     <div class="checkout-item" onclick="openModal('${d.kost}','${d.room}',true)">
       <strong>${d.namaAsli}</strong><br>
       <small>${formatDate(d.tanggalCheckout)} • ${d.kost} - ${d.room}</small>
-    </div>`).join("") : (query === "" ? "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data check-out sebelumnya</p>" : "");
+    </div>`).join("") : (query === "" ? "<p style='text-align:center;color:#666;padding:30px'>Tidak ada data sebelumnya</p>" : "");
 }
 
-// Filter realtime saat mengetik
 window.filterCheckoutList = function() {
   const query = document.getElementById("searchCheckout").value.trim().toLowerCase();
   if (!window.allCheckoutData) return;
 
   let filtered = window.allCheckoutData;
+
   if (query !== "") {
-    filtered = window.allCheckoutData.filter(item => item.nama.includes(query));
-  } else {
-    filtered = window.allCheckoutData; // tampilkan semua lagi
+    filtered = window.allCheckoutData.filter(item => item.namaLower.includes(query));
+
+    // Urutkan cerdas: yang diawali query paling atas
+    filtered.sort((a, b) => {
+      const aStarts = a.namaLower.startsWith(query) ? 0 : 1;
+      const bStarts = b.namaLower.startsWith(query) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      // Kalau sama-sama tidak diawali, urutkan berdasarkan posisi query
+      return a.namaLower.indexOf(query) - b.namaLower.indexOf(query);
+    });
   }
 
   renderCheckoutList(filtered, query);
