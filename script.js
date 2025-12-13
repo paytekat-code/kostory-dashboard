@@ -506,7 +506,7 @@ window.filterCheckoutList = function() {
   }
 
   renderCheckoutList(filtered, query);
-};// ====================== TAGIH & LUNAS ======================
+};};// ====================== TAGIH & LUNAS ======================
 window.bukaTagih = function(kost, room, nama, hp) {
   currentKost = kost; currentRoom = room;
   window.currentNamaTagih = nama;
