@@ -988,13 +988,13 @@ window.konfirmasiBersih = function(kost, room, nama, hp, tanggalBersih) {
 
   const pesan = `Halo Kak *${nama}*,
 
-Menurut catatan kami, kamar Kakak sudah selesai dibersihkan oleh Pengurus Kost pada tanggal *${tgl}*.
+Update dari dashboard kami, kamar Kakak udah selesai dibersihin sama Squad Kost tanggal *${tgl}*, Semestinya udah mirror-shine sekarang!😍 
 
-Kalau dirasa masih ada bagian yang kurang rapi atau kurang bersih, kabari kami ya, Kak. Dengan senang hati kami bantu bereskan lagi.
+Kalau dirasa masih ada bagian yang agak berantakan atau kurang kinclong, langsung bilang aja ya Kak. Kita kirim reinforcement buat nge-wipe ulang.
 
-Terima kasih banyak, Kak.
+Thanks Kak, stay clean!
 
-Salam Kostorian!  
+Salam Kostorian!🔥🏡 
 Tim Kostory`;
 
   const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
