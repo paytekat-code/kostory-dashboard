@@ -789,17 +789,20 @@ window.showPenghuniList = async function(sortBy = "default") {
   document.getElementById("penghuniListPage").classList.remove("hidden");
 
   // Header dengan dropdown sort
-  document.querySelector("#penghuniListPage #header").innerHTML = `
+    document.querySelector("#penghuniListPage #header").innerHTML = `
     <h2>Daftar Penghuni</h2>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-     <select id="sortSelect" onchange="showPenghuniList(this.value)" style="padding:10px;border-radius:8px;border:2px solid #e2e8f0;font-size:15px;">
-  <option value="default" ${sortBy==='default' ? 'selected' : ''}>Urutkan: Default (Ultah Terdekat)</option>
-  <option value="lama" ${sortBy==='lama' ? 'selected' : ''}>Paling Lama Ngekos</option>
-  <option value="ultah" ${sortBy==='ultah' ? 'selected' : ''}>Ultah Terdekat</option>
-  <option value="bayar" ${sortBy==='bayar' ? 'selected' : ''}>Pembayaran Terbaru</option>
-  <option value="bersih" ${sortBy==='bersih' ? 'selected' : ''}>Dibersihkan Terbaru</option>
-  <option value="jadwalbersih" ${sortBy==='jadwalbersih' ? 'selected' : ''}>Jadwal Pembersihan Terdekat</option>
-  <option value="belumbayar" ${sortBy==='belumbayar' ? 'selected' : ''}>Belum Bayar Terlama</option>
+      <input type="text" id="searchPenghuni" placeholder="Cari nama penghuni..." 
+             style="padding:10px;border-radius:8px;border:2px solid #e2e8f0;font-size:15px;flex:1;min-width:200px;"
+             onkeyup="filterPenghuni()">
+      <select id="sortSelect" onchange="showPenghuniList(this.value)" style="padding:10px;border-radius:8px;border:2px solid #e2e8f0;font-size:15px;">
+        <option value="default" ${sortBy==='default' ? 'selected' : ''}>Urutkan: Default (Ultah Terdekat)</option>
+        <option value="lama" ${sortBy==='lama' ? 'selected' : ''}>Paling Lama Ngekos</option>
+        <option value="ultah" ${sortBy==='ultah' ? 'selected' : ''}>Ultah Terdekat</option>
+        <option value="bayar" ${sortBy==='bayar' ? 'selected' : ''}>Pembayaran Terbaru</option>
+        <option value="bersih" ${sortBy==='bersih' ? 'selected' : ''}>Dibersihkan Terbaru</option>
+        <option value="jadwalbersih" ${sortBy==='jadwalbersih' ? 'selected' : ''}>Jadwal Pembersihan Terdekat</option>
+        <option value="belumbayar" ${sortBy==='belumbayar' ? 'selected' : ''}>Belum Bayar Terlama</option>
       </select>
       <button class="btn btn-wa" onclick="laporPembayaran()">LAPOR PEMBAYARAN</button>
       <button class="btn" style="background:#f59e0b;color:white" onclick="laporPembersihan()">LAPOR BERSIH KAMAR</button>
@@ -957,6 +960,10 @@ window.showPenghuniList = async function(sortBy = "default") {
       </div>
     </div>`;
   }).join("") || "<p style='text-align:center;color:#666;padding:50px'>Belum ada penghuni aktif</p>";
+ // Kembalikan filter search setelah daftar di-render ulang (saat ganti sorting)
+  if (document.getElementById("searchPenghuni")) {
+    filterPenghuni();
+  }
 };
 // === KIRIM KONFIRMASI BERSIH KE PENGHUNI (KHUSUS ADMIN) ===
 window.konfirmasiBersih = function(kost, room, nama, hp, tanggalBersih) {
@@ -1008,4 +1015,36 @@ window.ingatkanBersih = function(kost, room, nama, hariSejakBersih) {
   const nomorGrup = "6281383210009"; // nomor WA pengurus / grup
 
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+};
+// ====================== FITUR SEARCH NAMA PENGHUNI ======================
+window.filterPenghuni = function() {
+  const query = document.getElementById("searchPenghuni").value.toLowerCase().trim();
+  const items = document.querySelectorAll("#listPenghuni .penghuni-item");
+
+  items.forEach(item => {
+    const nama = item.querySelector("strong").textContent.toLowerCase();
+    if (nama.includes(query)) {
+      item.style.display = "block";
+    } else {
+      item.style.display = "none";
+    }
+  });
+
+  // Optional: tampilkan pesan kalau tidak ada hasil
+  const visibleCount = Array.from(items).filter(i => i.style.display !== "none").length;
+  if (visibleCount === 0 && query !== "") {
+    if (!document.getElementById("noResultMsg")) {
+      const msg = document.createElement("p");
+      msg.id = "noResultMsg";
+      msg.textContent = "Tidak ditemukan penghuni dengan nama tersebut.";
+      msg.style.textAlign = "center";
+      msg.style.color = "#666";
+      msg.style.padding = "30px";
+      document.getElementById("listPenghuni").appendChild(msg);
+    }
+  } else {
+    if (document.getElementById("noResultMsg")) {
+      document.getElementById("noResultMsg").remove();
+    }
+  }
 };
