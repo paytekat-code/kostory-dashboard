@@ -517,8 +517,9 @@ function renderCheckoutList(data, query = "") {
           <small>
   ${formatDate(d.tanggalCheckout)} • 
   ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)} • 
-  ${d.kost}
+  ${d.kost} • ${d.room}
 </small>
+
 
         </div>
         <button onclick="event.stopPropagation(); kirimPerpisahan('${d.namaAsli}','${d.hp}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
