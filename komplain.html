@@ -14,30 +14,45 @@
       font-family: 'Segoe UI', sans-serif;
       background: #f4f6f9;
       margin: 0;
-      padding: 20px;
+      padding: 24px;
       color: #1e293b;
     }
 
-    h1 { margin-bottom: 20px; }
+    h1 {
+      margin: 0 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
 
     .btn {
-      padding: 10px 16px;
+      padding: 10px 18px;
       border: none;
       border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
-      margin-right: 8px;
     }
 
     .btn-add { background:#16a34a; color:white; }
     .btn-back { background:#64748b; color:white; }
-    .btn-done { background:#2563eb; color:white; }
+    .btn-done { background:#2563eb; color:white; font-size:12px; }
+
+    /* LIST */
+    #listKomplain {
+      display: grid;
+      gap: 14px;
+    }
 
     .card {
       background: white;
       border-radius: 14px;
       padding: 16px;
-      margin-bottom: 12px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.08);
       display: flex;
       justify-content: space-between;
@@ -45,20 +60,94 @@
       flex-wrap: wrap;
     }
 
+    .meta small { display:block; color:#475569; }
+
     .status-open { color:#dc2626; font-weight:bold; }
     .status-proses { color:#f59e0b; font-weight:bold; }
     .status-selesai { color:#16a34a; font-weight:bold; }
+
+    /* MODAL */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .modal-content h3 { margin-top:0 }
+
+    .modal-content label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+
+    .modal-content input,
+    .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5f5;
+      margin-top: 6px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
   </style>
 </head>
 <body>
 
   <h1>📋 Daftar Komplain Penghuni</h1>
 
-  <div style="margin-bottom:20px">
-    <button class="btn btn-add" onclick="tambahKomplain()">+ Tambah Komplain</button>
-    <button class="btn btn-back" onclick="kembali()">⬅ Kembali</button>
+  <div class="toolbar">
+    <button class="btn btn-add" onclick="openModal()">+ Tambah Komplain</button>
+    <button class="btn btn-back" onclick="kembali()">← Kembali</button>
   </div>
 
-  <div id="listKomplain">Memuat data...</div>
+  <!-- LIST KOMPLAIN -->
+  <div id="listKomplain">
+    <em>Belum ada komplain</em>
+  </div>
 
-  <scr
+  <!-- MODAL KOMPLAIN -->
+  <div id="komplainModal" class="modal">
+    <div class="modal-content">
+      <h3>Tambah Komplain</h3>
+
+      <label>Nama Penghuni</label>
+      <input id="nama">
+
+      <label>No Kamar</label>
+      <input id="room">
+
+      <label>Kategori</label>
+      <input id="kategori" placeholder="Air / Listrik / AC / dll">
+
+      <label>Deskripsi Komplain</label>
+      <textarea id="deskripsi" rows="3"></textarea>
+
+      <div class="modal-actions">
+        <button class="btn btn-back" onclick="closeModal()">Batal</button>
+        <button class="btn btn-add" onclick="simpanKomplain()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="komplain.js"></script>
+</body>
+</html>
