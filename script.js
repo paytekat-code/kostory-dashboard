@@ -514,7 +514,12 @@ function renderCheckoutList(data, query = "") {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div>
           <strong>${i+1}. ${d.namaAsli}</strong><br>
-          <small>${formatDate(d.tanggalCheckout)} • ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)}</small>
+          <small>
+  ${formatDate(d.tanggalCheckout)} • 
+  ${hitungLamaTinggal(d.tanggalMasuk, d.tanggalCheckout)} • 
+  ${d.kost}
+</small>
+
         </div>
         <button onclick="event.stopPropagation(); kirimPerpisahan('${d.namaAsli}','${d.hp}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
                 style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
