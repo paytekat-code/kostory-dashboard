@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Komplain | Kostory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      color: #1e293b;
+    }
+
+    h1 { margin-bottom: 20px; }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+
+    .btn-add { background:#16a34a; color:white; }
+    .btn-back { background:#64748b; color:white; }
+    .btn-done { background:#2563eb; color:white; }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-open { color:#dc2626; font-weight:bold; }
+    .status-proses { color:#f59e0b; font-weight:bold; }
+    .status-selesai { color:#16a34a; font-weight:bold; }
+  </style>
+</head>
+<body>
+
+  <h1>📋 Daftar Komplain Penghuni</h1>
+
+  <div style="margin-bottom:20px">
+    <button class="btn btn-add" onclick="tambahKomplain()">+ Tambah Komplain</button>
+    <button class="btn btn-back" onclick="kembali()">⬅ Kembali</button>
+  </div>
+
+  <div id="listKomplain">Memuat data...</div>
+
+  <scr
