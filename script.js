@@ -10,6 +10,8 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
+
 
 const kosts = {
   "Kostory Mekar": ["101","102","103","105","106","107","108","201","202","203","205","206","207","208"],
