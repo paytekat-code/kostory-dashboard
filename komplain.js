@@ -92,7 +92,14 @@ async function loadKomplain() {
 function simpanKomplain() {
   const nama = document.getElementById("nama").value.trim();
   const room = document.getElementById("room").value.trim();
-  const kategori = document.getElementById("kategori").value.trim();
+  const kategori = Array.from(
+  document.querySelectorAll('input[name="kategori"]:checked')
+).map(el => el.value).join(", ");
+if (!kategori) {
+  alert("Pilih minimal 1 kategori komplain");
+  return;
+}
+
   const deskripsi = document.getElementById("deskripsi").value.trim();
 
   if (!nama || !room || !deskripsi) {
