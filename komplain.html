@@ -14,21 +14,34 @@
       font-family: 'Segoe UI', sans-serif;
       background: #f4f6f9;
       margin: 0;
-      padding: 24px;
       color: #1e293b;
     }
 
+    /* PAGE WRAPPER */
+    .page {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+
+    /* HEADER */
+    .header {
+      margin-bottom: 24px;
+    }
+
     h1 {
-      margin: 0 0 20px;
+      margin: 0;
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
+    /* TOOLBAR */
     .toolbar {
       display: flex;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
     }
 
     .btn {
@@ -60,7 +73,10 @@
       flex-wrap: wrap;
     }
 
-    .meta small { display:block; color:#475569; }
+    .meta small {
+      display: block;
+      color: #475569;
+    }
 
     .status-open { color:#dc2626; font-weight:bold; }
     .status-proses { color:#f59e0b; font-weight:bold; }
@@ -85,7 +101,9 @@
       max-width: 420px;
     }
 
-    .modal-content h3 { margin-top:0 }
+    .modal-content h3 {
+      margin-top: 0;
+    }
 
     .modal-content label {
       font-weight: bold;
@@ -100,6 +118,7 @@
       border-radius: 8px;
       border: 1px solid #cbd5f5;
       margin-top: 6px;
+      font-family: inherit;
     }
 
     .modal-actions {
@@ -112,19 +131,25 @@
 </head>
 <body>
 
-  <h1>📋 Daftar Komplain Penghuni</h1>
+  <div class="page">
 
-  <div class="toolbar">
-    <button class="btn btn-add" onclick="openModal()">+ Tambah Komplain</button>
-    <button class="btn btn-back" onclick="kembali()">← Kembali</button>
+    <div class="header">
+      <h1>📋 Daftar Komplain Penghuni</h1>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-add" onclick="openModal()">+ Tambah Komplain</button>
+      <button class="btn btn-back" onclick="kembali()">← Kembali</button>
+    </div>
+
+    <!-- LIST KOMPLAIN -->
+    <div id="listKomplain">
+      <em>Belum ada komplain</em>
+    </div>
+
   </div>
 
-  <!-- LIST KOMPLAIN -->
-  <div id="listKomplain">
-    <em>Belum ada komplain</em>
-  </div>
-
-  <!-- MODAL KOMPLAIN -->
+  <!-- MODAL KOMPLAIN (TIDAK DIUBAH FUNGSINYA) -->
   <div id="komplainModal" class="modal">
     <div class="modal-content">
       <h3>Tambah Komplain</h3>
