@@ -192,13 +192,8 @@ async function loadKomplain() {
     <div class="item">
       <div>
         <strong>
-          new Date(k.dibuatPada || k.tanggalBuat).toLocaleString("id-ID", {
-    day:"2-digit",
-    month:"short",
-    year:"2-digit",
-    hour:"2-digit",
-    minute:"2-digit"
-})
+          new Date(k.dibuatPada || k.tanggalBuat).toLocaleString("id-ID")
+
 
           | ${k.room} | ${k.namaPenghuni}
         </strong><br>
