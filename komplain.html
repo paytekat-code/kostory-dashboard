@@ -23,11 +23,9 @@
       padding: 24px;
     }
 
-    h1 { margin: 0 0 20px; }
-
     .toolbar {
       display: flex;
-      gap: 12px;
+      justify-content: space-between;
       margin-bottom: 24px;
     }
 
@@ -43,10 +41,55 @@
     .btn-back { background:#64748b; color:white; }
     .btn-done { background:#2563eb; color:white; font-size:12px; }
 
+    h2 { margin-bottom: 12px; }
+
+    /* LIST */
+    #listKomplain {
+      display: grid;
+      gap: 12px;
+    }
+
+    .item {
+      background: white;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .item small {
+      color: #475569;
+    }
+
+    .status-open { color:#dc2626; font-weight:bold; }
+    .status-selesai { color:#16a34a; font-weight:bold; }
+
+    /* MODAL */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+    }
+
     label {
       font-weight: bold;
       display: block;
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
     input, textarea {
@@ -55,107 +98,73 @@
       margin-top: 6px;
       border-radius: 8px;
       border: 1px solid #cbd5f5;
-      font-family: inherit;
     }
 
     input[readonly] {
       background: #f1f5f9;
     }
 
-    #hasilKamar {
-      background: white;
-      border-radius: 8px;
-      margin-top: 4px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-
     #hasilKamar div {
-      padding: 8px 10px;
+      padding: 6px;
       cursor: pointer;
     }
 
     #hasilKamar div:hover {
       background: #e0f2fe;
     }
-
-    .kategori {
-      display: grid;
-      grid-template-columns: repeat(2,1fr);
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .kategori label {
-      font-weight: normal;
-    }
-
-    #listKomplain {
-      margin-top: 40px;
-      display: grid;
-      gap: 14px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .meta small {
-      display: block;
-      color: #475569;
-    }
-
-    .status-open { color:#dc2626; font-weight:bold; }
-    .status-selesai { color:#16a34a; font-weight:bold; }
   </style>
 </head>
 <body>
 
 <div class="page">
-  <h1>📋 Komplain Penghuni</h1>
 
+  <!-- TOOLBAR -->
   <div class="toolbar">
+    <button class="btn btn-add" onclick="openModal()">+ Komplain</button>
     <button class="btn btn-back" onclick="kembali()">← Kembali</button>
   </div>
 
-  <!-- FORM KOMPLAIN -->
-  <label>No Kamar</label>
-  <input id="room" placeholder="Cari nomor kamar..." oninput="cariKamar()">
-  <div id="hasilKamar"></div>
-
-  <label>Nama Penghuni</label>
-  <input id="nama" readonly>
-
-  <label>Nama Kost</label>
-  <input id="kost" readonly>
-
-  <label>Kategori Komplain</label>
-  <div class="kategori">
-    <label><input type="checkbox" name="kategori" value="AC"> AC</label>
-    <label><input type="checkbox" name="kategori" value="Air"> Air</label>
-    <label><input type="checkbox" name="kategori" value="Listrik"> Listrik</label>
-    <label><input type="checkbox" name="kategori" value="Wifi"> Wifi</label>
-    <label><input type="checkbox" name="kategori" value="Kebersihan"> Kebersihan</label>
-    <label><input type="checkbox" name="kategori" value="Kerusakan"> Kerusakan</label>
-    <label><input type="checkbox" name="kategori" value="Keamanan"> Keamanan</label>
-    <label><input type="checkbox" name="kategori" value="Konflik"> Konflik</label>
-    <label><input type="checkbox" name="kategori" value="Aturan Kost"> Aturan Kost</label>
-    <label><input type="checkbox" name="kategori" value="Lainnya"> Lainnya</label>
+  <!-- LIST KOMPLAIN -->
+  <h2>Daftar Komplain</h2>
+  <div id="listKomplain">
+    <em>Memuat data...</em>
   </div>
 
-  <label>Deskripsi Komplain</label>
-  <textarea id="deskripsi" rows="3"></textarea>
+</div>
 
-  <button class="btn btn-add" style="margin-top:20px" onclick="simpanKomplain()">Simpan Komplain</button>
+<!-- MODAL KOMPLAIN -->
+<div id="komplainModal" class="modal">
+  <div class="modal-content">
 
-  <!-- LIST -->
-  <div id="listKomplain"></div>
+    <h3>Tambah Komplain</h3>
+
+    <label>No Kamar</label>
+    <input id="room" placeholder="Cari nomor kamar..." oninput="cariKamar()">
+    <div id="hasilKamar"></div>
+
+    <label>Nama Penghuni</label>
+    <input id="nama" readonly>
+
+    <label>Nama Kost</label>
+    <input id="kost" readonly>
+
+    <label>Kategori</label>
+    <div>
+      <label><input type="checkbox" name="kategori" value="AC"> AC</label>
+      <label><input type="checkbox" name="kategori" value="Air"> Air</label>
+      <label><input type="checkbox" name="kategori" value="Listrik"> Listrik</label>
+      <label><input type="checkbox" name="kategori" value="Wifi"> Wifi</label>
+    </div>
+
+    <label>Deskripsi</label>
+    <textarea id="deskripsi" rows="3"></textarea>
+
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-back" onclick="closeModal()">Batal</button>
+      <button class="btn btn-add" onclick="simpanKomplain()">Simpan</button>
+    </div>
+
+  </div>
 </div>
 
 <script src="komplain.js"></script>
