@@ -27,6 +27,23 @@ if (!user || !aksesKost) {
   location.href = "index.html";
 }
 
+// ================= AUTO ISI DATA DARI DAFTAR PENGHUNI =================
+const autoNama = localStorage.getItem("komplainNama");
+const autoKost = localStorage.getItem("komplainKost");
+const autoRoom = localStorage.getItem("komplainRoom");
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (autoNama && document.getElementById("nama")) {
+    document.getElementById("nama").value = autoNama;
+  }
+  if (autoKost && document.getElementById("kost")) {
+    document.getElementById("kost").value = autoKost;
+  }
+  if (autoRoom && document.getElementById("room")) {
+    document.getElementById("room").value = autoRoom;
+  }
+});
+
 // ================= MODAL =================
 function openModal() {
   document.getElementById("komplainModal").style.display = "flex";
