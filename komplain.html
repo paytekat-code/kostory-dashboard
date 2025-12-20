@@ -160,8 +160,23 @@
       <label>No Kamar</label>
       <input id="room">
 
-      <label>Kategori</label>
-      <input id="kategori" placeholder="Air / Listrik / AC / dll">
+      <label>Kategori Komplain</label>
+
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px">
+
+  <label><input type="checkbox" name="kategori" value="AC"> AC</label>
+  <label><input type="checkbox" name="kategori" value="Air"> Air</label>
+  <label><input type="checkbox" name="kategori" value="Listrik"> Listrik</label>
+  <label><input type="checkbox" name="kategori" value="Wifi"> Wifi</label>
+  <label><input type="checkbox" name="kategori" value="Kebersihan"> Kebersihan</label>
+  <label><input type="checkbox" name="kategori" value="Kerusakan"> Kerusakan</label>
+  <label><input type="checkbox" name="kategori" value="Keamanan"> Keamanan</label>
+  <label><input type="checkbox" name="kategori" value="Konflik"> Konflik</label>
+  <label><input type="checkbox" name="kategori" value="Aturan Kost"> Aturan Kost</label>
+  <label><input type="checkbox" name="kategori" value="Lainnya"> Lainnya</label>
+
+</div>
+
 
       <label>Deskripsi Komplain</label>
       <textarea id="deskripsi" rows="3"></textarea>
