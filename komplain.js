@@ -105,7 +105,7 @@ function pilihNama(nama, room, kost) {
 }
 
 // ================= SIMPAN KOMPLAIN =================
-function simpanKomplain() {
+window.simpanKomplain = function () {
   const room = document.getElementById("room").value.trim();
   const nama = document.getElementById("nama").value.trim();
   const kost = document.getElementById("kost").value.trim();
