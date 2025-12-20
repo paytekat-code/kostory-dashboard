@@ -1,163 +1,203 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Komplain Penghuni | Kostory</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+// ================= FIREBASE =================
+const firebaseConfig = {
+  apiKey: "AIzaSyAhN2a4m6PkTwFOvJ88TreD1lCERYJD7m0",
+  authDomain: "kostory-db.firebaseapp.com",
+  databaseURL: "https://kostory-db-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "kostory-db"
+};
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      color: #1e293b;
-    }
+// ================= HAK AKSES =================
+const hakAkses = {
+  admin: "all",
+  mekar: "Kostory Mekar",
+  satria: "Kostory Satria",
+  mitra: "Kostory Mitra",
+  ecokost: "Ecokost by Kostory",
+  mitraya: "Mitraya by Kostory",
+  inaya: "Inaya Bukit by Kostory"
+};
 
-    .page {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 24px;
-    }
+const user = localStorage.getItem("kostoryUser");
+const aksesKost = hakAkses[user];
 
-    h1 { margin: 0 0 20px; }
+if (!user || !aksesKost) {
+  alert("Session habis, login ulang");
+  location.href = "index.html";
+}
 
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
+// ================= DATA PENGHUNI =================
+let dataPenghuni = [];
 
-    .btn {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+// ================= LOAD PENGHUNI SESUAI AKSES =================
+async function loadPenghuniUntukKomplain() {
+  dataPenghuni = [];
 
-    .btn-add { background:#16a34a; color:white; }
-    .btn-back { background:#64748b; color:white; }
-    .btn-done { background:#2563eb; color:white; font-size:12px; }
+  if (aksesKost === "all") {
+    const snap = await db.ref("kosts").once("value");
+    const all = snap.val() || {};
+    Object.keys(all).forEach(kost => {
+      Object.keys(all[kost]).forEach(room => {
+        const d = all[kost][room];
+        if (d && d.nama) {
+          dataPenghuni.push({ kost, room, nama: d.nama });
+        }
+      });
+    });
+  } else {
+    const snap = await db.ref(`kosts/${aksesKost}`).once("value");
+    const data = snap.val() || {};
+    Object.keys(data).forEach(room => {
+      const d = data[room];
+      if (d && d.nama) {
+        dataPenghuni.push({ kost: aksesKost, room, nama: d.nama });
+      }
+    });
+  }
+}
 
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 14px;
-    }
+// ================= SEARCH KAMAR =================
+function cariKamar() {
+  const keyword = document.getElementById("room").value.trim();
+  const hasilEl = document.getElementById("hasilKamar");
 
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border-radius: 8px;
-      border: 1px solid #cbd5f5;
-      font-family: inherit;
-    }
+  document.getElementById("nama").value = "";
+  document.getElementById("kost").value = "";
 
-    input[readonly] {
-      background: #f1f5f9;
-    }
+  if (!keyword) {
+    hasilEl.innerHTML = "";
+    return;
+  }
 
-    #hasilKamar {
-      background: white;
-      border-radius: 8px;
-      margin-top: 4px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
+  const hasil = dataPenghuni.filter(p => p.room.includes(keyword));
 
-    #hasilKamar div {
-      padding: 8px 10px;
-      cursor: pointer;
-    }
+  if (hasil.length === 0) {
+    hasilEl.innerHTML = "<small style='padding:8px;display:block'>Tidak ditemukan</small>";
+    return;
+  }
 
-    #hasilKamar div:hover {
-      background: #e0f2fe;
-    }
+  hasilEl.innerHTML = hasil.map(p => `
+    <div onclick="pilihKamar('${p.room}','${p.nama}','${p.kost}')">
+      ${p.kost} - Kamar ${p.room} (${p.nama})
+    </div>
+  `).join("");
+}
 
-    .kategori {
-      display: grid;
-      grid-template-columns: repeat(2,1fr);
-      gap: 8px;
-      margin-top: 8px;
-    }
+function pilihKamar(room, nama, kost) {
+  document.getElementById("room").value = room;
+  document.getElementById("nama").value = nama;
+  document.getElementById("kost").value = kost;
+  document.getElementById("hasilKamar").innerHTML = "";
+}
 
-    .kategori label {
-      font-weight: normal;
-    }
+// ================= SIMPAN =================
+function simpanKomplain() {
+  const room = document.getElementById("room").value.trim();
+  const nama = document.getElementById("nama").value.trim();
+  const kost = document.getElementById("kost").value.trim();
+  const deskripsi = document.getElementById("deskripsi").value.trim();
 
-    #listKomplain {
-      margin-top: 40px;
-      display: grid;
-      gap: 14px;
-    }
+  const kategori = Array.from(
+    document.querySelectorAll('input[name="kategori"]:checked')
+  ).map(el => el.value).join(", ");
 
-    .card {
-      background: white;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+  if (!room || !nama || !kost) {
+    alert("Pilih kamar terlebih dahulu");
+    return;
+  }
 
-    .meta small {
-      display: block;
-      color: #475569;
-    }
+  if (!kategori) {
+    alert("Pilih minimal 1 kategori");
+    return;
+  }
 
-    .status-open { color:#dc2626; font-weight:bold; }
-    .status-selesai { color:#16a34a; font-weight:bold; }
-  </style>
-</head>
-<body>
+  if (!deskripsi) {
+    alert("Isi deskripsi komplain");
+    return;
+  }
 
-<div class="page">
-  <h1>📋 Komplain Penghuni</h1>
+  const id = Date.now().toString();
 
-  <div class="toolbar">
-    <button class="btn btn-back" onclick="kembali()">← Kembali</button>
-  </div>
+  db.ref(`komplain/${kost}/${room}/${id}`).set({
+    id,
+    kost,
+    room,
+    namaPenghuni: nama,
+    kategori,
+    deskripsi,
+    status: "open",
+    tanggalBuat: new Date().toISOString()
+  }).then(() => {
+    alert("Komplain tersimpan");
+    document.getElementById("deskripsi").value = "";
+    document.querySelectorAll('input[name="kategori"]').forEach(c => c.checked = false);
+    loadKomplain();
+  });
+}
 
-  <!-- FORM KOMPLAIN -->
-  <label>No Kamar</label>
-  <input id="room" placeholder="Cari nomor kamar..." oninput="cariKamar()">
-  <div id="hasilKamar"></div>
+// ================= LOAD LIST =================
+async function loadKomplain() {
+  const el = document.getElementById("listKomplain");
+  el.innerHTML = "<em>Memuat data...</em>";
 
-  <label>Nama Penghuni</label>
-  <input id="nama" readonly>
+  let data = {};
 
-  <label>Nama Kost</label>
-  <input id="kost" readonly>
+  if (aksesKost === "all") {
+    const snap = await db.ref("komplain").once("value");
+    data = snap.val() || {};
+  } else {
+    const snap = await db.ref(`komplain/${aksesKost}`).once("value");
+    data[aksesKost] = snap.val() || {};
+  }
 
-  <label>Kategori Komplain</label>
-  <div class="kategori">
-    <label><input type="checkbox" name="kategori" value="AC"> AC</label>
-    <label><input type="checkbox" name="kategori" value="Air"> Air</label>
-    <label><input type="checkbox" name="kategori" value="Listrik"> Listrik</label>
-    <label><input type="checkbox" name="kategori" value="Wifi"> Wifi</label>
-    <label><input type="checkbox" name="kategori" value="Kebersihan"> Kebersihan</label>
-    <label><input type="checkbox" name="kategori" value="Kerusakan"> Kerusakan</label>
-    <label><input type="checkbox" name="kategori" value="Keamanan"> Keamanan</label>
-    <label><input type="checkbox" name="kategori" value="Konflik"> Konflik</label>
-    <label><input type="checkbox" name="kategori" value="Aturan Kost"> Aturan Kost</label>
-    <label><input type="checkbox" name="kategori" value="Lainnya"> Lainnya</label>
-  </div>
+  let list = [];
 
-  <label>Deskripsi Komplain</label>
-  <textarea id="deskripsi" rows="3"></textarea>
+  Object.keys(data).forEach(kost => {
+    Object.keys(data[kost] || {}).forEach(room => {
+      Object.values(data[kost][room]).forEach(k => list.push(k));
+    });
+  });
 
-  <button class="btn btn-add" style="margin-top:20px" onclick="simpanKomplain()">Simpan Komplain</button>
+  if (list.length === 0) {
+    el.innerHTML = "<em>Belum ada komplain</em>";
+    return;
+  }
 
-  <!-- LIST -->
-  <div id="listKomplain"></div>
-</div>
+  list.sort((a,b)=> new Date(b.tanggalBuat) - new Date(a.tanggalBuat));
 
-<script src="komplain.js"></script>
-</body>
-</html>
+  el.innerHTML = list.map(k => `
+    <div class="card">
+      <div class="meta">
+        <strong>${k.namaPenghuni}</strong>
+        <small>${k.kost} • Kamar ${k.room}</small>
+        <small>${k.kategori}</small>
+        <small>${k.deskripsi}</small>
+        <small>Status:
+          <span class="status-${k.status}">${k.status}</span>
+        </small>
+      </div>
+      ${k.status !== "selesai"
+        ? `<button class="btn btn-done" onclick="selesaikan('${k.kost}','${k.room}','${k.id}')">Selesai</button>`
+        : ""}
+    </div>
+  `).join("");
+}
+
+function selesaikan(kost, room, id) {
+  db.ref(`komplain/${kost}/${room}/${id}`).update({
+    status: "selesai"
+  }).then(loadKomplain);
+}
+
+// ================= NAV =================
+function kembali() {
+  location.href = "index.html";
+}
+
+// ================= INIT =================
+window.onload = async () => {
+  await loadPenghuniUntukKomplain();
+  loadKomplain();
+};
