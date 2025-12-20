@@ -121,8 +121,8 @@
 .kategori {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .kategori input[type="checkbox"] {
@@ -130,20 +130,22 @@
 }
 
 .kategori label {
-  padding: 6px 14px;
+  border: 1px solid #d1d5db;
   border-radius: 999px;
-  border: 1px solid #cbd5f5;
+  padding: 8px 16px;
   cursor: pointer;
-  font-size: 13px;
-  user-select: none;
+  font-size: 14px;
   background: #fff;
+  color: #1f2937;
   transition: all 0.2s ease;
 }
 
+/* ⬇️ INI INTINYA */
 .kategori input[type="checkbox"]:checked + span {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
+  background: #f97316;        /* ORANGE */
+  color: #fff;
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249,115,22,0.25);
 }
 
   </style>
