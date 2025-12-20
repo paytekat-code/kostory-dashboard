@@ -183,10 +183,9 @@ async function loadKomplain() {
 
   // 🔥 SORT: OPEN dulu, lalu paling lama di atas
   list.sort((a, b) => {
-    if (a.status === "open" && b.status !== "open") return -1;
-    if (a.status !== "open" && b.status === "open") return 1;
-    return new Date(a.dibuatPada || a.tanggalBuat) - new Date(b.dibuatPada || b.tanggalBuat);
-
+  if (a.status === "open" && b.status !== "open") return -1;
+  if (a.status !== "open" && b.status === "open") return 1;
+  return new Date(a.dibuatPada) - new Date(b.dibuatPada);
   });
 
   el.innerHTML = list.map(k => `
