@@ -31,12 +31,13 @@ if (!user || !aksesKost) {
 let dataPenghuni = [];
 
 // ================= MODAL =================
-function openModal() {
+window.openModal = function () {
   document.getElementById("komplainModal").style.display = "flex";
-}
-function closeModal() {
+};
+
+window.closeModal = function () {
   document.getElementById("komplainModal").style.display = "none";
-}
+};
 
 // ================= LOAD PENGHUNI =================
 async function loadPenghuniUntukKomplain() {
