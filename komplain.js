@@ -1,157 +1,163 @@
-// ================= FIREBASE =================
-const firebaseConfig = {
-  apiKey: "AIzaSyAhN2a4m6PkTwFOvJ88TreD1lCERYJD7m0",
-  authDomain: "kostory-db.firebaseapp.com",
-  databaseURL: "https://kostory-db-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "kostory-db"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Komplain Penghuni | Kostory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-// ================= HAK AKSES =================
-const hakAkses = {
-  admin: "all",
-  mekar: "Kostory Mekar",
-  satria: "Kostory Satria",
-  mitra: "Kostory Mitra",
-  ecokost: "Ecokost by Kostory",
-  mitraya: "Mitraya by Kostory",
-  inaya: "Inaya Bukit by Kostory"
-};
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
 
-const user = localStorage.getItem("kostoryUser");
-const aksesKost = hakAkses[user];
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      color: #1e293b;
+    }
 
-if (!user || !aksesKost) {
-  alert("Session habis, login ulang");
-  location.href = "index.html";
-}
+    .page {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 24px;
+    }
 
-// ================= AUTO ISI DATA DARI DAFTAR PENGHUNI =================
-const autoNama = localStorage.getItem("komplainNama");
-const autoKost = localStorage.getItem("komplainKost");
-const autoRoom = localStorage.getItem("komplainRoom");
+    h1 { margin: 0 0 20px; }
 
-window.addEventListener("DOMContentLoaded", () => {
-  if (autoNama && document.getElementById("nama")) {
-    document.getElementById("nama").value = autoNama;
-  }
-  if (autoKost && document.getElementById("kost")) {
-    document.getElementById("kost").value = autoKost;
-  }
-  if (autoRoom && document.getElementById("room")) {
-    document.getElementById("room").value = autoRoom;
-  }
-});
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
 
-// ================= MODAL =================
-function openModal() {
-  document.getElementById("komplainModal").style.display = "flex";
-}
-function closeModal() {
-  document.getElementById("komplainModal").style.display = "none";
-}
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-// ================= LOAD LIST =================
-window.onload = loadKomplain;
+    .btn-add { background:#16a34a; color:white; }
+    .btn-back { background:#64748b; color:white; }
+    .btn-done { background:#2563eb; color:white; font-size:12px; }
 
-async function loadKomplain() {
-  const listEl = document.getElementById("listKomplain");
-  listEl.innerHTML = "";
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 14px;
+    }
 
-  let snap, data = {};
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #cbd5f5;
+      font-family: inherit;
+    }
 
-  if (aksesKost === "all") {
-    snap = await db.ref("komplain").once("value");
-    data = snap.val() || {};
-  } else {
-    snap = await db.ref(`komplain/${aksesKost}`).once("value");
-    data[aksesKost] = snap.val() || {};
-  }
+    input[readonly] {
+      background: #f1f5f9;
+    }
 
-  let list = [];
+    #hasilKamar {
+      background: white;
+      border-radius: 8px;
+      margin-top: 4px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
 
-  Object.keys(data).forEach(kost => {
-    Object.keys(data[kost] || {}).forEach(room => {
-      Object.values(data[kost][room]).forEach(k => list.push(k));
-    });
-  });
+    #hasilKamar div {
+      padding: 8px 10px;
+      cursor: pointer;
+    }
 
-  if (list.length === 0) {
-    listEl.innerHTML = "<em>Belum ada komplain</em>";
-    return;
-  }
+    #hasilKamar div:hover {
+      background: #e0f2fe;
+    }
 
-  list.sort((a,b)=> new Date(b.tanggalBuat) - new Date(a.tanggalBuat));
+    .kategori {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
 
-  listEl.innerHTML = list.map(k => `
-    <div class="card">
-      <div class="meta">
-        <strong>${k.namaPenghuni}</strong>
-        <small>${k.kost} • Kamar ${k.room}</small>
-        <small>${k.kategori}</small>
-        <small>${k.deskripsi}</small>
-        <small>Status:
-          <span class="status-${k.status}">${k.status}</span>
-        </small>
-      </div>
-      ${k.status !== "selesai"
-        ? `<button class="btn btn-done"
-            onclick="updateStatus('${k.kost}','${k.room}','${k.id}')">
-            Tandai Selesai
-          </button>`
-        : ""}
-    </div>
-  `).join("");
-}
+    .kategori label {
+      font-weight: normal;
+    }
 
-// ================= SIMPAN =================
-function simpanKomplain() {
-  const nama = document.getElementById("nama").value.trim();
-  const room = document.getElementById("room").value.trim();
-  const kategori = Array.from(
-  document.querySelectorAll('input[name="kategori"]:checked')
-).map(el => el.value).join(", ");
-if (!kategori) {
-  alert("Pilih minimal 1 kategori komplain");
-  return;
-}
+    #listKomplain {
+      margin-top: 40px;
+      display: grid;
+      gap: 14px;
+    }
 
-  const deskripsi = document.getElementById("deskripsi").value.trim();
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
 
-  if (!nama || !room || !deskripsi) {
-    alert("Lengkapi data");
-    return;
-  }
+    .meta small {
+      display: block;
+      color: #475569;
+    }
 
-  const kost = aksesKost === "all" ? prompt("Nama Kost:") : aksesKost;
-  if (!kost) return;
+    .status-open { color:#dc2626; font-weight:bold; }
+    .status-selesai { color:#16a34a; font-weight:bold; }
+  </style>
+</head>
+<body>
 
-  const id = Date.now().toString();
+<div class="page">
+  <h1>📋 Komplain Penghuni</h1>
 
-  db.ref(`komplain/${kost}/${room}/${id}`).set({
-    id,
-    namaPenghuni: nama,
-    kost,
-    room,
-    kategori,
-    deskripsi,
-    status: "open",
-    tanggalBuat: new Date().toISOString()
-  }).then(() => {
-    closeModal();
-    loadKomplain();
-  });
-}
+  <div class="toolbar">
+    <button class="btn btn-back" onclick="kembali()">← Kembali</button>
+  </div>
 
-// ================= UPDATE =================
-function updateStatus(kost, room, id) {
-  db.ref(`komplain/${kost}/${room}/${id}`).update({
-    status: "selesai"
-  }).then(loadKomplain);
-}
+  <!-- FORM KOMPLAIN -->
+  <label>No Kamar</label>
+  <input id="room" placeholder="Cari nomor kamar..." oninput="cariKamar()">
+  <div id="hasilKamar"></div>
 
-// ================= NAV =================
-function kembali() {
-  location.href = "index.html";
-}
+  <label>Nama Penghuni</label>
+  <input id="nama" readonly>
+
+  <label>Nama Kost</label>
+  <input id="kost" readonly>
+
+  <label>Kategori Komplain</label>
+  <div class="kategori">
+    <label><input type="checkbox" name="kategori" value="AC"> AC</label>
+    <label><input type="checkbox" name="kategori" value="Air"> Air</label>
+    <label><input type="checkbox" name="kategori" value="Listrik"> Listrik</label>
+    <label><input type="checkbox" name="kategori" value="Wifi"> Wifi</label>
+    <label><input type="checkbox" name="kategori" value="Kebersihan"> Kebersihan</label>
+    <label><input type="checkbox" name="kategori" value="Kerusakan"> Kerusakan</label>
+    <label><input type="checkbox" name="kategori" value="Keamanan"> Keamanan</label>
+    <label><input type="checkbox" name="kategori" value="Konflik"> Konflik</label>
+    <label><input type="checkbox" name="kategori" value="Aturan Kost"> Aturan Kost</label>
+    <label><input type="checkbox" name="kategori" value="Lainnya"> Lainnya</label>
+  </div>
+
+  <label>Deskripsi Komplain</label>
+  <textarea id="deskripsi" rows="3"></textarea>
+
+  <button class="btn btn-add" style="margin-top:20px" onclick="simpanKomplain()">Simpan Komplain</button>
+
+  <!-- LIST -->
+  <div id="listKomplain"></div>
+</div>
+
+<script src="komplain.js"></script>
+</body>
+</html>
