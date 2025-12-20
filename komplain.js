@@ -197,10 +197,24 @@ async function loadKomplain() {
         </strong>
 
         <small>${k.kategori} | ${k.deskripsi}</small>
-        <br>
+<br>
 <small style="color:#64748b">
   Ditulis oleh: ${k.dibuatOleh || "-"}
 </small>
+
+${k.komentar ? `
+  <div style="margin-top:10px;padding-left:12px;border-left:3px solid #f59e0b">
+    ${Object.values(k.komentar).map(c => `
+      <div style="margin-bottom:8px">
+        <small style="color:#6b7280">
+          ${new Date(c.waktu).toLocaleString("id-ID")} — ${c.oleh}
+        </small><br>
+        ${c.teks}
+      </div>
+    `).join("")}
+  </div>
+` : ""}
+
 
       </div>
 
