@@ -5,7 +5,6 @@ const firebaseConfig = {
   databaseURL: "https://kostory-db-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "kostory-db"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -24,20 +23,29 @@ const user = localStorage.getItem("kostoryUser");
 const aksesKost = hakAkses[user];
 
 if (!user || !aksesKost) {
-  alert("Session habis, login ulang");
+  alert("Session habis, silakan login ulang");
   location.href = "index.html";
 }
 
-// ================= DATA PENGHUNI =================
+// ================= STATE =================
 let dataPenghuni = [];
 
-// ================= LOAD PENGHUNI SESUAI AKSES =================
+// ================= MODAL =================
+function openModal() {
+  document.getElementById("komplainModal").style.display = "flex";
+}
+function closeModal() {
+  document.getElementById("komplainModal").style.display = "none";
+}
+
+// ================= LOAD PENGHUNI =================
 async function loadPenghuniUntukKomplain() {
   dataPenghuni = [];
 
   if (aksesKost === "all") {
     const snap = await db.ref("kosts").once("value");
     const all = snap.val() || {};
+
     Object.keys(all).forEach(kost => {
       Object.keys(all[kost]).forEach(room => {
         const d = all[kost][room];
@@ -49,6 +57,7 @@ async function loadPenghuniUntukKomplain() {
   } else {
     const snap = await db.ref(`kosts/${aksesKost}`).once("value");
     const data = snap.val() || {};
+
     Object.keys(data).forEach(room => {
       const d = data[room];
       if (d && d.nama) {
@@ -74,13 +83,13 @@ function cariKamar() {
   const hasil = dataPenghuni.filter(p => p.room.includes(keyword));
 
   if (hasil.length === 0) {
-    hasilEl.innerHTML = "<small style='padding:8px;display:block'>Tidak ditemukan</small>";
+    hasilEl.innerHTML = "<small>Tidak ditemukan</small>";
     return;
   }
 
   hasilEl.innerHTML = hasil.map(p => `
     <div onclick="pilihKamar('${p.room}','${p.nama}','${p.kost}')">
-      ${p.kost} - Kamar ${p.room} (${p.nama})
+      ${p.kost} | ${p.room} | ${p.nama}
     </div>
   `).join("");
 }
@@ -92,7 +101,7 @@ function pilihKamar(room, nama, kost) {
   document.getElementById("hasilKamar").innerHTML = "";
 }
 
-// ================= SIMPAN =================
+// ================= SIMPAN KOMPLAIN =================
 function simpanKomplain() {
   const room = document.getElementById("room").value.trim();
   const nama = document.getElementById("nama").value.trim();
@@ -107,12 +116,10 @@ function simpanKomplain() {
     alert("Pilih kamar terlebih dahulu");
     return;
   }
-
   if (!kategori) {
     alert("Pilih minimal 1 kategori");
     return;
   }
-
   if (!deskripsi) {
     alert("Isi deskripsi komplain");
     return;
@@ -130,14 +137,14 @@ function simpanKomplain() {
     status: "open",
     tanggalBuat: new Date().toISOString()
   }).then(() => {
-    alert("Komplain tersimpan");
+    closeModal();
     document.getElementById("deskripsi").value = "";
     document.querySelectorAll('input[name="kategori"]').forEach(c => c.checked = false);
     loadKomplain();
   });
 }
 
-// ================= LOAD LIST =================
+// ================= LOAD & SORT LIST =================
 async function loadKomplain() {
   const el = document.getElementById("listKomplain");
   el.innerHTML = "<em>Memuat data...</em>";
@@ -165,26 +172,37 @@ async function loadKomplain() {
     return;
   }
 
-  list.sort((a,b)=> new Date(b.tanggalBuat) - new Date(a.tanggalBuat));
+  // 🔥 SORT: OPEN dulu, lalu paling lama di atas
+  list.sort((a, b) => {
+    if (a.status === "open" && b.status !== "open") return -1;
+    if (a.status !== "open" && b.status === "open") return 1;
+    return new Date(a.tanggalBuat) - new Date(b.tanggalBuat);
+  });
 
   el.innerHTML = list.map(k => `
-    <div class="card">
-      <div class="meta">
-        <strong>${k.namaPenghuni}</strong>
-        <small>${k.kost} • Kamar ${k.room}</small>
-        <small>${k.kategori}</small>
-        <small>${k.deskripsi}</small>
-        <small>Status:
-          <span class="status-${k.status}">${k.status}</span>
-        </small>
+    <div class="item">
+      <div>
+        <strong>
+          ${new Date(k.tanggalBuat).toLocaleDateString("id-ID", {
+            day:"2-digit", month:"short", year:"2-digit"
+          })}
+          | ${k.room} | ${k.namaPenghuni}
+        </strong><br>
+        <small>${k.kategori} | ${k.deskripsi}</small>
       </div>
-      ${k.status !== "selesai"
-        ? `<button class="btn btn-done" onclick="selesaikan('${k.kost}','${k.room}','${k.id}')">Selesai</button>`
-        : ""}
+
+      ${k.status === "open"
+        ? `<button class="btn btn-done"
+            onclick="selesaikan('${k.kost}','${k.room}','${k.id}')">
+            Selesai
+          </button>`
+        : `<span class="status-selesai">Selesai</span>`
+      }
     </div>
   `).join("");
 }
 
+// ================= SELESAIKAN =================
 function selesaikan(kost, room, id) {
   db.ref(`komplain/${kost}/${room}/${id}`).update({
     status: "selesai"
