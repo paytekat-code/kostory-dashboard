@@ -69,11 +69,11 @@ async function loadPenghuniUntukKomplain() {
 }
 
 // ================= SEARCH KAMAR =================
-function cariKamar() {
-  const keyword = document.getElementById("room").value.trim();
-  const hasilEl = document.getElementById("hasilKamar");
+function cariNama() {
+  const keyword = document.getElementById("searchNama").value.trim().toLowerCase();
+  const hasilEl = document.getElementById("hasilNama");
 
-  document.getElementById("nama").value = "";
+  document.getElementById("room").value = "";
   document.getElementById("kost").value = "";
 
   if (!keyword) {
@@ -81,7 +81,9 @@ function cariKamar() {
     return;
   }
 
-  const hasil = dataPenghuni.filter(p => p.room.includes(keyword));
+  const hasil = dataPenghuni.filter(p =>
+    p.nama.toLowerCase().includes(keyword)
+  );
 
   if (hasil.length === 0) {
     hasilEl.innerHTML = "<small>Tidak ditemukan</small>";
@@ -89,17 +91,17 @@ function cariKamar() {
   }
 
   hasilEl.innerHTML = hasil.map(p => `
-    <div onclick="pilihKamar('${p.room}','${p.nama}','${p.kost}')">
-      ${p.kost} | ${p.room} | ${p.nama}
+    <div onclick="pilihNama('${p.nama}','${p.room}','${p.kost}')">
+      ${p.nama} — ${p.kost} (Kamar ${p.room})
     </div>
   `).join("");
 }
 
-function pilihKamar(room, nama, kost) {
+function pilihNama(nama, room, kost) {
+  document.getElementById("searchNama").value = nama;
   document.getElementById("room").value = room;
-  document.getElementById("nama").value = nama;
   document.getElementById("kost").value = kost;
-  document.getElementById("hasilKamar").innerHTML = "";
+  document.getElementById("hasilNama").innerHTML = "";
 }
 
 // ================= SIMPAN KOMPLAIN =================
