@@ -143,6 +143,8 @@ window.simpanKomplain = function () {
   dibuatOleh: user,                     // siapa yang input (admin / mekar / dll)
   dibuatPada: new Date().toISOString()  // tanggal + jam
     
+  komentar: {}   // ⬅️ TAMBAH INI  
+  
   }).then(() => {
     closeModal();
     document.getElementById("deskripsi").value = "";
@@ -206,12 +208,18 @@ async function loadKomplain() {
       </div>
 
       ${k.status === "open"
-        ? `<button class="btn btn-done"
-            onclick="selesaikan('${k.kost}','${k.room}','${k.id}')">
-            Selesai
-          </button>`
-        : `<span class="status-selesai">Selesai</span>`
-      }
+  ? `
+    <button class="btn btn-progress"
+  onclick="openKomentar('${k.kost}','${k.room}','${k.id}')">
+  Progres
+</button>
+    <button class="btn btn-done"
+      onclick="selesaikan('${k.kost}','${k.room}','${k.id}')">
+      Selesai
+    </button>
+  `
+  : `<span class="status-selesai">Selesai</span>`
+}
     </div>
   `).join("");
 }
@@ -232,4 +240,24 @@ function kembali() {
 window.onload = async () => {
   await loadPenghuniUntukKomplain();
   loadKomplain();
+};
+window.openKomentar = function(kost, room, id) {
+  const teks = prompt("Isi komentar progres:");
+
+  if (!teks || teks.trim() === "") {
+    alert("Komentar wajib diisi!");
+    return;
+  }
+
+  const waktu = new Date().toISOString();
+  const kid = Date.now().toString();
+
+  db.ref(`komplain/${kost}/${room}/${id}/komentar/${kid}`).set({
+    teks: teks.trim(),
+    oleh: user,
+    waktu
+  }).then(() => {
+    alert("Komentar tersimpan");
+    loadKomplain();
+  });
 };
