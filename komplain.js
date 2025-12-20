@@ -141,9 +141,8 @@ window.simpanKomplain = function () {
 
   /* ⬇️ TAMBAHAN */
   dibuatOleh: user,                     // siapa yang input (admin / mekar / dll)
-  dibuatPada: new Date().toISOString()  // tanggal + jam
-    
-  komentar: {}   // ⬅️ TAMBAH INI  
+  dibuatPada: new Date().toISOString(),
+  komentar: {}
   
   }).then(() => {
     closeModal();
@@ -192,10 +191,14 @@ async function loadKomplain() {
     <div class="item">
       <div>
         <strong>
-          ${new Date(k.dibuatPada || k.tanggalBuat).toLocaleDateString("id-ID", {
-  day:"2-digit", month:"short", year:"2-digit",
-  hour:"2-digit", minute:"2-digit"
-})}
+          new Date(k.dibuatPada || k.tanggalBuat).toLocaleString("id-ID", {
+    day:"2-digit",
+    month:"short",
+    year:"2-digit",
+    hour:"2-digit",
+    minute:"2-digit"
+})
+
           | ${k.room} | ${k.namaPenghuni}
         </strong><br>
         <small>${k.kategori} | ${k.deskripsi}</small>
