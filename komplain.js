@@ -139,10 +139,11 @@ window.simpanKomplain = function () {
   deskripsi,
   status: "open",
 
-  /* ⬇️ TAMBAHAN */
-  dibuatOleh: user,                     // siapa yang input (admin / mekar / dll)
+  dibuatOleh: user,
   dibuatPada: new Date().toISOString(),
+
   komentar: {}
+
   
   }).then(() => {
     closeModal();
