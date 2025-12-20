@@ -131,14 +131,18 @@ window.simpanKomplain = function () {
   const id = Date.now().toString();
 
   db.ref(`komplain/${kost}/${room}/${id}`).set({
-    id,
-    kost,
-    room,
-    namaPenghuni: nama,
-    kategori,
-    deskripsi,
-    status: "open",
-    tanggalBuat: new Date().toISOString()
+  id,
+  kost,
+  room,
+  namaPenghuni: nama,
+  kategori,
+  deskripsi,
+  status: "open",
+
+  /* ⬇️ TAMBAHAN */
+  dibuatOleh: user,                     // siapa yang input (admin / mekar / dll)
+  dibuatPada: new Date().toISOString()  // tanggal + jam
+    
   }).then(() => {
     closeModal();
     document.getElementById("deskripsi").value = "";
