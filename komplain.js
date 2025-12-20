@@ -225,9 +225,10 @@ ${k.komentar ? `
   Progres
 </button>
     <button class="btn btn-done"
-      onclick="selesaikan('${k.kost}','${k.room}','${k.id}')">
-      Selesai
-    </button>
+  onclick="selesaikanDenganKomentar('${k.kost}','${k.room}','${k.id}')">
+  Selesai
+</button>
+
   `
   : `<span class="status-selesai">Selesai</span>`
 }
@@ -236,11 +237,7 @@ ${k.komentar ? `
 }
 
 // ================= SELESAIKAN =================
-function selesaikan(kost, room, id) {
-  db.ref(`komplain/${kost}/${room}/${id}`).update({
-    status: "selesai"
-  }).then(loadKomplain);
-}
+
 
 // ================= NAV =================
 function kembali() {
@@ -269,6 +266,44 @@ window.openKomentar = function(kost, room, id) {
     waktu
   }).then(() => {
     alert("Komentar tersimpan");
+    loadKomplain();
+  });
+};
+
+
+window.selesaikanDenganKomentar = function(kost, room, id) {
+  const teks = prompt("Isi komentar penyelesaian:");
+
+  // klik batal
+  if (teks === null) return;
+
+  // kosong
+  if (teks.trim() === "") {
+    alert("Komentar wajib diisi");
+    return;
+  }
+
+  const konfirmasi = confirm("Yakin tandai komplain ini SELESAI?");
+  if (!konfirmasi) return;
+
+  const waktu = new Date().toISOString();
+  const kid = Date.now().toString();
+
+  const ref = db.ref(`komplain/${kost}/${room}/${id}`);
+
+  // simpan komentar
+  ref.child(`komentar/${kid}`).set({
+    teks: teks.trim(),
+    oleh: user,
+    waktu
+  }).then(() => {
+    // update status selesai
+    return ref.update({
+      status: "selesai",
+      selesaiPada: waktu,
+      selesaiOleh: user
+    });
+  }).then(() => {
     loadKomplain();
   });
 };
