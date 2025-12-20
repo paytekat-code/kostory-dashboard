@@ -117,6 +117,35 @@
     #hasilKamar div:hover {
       background: #e0f2fe;
     }
+    /* ===== KATEGORI CHIP ===== */
+.kategori {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.kategori input[type="checkbox"] {
+  display: none;
+}
+
+.kategori label {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #cbd5f5;
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.kategori input[type="checkbox"]:checked + span {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
   </style>
 </head>
 <body>
@@ -155,20 +184,65 @@
 
 
     <label>Kategori</label>
-    <div>
-      <label><input type="checkbox" name="kategori" value="AC"> AC</label>
-      <label><input type="checkbox" name="kategori" value="Air"> Air</label>
-      <label><input type="checkbox" name="kategori" value="Listrik"> Listrik</label>
-      <label><input type="checkbox" name="kategori" value="Wifi"> Wifi</label>
-      <label><input type="checkbox" name="kategori" value="Kebersihan"> Kebersihan</label>
-      <label><input type="checkbox" name="kategori" value="Kerusakan"> Kerusakan</label>
-      <label><input type="checkbox" name="kategori" value="Keamanan"> Keamanan</label>
-      <label><input type="checkbox" name="kategori" value="Konflik"> Konflik</label>
-      <label><input type="checkbox" name="kategori" value="Pindah Kamar"> Pindah Kamar</label>
-      <label><input type="checkbox" name="kategori" value="Aturan Kost"> Aturan Kost</label>
-      <label><input type="checkbox" name="kategori" value="Lainnya"> Lainnya</label>
-    
-    </div>
+<div class="kategori">
+
+  <label>
+    <input type="checkbox" name="kategori" value="AC">
+    <span>AC</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Air">
+    <span>Air</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Listrik">
+    <span>Listrik</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Wifi">
+    <span>Wifi</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Kebersihan">
+    <span>Kebersihan</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Kerusakan">
+    <span>Kerusakan</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Keamanan">
+    <span>Keamanan</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Konflik">
+    <span>Konflik</span>
+  </label>
+  
+<label>
+    <input type="checkbox" name="kategori" value="Pindah Kamar">
+    <span>Pindah Kamar</span>
+  </label>
+  
+  <label>
+    <input type="checkbox" name="kategori" value="Aturan Kost">
+    <span>Aturan Kost</span>
+  </label>
+
+  <label>
+    <input type="checkbox" name="kategori" value="Lainnya">
+    <span>Lainnya</span>
+  </label>
+
+</div>
+
 
     <label>Deskripsi</label>
     <textarea id="deskripsi" rows="3"></textarea>
