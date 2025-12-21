@@ -23,13 +23,26 @@ const kosts = {
 };
 
 const hakAkses = { 
-  "admin":"all","mekar":"Kostory Mekar","satria":"Kostory Satria","mitra":"Kostory Mitra",
-  "ecokost":"Ecokost by Kostory","mitraya":"Mitraya by Kostory","inaya":"Inaya Bukit by Kostory" 
+  "admin":"all",
+  "mekar":["Kostory Mekar"],
+  "satria":["Kostory Satria"],
+  "mitra":["Kostory Mitra"],
+  "ecokost":["Ecokost by Kostory"],
+  "mitraya":["Mitraya by Kostory"],
+  "inaya":["Inaya Bukit by Kostory"],
+
+  // USER BARU (MULTI KOST)
+  "budi":[
+    "Kostory Mitra",
+    "Ecokost by Kostory",
+    "Mitraya by Kostory",
+    "Inaya Bukit by Kostory"
+  ]
 };
 
 const passwordDb = { 
   "admin":"ramenuno20","mekar":"kopipait69","satria":"cilukba123","mitra":"ayamgeprek77",
-  "ecokost":"mirebus08","mitraya":"odading88","inaya":"nasiuduk21" 
+  "ecokost":"mirebus08","mitraya":"odading88","inaya":"nasiuduk21","budi":"pecelele68"
 };
 
 let currentUser = null;
@@ -111,7 +124,14 @@ window.login = function() {
   if (passwordDb[user] && passwordDb[user] === pass) {
     currentUser = user;
     localStorage.setItem("kostoryUser", user);
-    allowedKosts = hakAkses[user] === "all" ? Object.keys(kosts) : [hakAkses[user]];
+    if (hakAkses[user] === "all") {
+  allowedKosts = Object.keys(kosts);
+} else if (Array.isArray(hakAkses[user])) {
+  allowedKosts = hakAkses[user];
+} else {
+  allowedKosts = [hakAkses[user]];
+}
+
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     loadDashboard();
@@ -124,7 +144,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("kostoryUser");
   if (saved && passwordDb[saved.toLowerCase()]) {
     currentUser = saved.toLowerCase();
-    allowedKosts = hakAkses[currentUser] === "all" ? Object.keys(kosts) : [hakAkses[currentUser]];
+    if (hakAkses[currentUser] === "all") {
+  allowedKosts = Object.keys(kosts);
+} else if (Array.isArray(hakAkses[currentUser])) {
+  allowedKosts = hakAkses[currentUser];
+} else {
+  allowedKosts = [hakAkses[currentUser]];
+}
+
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     loadDashboard();
