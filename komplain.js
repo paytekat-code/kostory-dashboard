@@ -11,21 +11,34 @@ const db = firebase.database();
 // ================= HAK AKSES =================
 const hakAkses = {
   admin: "all",
-  mekar: "Kostory Mekar",
-  satria: "Kostory Satria",
-  mitra: "Kostory Mitra",
-  ecokost: "Ecokost by Kostory",
-  mitraya: "Mitraya by Kostory",
-  inaya: "Inaya Bukit by Kostory"
+  mekar: ["Kostory Mekar"],
+  satria: ["Kostory Satria"],
+  mitra: ["Kostory Mitra"],
+  ecokost: ["Ecokost by Kostory"],
+  mitraya: ["Mitraya by Kostory"],
+  inaya: ["Inaya Bukit by Kostory"],
+  budi: [
+    "Kostory Mitra",
+    "Ecokost by Kostory",
+    "Mitraya by Kostory",
+    "Inaya Bukit by Kostory"
+  ]
 };
 
 const user = localStorage.getItem("kostoryUser");
-const aksesKost = hakAkses[user];
+const user = localStorage.getItem("kostoryUser");
 
-if (!user || !aksesKost) {
+if (!user || !hakAkses[user]) {
   alert("Session habis, silakan login ulang");
   location.href = "index.html";
 }
+
+const aksesKost =
+  hakAkses[user] === "all"
+    ? "all"
+    : Array.isArray(hakAkses[user])
+      ? hakAkses[user]
+      : [hakAkses[user]];
 
 // ================= STATE =================
 let dataPenghuni = [];
@@ -56,7 +69,19 @@ async function loadPenghuniUntukKomplain() {
       });
     });
   } else {
-    const snap = await db.ref(`kosts/${aksesKost}`).once("value");
+  for (const kost of aksesKost) {
+    const snap = await db.ref(`kosts/${kost}`).once("value");
+    const data = snap.val() || {};
+
+    Object.keys(data).forEach(room => {
+      const d = data[room];
+      if (d && d.nama) {
+        dataPenghuni.push({ kost, room, nama: d.nama });
+      }
+    });
+  }
+}
+
     const data = snap.val() || {};
 
     Object.keys(data).forEach(room => {
@@ -164,9 +189,12 @@ async function loadKomplain() {
     const snap = await db.ref("komplain").once("value");
     data = snap.val() || {};
   } else {
-    const snap = await db.ref(`komplain/${aksesKost}`).once("value");
-    data[aksesKost] = snap.val() || {};
+  for (const kost of aksesKost) {
+    const snap = await db.ref(`komplain/${kost}`).once("value");
+    data[kost] = snap.val() || {};
   }
+}
+
 
   let list = [];
 
