@@ -5,7 +5,10 @@ const firebaseConfig = {
   databaseURL: "https://kostory-db-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "kostory-db"
 };
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 const db = firebase.database();
 
 // ================= HAK AKSES =================
