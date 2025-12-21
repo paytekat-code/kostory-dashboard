@@ -117,14 +117,6 @@ function hitungTelatBayar(tanggalMasuk, tanggalLunas = null) {
   // Belum lunas → hitung dari jatuh tempo sampai sekarang
   return Math.max(0, Math.floor((sekarang - jatuhTempo) / 86400000));
 }
-
-function hitungHariTidakDibersihkan(tanggalBersih) {
-  if (!tanggalBersih) return null; // belum pernah dibersihkan
-  const last = new Date(tanggalBersih);
-  const today = new Date();
-  return Math.floor((today - last) / 86400000) + 1;
-}
-
 // ====================== LOGIN ======================
 window.login = function() {
   const user = document.getElementById("username").value.trim().toLowerCase();
@@ -223,19 +215,10 @@ function loadDashboard() {
     // Tambahan teks kecil untuk telat bayar
     let tambahan = `<small>${d.nama}</small>`;
     if (hariTelat > 0) {
-  tambahan += `<br><small style="color:#dc2626;font-weight:bold;font-size:10px;">
-    Telat ${hariTelat} hari
-  </small>`;
-  if (!kelas.includes("telat")) kelas += " telat";
-}
-
-// === TAMBAHAN STATUS BERSIH ===
-const hariTidakBersih = hitungHariTidakDibersihkan(d.tanggalBersih);
-if (hariTidakBersih !== null && hariTidakBersih > 0) {
-  tambahan += `<br><small style="color:#7c2d12;font-size:10px;">
-    ${hariTidakBersih} hari tidak dibersihkan
-  </small>`;
-}
+      tambahan += `<br><small style="color:#dc2626;font-weight:bold;font-size:10px;">Telat ${hariTelat} hari</small>`;
+      // Optional: ubah warna box jadi merah jika telat
+      if (!kelas.includes("telat")) kelas += " telat";
+    }
 
     box.className = `room ${kelas}`;
     box.innerHTML = `${room}<br>${tambahan}`;
