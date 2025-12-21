@@ -85,17 +85,6 @@ async function loadPenghuniUntukKomplain() {
   }
 }
 
-    const data = snap.val() || {};
-
-    Object.keys(data).forEach(room => {
-      const d = data[room];
-      if (d && d.nama) {
-        dataPenghuni.push({ kost: aksesKost, room, nama: d.nama });
-      }
-    });
-  }
-}
-
 // ================= SEARCH KAMAR =================
 function cariNama() {
   const keyword = document.getElementById("searchNama").value.trim().toLowerCase();
