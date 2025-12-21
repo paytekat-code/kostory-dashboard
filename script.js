@@ -549,10 +549,13 @@ function renderCheckoutList(data, query = "") {
 
 
         </div>
-        <button onclick="event.stopPropagation(); kirimPerpisahan('${d.namaAsli}','${d.hp}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
-                style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
-          Kirim Perpisahan
-        </button>
+        ${currentUser === "admin" ? `
+<button onclick="event.stopPropagation(); kirimPerpisahan('${d.namaAsli}','${d.hp}','${d.tanggalCheckout}','${d.tanggalMasuk}')"
+        style="background:#25d366;color:white;padding:8px 12px;border:none;border-radius:8px;font-weight:bold;font-size:12px;">
+  Kirim Perpisahan
+</button>
+` : ``}
+
       </div>
     </div>`).join("") : `<p style='text-align:center;color:#666;padding:30px'>
       ${query === "" ? "Belum ada check-out bulan ini" : "Tidak ditemukan nama tersebut"}
