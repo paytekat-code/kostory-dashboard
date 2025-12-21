@@ -26,7 +26,6 @@ const hakAkses = {
 };
 
 const user = localStorage.getItem("kostoryUser");
-const user = localStorage.getItem("kostoryUser");
 
 if (!user || !hakAkses[user]) {
   alert("Session habis, silakan login ulang");
@@ -61,7 +60,7 @@ async function loadPenghuniUntukKomplain() {
     const all = snap.val() || {};
 
     Object.keys(all).forEach(kost => {
-      Object.keys(all[kost]).forEach(room => {
+      Object.keys(all[kost] || {}).forEach(room => {
         const d = all[kost][room];
         if (d && d.nama) {
           dataPenghuni.push({ kost, room, nama: d.nama });
@@ -69,16 +68,17 @@ async function loadPenghuniUntukKomplain() {
       });
     });
   } else {
-  for (const kost of aksesKost) {
-    const snap = await db.ref(`kosts/${kost}`).once("value");
-    const data = snap.val() || {};
+    for (const kost of aksesKost) {
+      const snap = await db.ref(`kosts/${kost}`).once("value");
+      const data = snap.val() || {};
 
-    Object.keys(data).forEach(room => {
-      const d = data[room];
-      if (d && d.nama) {
-        dataPenghuni.push({ kost, room, nama: d.nama });
-      }
-    });
+      Object.keys(data).forEach(room => {
+        const d = data[room];
+        if (d && d.nama) {
+          dataPenghuni.push({ kost, room, nama: d.nama });
+        }
+      });
+    }
   }
 }
 
