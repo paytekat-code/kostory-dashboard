@@ -241,16 +241,21 @@ ${k.komentar ? `
       ${k.status === "open"
   ? `
     <button class="btn btn-progress"
-  onclick="openKomentar('${k.kost}','${k.room}','${k.id}')">
-  Progres
-</button>
+      onclick="openKomentar('${k.kost}','${k.room}','${k.id}')">
+      Progres
+    </button>
+
+    <button class="btn btn-wa"
+      onclick="kirimWA('${k.kost}','${k.room}','${k.namaPenghuni}','${k.deskripsi}')">
+      Kirim WA
+    </button>
+
     <button class="btn btn-done"
-  onclick="selesaikanDenganKomentar('${k.kost}','${k.room}','${k.id}')">
-  Selesai
-</button>
-
-
+      onclick="selesaikanDenganKomentar('${k.kost}','${k.room}','${k.id}')">
+      Selesai
+    </button>
   `
+
   : `<span class="status-selesai">Selesai</span>`
 }
     </div>
@@ -327,4 +332,39 @@ window.selesaikanDenganKomentar = function(kost, room, id) {
   }).then(() => {
     loadKomplain();
   });
+};
+
+window.kirimWA = async function(kost, room, nama, deskripsi) {
+  try {
+    const snap = await db.ref(`kosts/${kost}/${room}/hp`).once("value");
+    const hp = snap.val();
+
+    if (!hp) {
+      alert("Nomor HP penghuni tidak tersedia");
+      return;
+    }
+
+    const phone = hp.replace(/^0/, "62").replace(/[^0-9]/g, "");
+
+    const pesan =
+`Halo Kak *${nama}* 👋
+
+Kami menindaklanjuti komplain berikut:
+
+"${deskripsi}"
+
+Mohon ditunggu ya kak, sedang kami proses 🙏
+Jika ada info tambahan silakan dibalas.
+
+Salam,
+Tim Kostory`;
+
+    window.open(
+      `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(pesan)}`,
+      "_blank"
+    );
+
+  } catch (e) {
+    alert("Gagal mengambil nomor HP");
+  }
 };
